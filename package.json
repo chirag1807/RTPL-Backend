@@ -1,0 +1,27 @@
+{
+  "name": "rtpl",
+  "version": "1.0.0",
+  "description": "RTPL RESTapi.",
+  "main": "server.js",
+  "scripts": {
+    "start": "nodemon server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "rtpl",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^5.1.0",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.0",
+    "mysql2": "^3.4.2",
+    "nodemailer": "^6.9.3",
+    "sequelize": "^6.32.1",
+    "validator": "^13.9.0"
+  },
+  "devDependencies": {
+    "ansi-colors": "^4.1.3",
+    "chalk": "^5.2.0",
+    "nodemon": "^2.0.22"
+  }
+}
