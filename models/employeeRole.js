@@ -10,4 +10,4 @@ const EmployeeRole = sequelize.define('EmployeeRole', {
     },
   });
 
-  module.exports = EmployeeRole;
+module.exports = EmployeeRole;
