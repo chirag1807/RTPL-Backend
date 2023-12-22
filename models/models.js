@@ -21,5 +21,5 @@ module.exports = {
     Meeting,
     MeetingMode,
     MeetingType,
-    RequestMeeting
+    RequestMeeting,
 }
