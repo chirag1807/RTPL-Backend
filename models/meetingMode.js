@@ -1,7 +1,7 @@
-const { DataTypes } = require("sequelize");
+const { Sequelize, DataTypes } = require("sequelize");
 const sequelize = require("./../utils/database.config");
 
-const MeetingMode = sequelize.define("MeetingMode", {
+const MeetingMode = sequelize.define("MeetingModes", {
     MeetingModeID: {
       type: DataTypes.INTEGER,
       primaryKey: true,

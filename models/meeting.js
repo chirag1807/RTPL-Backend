@@ -1,7 +1,7 @@
-const { DataTypes } = require('sequelize');
+const { Sequelize, DataTypes } = require('sequelize');
 const sequelize = require('./../utils/database.config');
 
-const Meeting = sequelize.define('Meeting', {
+const Meeting = sequelize.define('Meetings', {
     meetingID: {
         type: DataTypes.INTEGER,
         primaryKey: true,
@@ -11,7 +11,7 @@ const Meeting = sequelize.define('Meeting', {
         type: DataTypes.INTEGER,
         allowNull: true,
         references: {
-          model: 'RequestMeeting',
+          model: 'RequestMeetings',
           key: 'visitorID',
         },
     },
@@ -19,7 +19,7 @@ const Meeting = sequelize.define('Meeting', {
         type: DataTypes.INTEGER,
         allowNull: true,
         references: {
-          model: 'Office',
+          model: 'Offices',
           key: 'officeID',
         },
     },
@@ -27,7 +27,7 @@ const Meeting = sequelize.define('Meeting', {
         type: DataTypes.INTEGER,
         allowNull: true,
         references: {
-          model: 'MeetingType',
+          model: 'MeetingTypes',
           key: 'MeetingTypeID',
         },
     },
@@ -35,7 +35,7 @@ const Meeting = sequelize.define('Meeting', {
         type: DataTypes.INTEGER,
         allowNull: true,
         references: {
-          model: 'MeetingMode',
+          model: 'MeetingModes',
           key: 'MeetingModeID',
         },
     },

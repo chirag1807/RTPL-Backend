@@ -1,7 +1,7 @@
-const { DataTypes } = require('sequelize');
+const { Sequelize, DataTypes } = require('sequelize');
 const sequelize = require('./../utils/database.config');
 
-const RequestMeeting = sequelize.define('RequestMeeting', {
+const RequestMeeting = sequelize.define('RequestMeetings', {
     visitorID: {
         type: DataTypes.INTEGER,
         primaryKey: true,
@@ -59,7 +59,7 @@ const RequestMeeting = sequelize.define('RequestMeeting', {
         type: DataTypes.INTEGER,
         allowNull: false,
         references: {
-          model: 'Employee',
+          model: 'Employees',
           key: 'empID',
         },
     },
