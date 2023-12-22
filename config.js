@@ -3,7 +3,7 @@
 module.exports = {
     development: {
       DB_USER: 'root',
-      PASSWORD: 'Ravi@786',
+      PASSWORD: '',
       DB_NAME: 'rtpl_database',
       host: 'localhost',
       dialect: 'mysql',
@@ -20,11 +20,11 @@ module.exports = {
     },
     production:{
       DB_USER: 'root',
-      PASSWORD: 'Ravi@786',
+      PASSWORD: '',
       DB_NAME: 'rtpl_database',
       host: 'localhost',
       dialect: 'mysql',
-      PORT: 8080,
+      PORT: 5000,
       APIURL: 'http://localhost:5000/api/',
       
     }

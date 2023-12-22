@@ -5,7 +5,7 @@ const {createAccessToken} = require('../../Middleware/auth')
 const nodemailer = require('nodemailer');
 const CONSTANT = require('../../constant/constant');
 
-module.exports.createMeeting = async (req, res) => {
+module.exports.addMeetingType = async (req, res) => {
     try {
         
     } catch (error) {
