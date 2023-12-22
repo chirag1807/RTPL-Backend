@@ -93,7 +93,7 @@ const Employee = sequelize.define('Employee', {
 Employee.belongsTo(EmployeeRole, {
   as: 'role',
   foreignKey: {
-    name:'roleID',allowNull:false
+    name: 'roleID', allowNull: false
   }
 })
 

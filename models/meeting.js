@@ -19,7 +19,7 @@ const Meeting = sequelize.define('Meeting', {
         type: DataTypes.INTEGER,
         allowNull: true,
         references: {
-          model: 'Office',
+          model: 'Offices',
           key: 'officeID',
         },
     },
