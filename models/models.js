@@ -8,7 +8,7 @@ const MeetingMode = require('./meetingMode');
 const MeetingType = require('./meetingType');
 const RequestMeeting = require('./requestMeeting');
 const Office = require('./office');
-
+const ReqMeetDetailsByRecp = require('./reqMeetDetailsByRecp');
 
 module.exports = {
     Company,
@@ -21,4 +21,5 @@ module.exports = {
     MeetingType,
     Office,
     RequestMeeting,
+    ReqMeetDetailsByRecp
 }

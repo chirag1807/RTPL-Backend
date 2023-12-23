@@ -1,6 +1,7 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../utils/config');
 const Employee = require('./employee');
+const ReqMeetingDetailsByRecp = require('./reqMeetDetailsByRecp');
 
 const RequestMeeting = sequelize.define('RequestMeetings', {
     visitorID: {
@@ -64,9 +65,13 @@ const RequestMeeting = sequelize.define('RequestMeetings', {
           key: 'empID',
         },
     },
-    TokenNumber: {
-        type: DataTypes.STRING,
-        allowNull: true
+    reqMeetDetailsID: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        references: {
+          model: ReqMeetingDetailsByRecp,
+          key: 'reqMeetDetailsID',
+        },
     },
     ReqStatus: {
         type: DataTypes.STRING,
@@ -86,5 +91,6 @@ const RequestMeeting = sequelize.define('RequestMeetings', {
 });
 
 RequestMeeting.belongsTo(Employee, { foreignKey: 'empId', as: 'employee' });
+RequestMeeting.belongsTo(ReqMeetingDetailsByRecp, { foreignKey: 'reqMeetDetailsID', as: 'reqMeetDetailsByRecp' });
 
 module.exports = RequestMeeting;
