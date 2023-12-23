@@ -47,4 +47,6 @@ const Designation = sequelize.define('Designation', {
     paranoid: true
 });
 
+Designation.belongsTo(Department, { foreignKey: 'departmentID', as: 'department' });
+
 module.exports = Designation;

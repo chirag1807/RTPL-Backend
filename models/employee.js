@@ -76,12 +76,12 @@ const Employee = sequelize.define('Employees', {
   paranoid: true
 });
 
-Employee.belongsTo(EmployeeRole, {
-  as: 'role',
-  foreignKey: {
-    name: 'roleID', allowNull: false
-  }
-})
+// Employee.belongsTo(EmployeeRole, {
+//   as: 'role',
+//   foreignKey: {
+//     name: 'roleID', allowNull: false
+//   }
+// })
 
 
 module.exports = Employee;

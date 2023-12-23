@@ -32,7 +32,7 @@ const Meeting = sequelize.define('Meetings', {
         allowNull: true,
         references: {
           model: MeetingType,
-          key: 'MeetingTypeID',
+          key: 'meetingTypeID',
         },
     },
     meetingModeID: {
@@ -40,7 +40,7 @@ const Meeting = sequelize.define('Meetings', {
         allowNull: true,
         references: {
           model: MeetingMode,
-          key: 'MeetingModeID',
+          key: 'meetingModeID',
         },
     },
     MeetingRoom: {
@@ -102,5 +102,10 @@ const Meeting = sequelize.define('Meetings', {
     timestamps: true,
     paranoid: true
 });
+
+Meeting.belongsTo(Office, { foreignKey: 'officeID', as: 'office' });
+Meeting.belongsTo(RequestMeeting, { foreignKey: 'visitorID', as: 'requestMeeting' });
+Meeting.belongsTo(MeetingType, { foreignKey: 'meetingTypeID', as: 'meetingType' });
+Meeting.belongsTo(MeetingMode, { foreignKey: 'meetingModeID', as: 'meetingMode' });
 
 module.exports = Meeting;

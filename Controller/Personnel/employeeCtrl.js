@@ -22,7 +22,7 @@ const inputFieldsEmployee = [
     'createdAt',
     'updatedAt',
     'deletedAt',
-    'roleID'
+    // 'roleID'
 ];
 // login employee
 module.exports.loginEmployee = async (req,res) =>{
@@ -65,7 +65,7 @@ module.exports.employeeRegistration = async (req, res) => {
         const {Employee} = req.app.locals.models;
       if (req.body) {
         // get value of CreatedBy 
-          COMMON.setModelCreatedByFieldValue(req);
+        //   COMMON.setModelCreatedByFieldValue(req);
         // Validate email
         if (!validator.isEmail(req.body.email)) {
             return res.status(400).json({ error: 'Invalid email' });

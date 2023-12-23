@@ -2,7 +2,7 @@ const { DataTypes } = require("sequelize");
 const sequelize = require("../utils/config");
 
 const MeetingType = sequelize.define("MeetingTypes", {
-    MeetingTypeID: {
+    meetingTypeID: {
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true,

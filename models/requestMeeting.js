@@ -1,5 +1,6 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../utils/config');
+const Employee = require('./employee');
 
 const RequestMeeting = sequelize.define('RequestMeetings', {
     visitorID: {
@@ -57,9 +58,9 @@ const RequestMeeting = sequelize.define('RequestMeetings', {
     },
     empId: {
         type: DataTypes.INTEGER,
-        allowNull: false,
+        allowNull: true,
         references: {
-          model: 'Employees',
+          model: Employee,
           key: 'empID',
         },
     },
@@ -83,5 +84,7 @@ const RequestMeeting = sequelize.define('RequestMeetings', {
     timestamps: true,
     paranoid: true
 });
+
+RequestMeeting.belongsTo(Employee, { foreignKey: 'empId', as: 'employee' });
 
 module.exports = RequestMeeting;

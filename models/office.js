@@ -47,4 +47,6 @@ const Office = sequelize.define('Offices', {
     paranoid: true
 });
 
+Office.belongsTo(Company, { foreignKey: 'companyID', as: 'company' });
+
 module.exports = Office;
