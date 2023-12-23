@@ -1,5 +1,5 @@
-const { Sequelize, DataTypes } = require('sequelize');
-const sequelize = require('./../utils/database.config');
+const { DataTypes } = require('sequelize');
+const sequelize = require('../utils/config');
 
 const RequestMeeting = sequelize.define('RequestMeetings', {
     visitorID: {

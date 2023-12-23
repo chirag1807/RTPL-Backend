@@ -1,5 +1,5 @@
-const { Sequelize, DataTypes } = require('sequelize');
-const sequelize = require('./../utils/database.config');
+const { DataTypes } = require('sequelize');
+const sequelize = require('../utils/config');
 const EmployeeRole = require('./employeeRole');
 
 const Employee = sequelize.define('Employees', {
@@ -71,20 +71,6 @@ const Employee = sequelize.define('Employees', {
     type: DataTypes.STRING,
     allowNull: true
   },
-  createdAt: {
-    type: DataTypes.DATE,
-    allowNull: true,
-    defaultValue: Sequelize.NOW
-  },
-  updatedAt: {
-    type: DataTypes.DATE,
-    allowNull: true,
-    defaultValue: Sequelize.NOW
-  },
-  deletedAt: {
-    type: DataTypes.DATE,
-    allowNull: true
-  },
 }, {
   timestamps: true,
   paranoid: true
@@ -93,7 +79,7 @@ const Employee = sequelize.define('Employees', {
 Employee.belongsTo(EmployeeRole, {
   as: 'role',
   foreignKey: {
-    name:'roleID',allowNull:false
+    name: 'roleID', allowNull: false
   }
 })
 

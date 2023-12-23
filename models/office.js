@@ -1,5 +1,6 @@
-const { Sequelize, DataTypes } = require('sequelize');
-const sequelize = require('./../utils/database.config');
+const { DataTypes } = require('sequelize');
+const sequelize = require('../utils/config');
+const Company = require('./company');
 
 const Office = sequelize.define('Offices', {
     officeID : {
@@ -11,7 +12,7 @@ const Office = sequelize.define('Offices', {
         type: DataTypes.INTEGER,
         allowNull: true,
         references: {
-            model : 'Companies',
+            model : Company,
             key:'companyID',
         },
     },
