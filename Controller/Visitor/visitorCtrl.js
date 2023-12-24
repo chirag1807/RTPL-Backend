@@ -39,9 +39,7 @@ module.exports.visitorRequestMeeting = async (req, res) => {
       if (!validator.isEmail(req.body.vCompanyEmail)) {
         return res.status(400).json({ error: "Invalid email." });
       }
-      if (
-        !validator.isMobilePhone(req.body.vCompanyContact.toString(), "any")
-      ) {
+      if (!validator.isMobilePhone(req.body.vCompanyContact.toString(), "any")) {
         return res.status(400).json({ error: "Invalid phone number." });
       }
       //save visitor icard and documents to s3 bucket.

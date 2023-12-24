@@ -9,6 +9,10 @@ const MeetingType = require('./meetingType');
 const RequestMeeting = require('./requestMeeting');
 const Office = require('./office');
 const ReqMeetDetailsByRecp = require('./reqMeetDetailsByRecp');
+const AppointmentMeeting = require('./appointmentMeeting');
+const ConferenceRoom = require('./conferenceRoom');
+const InternalTeamSelect = require('./internalTeamSelect');
+const OuterMeeting = require('./outerMeeting');
 
 module.exports = {
     Company,
@@ -21,5 +25,9 @@ module.exports = {
     MeetingType,
     Office,
     RequestMeeting,
-    ReqMeetDetailsByRecp
+    ReqMeetDetailsByRecp,
+    AppointmentMeeting,
+    ConferenceRoom,
+    InternalTeamSelect,
+    OuterMeeting
 }

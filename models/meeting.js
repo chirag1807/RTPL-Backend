@@ -1,15 +1,27 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../utils/config');
+const Employee = require('./employee');
 const Office = require('./office');
 const RequestMeeting = require('./requestMeeting');
+const AppointmentMeeting = require('./appointmentMeeting');
+const OuterMeeting = require('./outerMeeting');
 const MeetingType = require('./meetingType');
 const MeetingMode = require('./meetingMode');
+const ConferenceRoom = require('./conferenceRoom');
 
 const Meeting = sequelize.define('Meetings', {
     meetingID: {
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true
+    },
+    empId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        references: {
+          model: Employee,
+          key: 'empID',
+        },
     },
     officeID: {
         type: DataTypes.INTEGER,
@@ -25,6 +37,22 @@ const Meeting = sequelize.define('Meetings', {
         references: {
           model: RequestMeeting,
           key: 'visitorID',
+        },
+    },
+    appointmentMeetingID: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        references: {
+          model: AppointmentMeeting,
+          key: 'appointmentMeetingID',
+        },
+    },
+    outerMeetingID: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        references: {
+          model: OuterMeeting,
+          key: 'outerMeetingID',
         },
     },
     meetingTypeID: {
@@ -43,9 +71,21 @@ const Meeting = sequelize.define('Meetings', {
           key: 'meetingModeID',
         },
     },
-    MeetingRoom: {
-        type: DataTypes.STRING,
-        allowNull: false,
+    conferenceRoomID: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        references: {
+          model: ConferenceRoom,
+          key: 'conferenceRoomID',
+        },
+    },
+    rescConferenceRoomID: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        references: {
+          model: ConferenceRoom,
+          key: 'conferenceRoomID',
+        },
     },
     MeetingPurpose: {
         type: DataTypes.STRING,
@@ -55,7 +95,11 @@ const Meeting = sequelize.define('Meetings', {
         type: DataTypes.DATEONLY,
         allowNull: false,
     },
-    meetingTime: {
+    meetingStartTime: {
+        type: DataTypes.TIME,
+        allowNull: false,
+    },
+    meetingEndTime: {
         type: DataTypes.TIME,
         allowNull: false,
     },
@@ -73,13 +117,13 @@ const Meeting = sequelize.define('Meetings', {
         type: DataTypes.DATEONLY,
         allowNull: true,
     },
-    rescMeetingTime: {
+    rescMeetingStartTime: {
         type: DataTypes.TIME,
         allowNull: true,
     },
-    rescMeetingRoom: {
-        type: DataTypes.STRING,
-        allowNull: true
+    rescMeetingEndTime: {
+        type: DataTypes.TIME,
+        allowNull: true,
     },
     isDeleted: {
         type: DataTypes.BOOLEAN,
@@ -88,7 +132,7 @@ const Meeting = sequelize.define('Meetings', {
     },
     createdBy: {
         type: DataTypes.STRING,
-        allowNull: true
+        allowNull: false
     },
     updatedBy: {
         type: DataTypes.STRING,
@@ -103,9 +147,13 @@ const Meeting = sequelize.define('Meetings', {
     paranoid: true
 });
 
+Meeting.belongsTo(Employee, { foreignKey: 'empId', as: 'employee' });
 Meeting.belongsTo(Office, { foreignKey: 'officeID', as: 'office' });
 Meeting.belongsTo(RequestMeeting, { foreignKey: 'visitorID', as: 'requestMeeting' });
+Meeting.belongsTo(AppointmentMeeting, { foreignKey: 'appointmentMeetingID', as: 'appointmentMeeting'});
+Meeting.belongsTo(OuterMeeting, { foreignKey: 'outerMeetingID', as: 'outerMeeting' });
 Meeting.belongsTo(MeetingType, { foreignKey: 'meetingTypeID', as: 'meetingType' });
 Meeting.belongsTo(MeetingMode, { foreignKey: 'meetingModeID', as: 'meetingMode' });
+Meeting.belongsTo(ConferenceRoom, { foreignKey: 'conferenceRoomID', as: 'conferenceRoom' });
 
 module.exports = Meeting;
