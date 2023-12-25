@@ -3,7 +3,9 @@ const employeeController = require('../Controller/Personnel/employeeCtrl');
 const {authenticateToken} = require('../Middleware/auth');
 const router = express.Router();
 
-router.post('/createEmployee',authenticateToken,employeeController.employeeRegistration);
+router.post('/createEmployee',
+// authenticateToken,
+employeeController.employeeRegistration);
 router.post('/loginEmployee',employeeController.loginEmployee);
 router.post('/changePassword',authenticateToken,employeeController.changePassword);
 router.put('/:id', authenticateToken,employeeController.updateEmployee);

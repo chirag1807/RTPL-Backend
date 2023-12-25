@@ -1,5 +1,6 @@
-const { Sequelize, DataTypes } = require('sequelize');
-const sequelize = require('./../utils/database.config');
+const { DataTypes } = require('sequelize');
+const sequelize = require('../utils/config');
+const Department = require('./department');
 
 const Designation = sequelize.define('Designation', {
     designationID : {
@@ -15,7 +16,7 @@ const Designation = sequelize.define('Designation', {
         type: DataTypes.INTEGER,
         allowNull: true,
         references: {
-            model : 'Departments',
+            model : Department,
             key:'departmentID',
         },
     },
@@ -41,23 +42,11 @@ const Designation = sequelize.define('Designation', {
         type: DataTypes.STRING,
         allowNull: true
     },
-    createdAt: {
-        type: DataTypes.DATE,
-        allowNull: true,
-        defaultValue: Sequelize.NOW
-    },
-    updatedAt: {
-        type: DataTypes.DATE,
-        allowNull: true,
-        defaultValue: Sequelize.NOW
-    },
-    deletedAt: {
-        type: DataTypes.DATE,
-        allowNull: true
-    },
 }, {
     timestamps: true,
     paranoid: true
 });
+
+Designation.belongsTo(Department, { foreignKey: 'departmentID', as: 'department' });
 
 module.exports = Designation;

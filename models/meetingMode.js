@@ -1,8 +1,8 @@
 const { DataTypes } = require("sequelize");
-const sequelize = require("./../utils/database.config");
+const sequelize = require("../utils/config");
 
-const MeetingMode = sequelize.define("MeetingMode", {
-    MeetingModeID: {
+const MeetingMode = sequelize.define("MeetingModes", {
+    meetingModeID: {
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true,

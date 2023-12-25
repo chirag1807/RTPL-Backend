@@ -1,5 +1,5 @@
-const { Sequelize, DataTypes } = require('sequelize');
-const sequelize = require('./../utils/database.config');
+const { DataTypes } = require('sequelize');
+const sequelize = require('../utils/config');
 
 const Company = sequelize.define('Companies', {
     companyID: {
@@ -44,20 +44,6 @@ const Company = sequelize.define('Companies', {
     },
     deletedBy: {
         type: DataTypes.STRING,
-        allowNull: true
-    },
-    createdAt: {
-        type: DataTypes.DATE,
-        allowNull: true,
-        defaultValue: Sequelize.NOW
-    },
-    updatedAt: {
-        type: DataTypes.DATE,
-        allowNull: true,
-        defaultValue: Sequelize.NOW
-    },
-    deletedAt: {
-        type: DataTypes.DATE,
         allowNull: true
     },
 }, {

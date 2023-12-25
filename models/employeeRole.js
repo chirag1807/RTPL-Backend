@@ -1,8 +1,8 @@
-const { Sequelize, DataTypes } = require('sequelize');
-const sequelize = require('./../utils/database.config');
+const { DataTypes } = require('sequelize');
+const sequelize = require('../utils/config');
 
 // EmployeeRole model
-const EmployeeRole = sequelize.define('EmployeeRole', {
+const EmployeeRole = sequelize.define('EmployeeRoles', {
     name: {
       type: DataTypes.STRING,
       allowNull: false,
