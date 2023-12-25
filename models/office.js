@@ -3,22 +3,22 @@ const sequelize = require('../utils/config');
 const Company = require('./company');
 
 const Office = sequelize.define('Offices', {
-    officeID : {
-        type : DataTypes.INTEGER,
+    officeID: {
+        type: DataTypes.INTEGER,
         primaryKey: true,
-        autoIncrement:true,
+        autoIncrement: true,
     },
     companyID: {
         type: DataTypes.INTEGER,
         allowNull: true,
         references: {
-            model : Company,
-            key:'companyID',
+            model: Company,
+            key: 'companyID',
         },
     },
     Address: {
-       type: DataTypes.STRING,
-       allowNull: true,
+        type: DataTypes.STRING,
+        allowNull: true,
     },
     isActive: {
         type: DataTypes.BOOLEAN,
@@ -47,6 +47,6 @@ const Office = sequelize.define('Offices', {
     paranoid: true
 });
 
-Office.belongsTo(Company, { foreignKey: 'companyID', as: 'company' });
+Office.belongsTo(Company, { foreignKey: 'companyID', as: 'company', onDelete: 'CASCADE', });
 
 module.exports = Office;
