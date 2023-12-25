@@ -70,14 +70,14 @@ module.exports.getMeetingTypeByID = async (req, res) => {
         const { MeetingType } = req.app.locals.models;
         if(req.params){
             const { meetingTypeID } = req.params;
-            const meetingTypes = await MeetingType.findOne({
+            const meetingType = await MeetingType.findOne({
                 where: { meetingTypeID },
             });
         
-            if (meetingTypes) {
+            if (meetingType) {
               res.status(200).json({
                 message: "Meeting Type Fetched Successfully.",
-                meetings: meetingTypes,
+                meeting: meetingType,
               });
             } else {
               res.status(400).json({
@@ -119,6 +119,10 @@ module.exports.updateMeetingType = async (req, res) => {
             else{
                 res.status(400).json({message: "Meeting Type has not been Updated, Please Try Again Later."});
             }
+        }
+        else{
+            console.log("Invalid perameter");
+            res.status(400).json({ error: "Invalid perameter" });
         }   
     } catch (error) {
         console.error(error);
@@ -148,7 +152,11 @@ module.exports.deleteMeetingType = async (req, res) => {
             else{
                 res.status(400).json({message: "Meeting Type has not been Deleted, Please Try Again Later."});
             }
-        }   
+        }
+        else{
+            console.log("Invalid perameter");
+            res.status(400).json({ error: "Invalid perameter" });
+        } 
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: "Internal server error" });

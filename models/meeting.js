@@ -3,11 +3,11 @@ const sequelize = require('../utils/config');
 const Employee = require('./employee');
 const Office = require('./office');
 const RequestMeeting = require('./requestMeeting');
-const AppointmentMeeting = require('./appointmentMeeting');
-const OuterMeeting = require('./outerMeeting');
 const MeetingType = require('./meetingType');
 const MeetingMode = require('./meetingMode');
 const ConferenceRoom = require('./conferenceRoom');
+const AppointmentMeeting = require('./appointmentMeeting');
+const OuterMeeting = require('./outerMeeting');
 
 const Meeting = sequelize.define('Meetings', {
     meetingID: {
