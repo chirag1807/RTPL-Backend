@@ -1,21 +1,12 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../utils/config');
 const Employee = require('./employee');
-const Meeting = require('./meeting');
 
-const AppointmentMeeting = sequelize.define('AppointMeeting', {
+const AppointmentMeeting = sequelize.define('AppointmentMeeting', {
     appointmentMeetingID: {
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true
-    },
-    meetingID: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        references: {
-            model: Meeting,
-            key: 'meetingID'
-        }
     },
     empId: {
         type: DataTypes.INTEGER,
@@ -43,6 +34,5 @@ const AppointmentMeeting = sequelize.define('AppointMeeting', {
 });
 
 AppointmentMeeting.belongsTo(Employee, { foreignKey: 'empId', as: 'appointee' });
-AppointmentMeeting.belongsTo(Meeting, { foreignKey: 'meetingID', as: 'meeting' });
 
 module.exports = AppointmentMeeting;
