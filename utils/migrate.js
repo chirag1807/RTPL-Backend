@@ -2,7 +2,7 @@ const sequelize = require("./config");
 const Employee = require('../models/employee');
 const Meeting = require("../models/meeting");
 const Designation = require("../models/designation");
-// const InternalTeamSelect = require('../models/internalTeamSelect');
+const InternalTeamSelect = require('../models/internalTeamSelect');
     
 (async () => {
   try {
