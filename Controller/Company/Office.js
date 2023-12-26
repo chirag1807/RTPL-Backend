@@ -88,6 +88,58 @@ module.exports.getOfficesByCompany = async (req, res) => {
     }
 };
 
+module.exports.getOffices = async (req, res) => {
+    try {
+        const { Office } = req.app.locals.models;
+
+        const offices = await Office.findAll({});
+
+        if (offices) {
+            res.status(200).json({
+                message: "Offices Fetched Successfully.",
+                data: offices,
+            });
+        } else {
+            res.status(400).json({
+                message: "Offices Can't be Fetched, Please Try Again Later.",
+            });
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: error.message });
+    }
+}
+
+module.exports.getOfficeByID = async (req, res) => {
+    try {
+        const { Office } = req.app.locals.models;
+        if (req.params) {
+            const { officeID } = req.params;
+            const office = await Office.findOne({
+                where: { officeID },
+            });
+
+            if (office) {
+                res.status(200).json({
+                    message: "Office Fetched Successfully.",
+                    data: office,
+                });
+            } else {
+                res.status(400).json({
+                    message: "Office Can't be Fetched, Please Try Again Later.",
+                });
+            }
+        }
+        else {
+            console.log("Invalid perameter");
+            res.status(400).json({ error: "Invalid perameter" });
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: error.message });
+    }
+}
+
 module.exports.deleteOffice = async (req, res) => {
     try {
         const { Office } = req.app.locals.models;
