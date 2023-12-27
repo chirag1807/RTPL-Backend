@@ -8,6 +8,7 @@ const MeetingMode = require('./meetingMode');
 const ConferenceRoom = require('./conferenceRoom');
 const AppointmentMeeting = require('./appointmentMeeting');
 const OuterMeeting = require('./outerMeeting');
+const VisitorDetails = require('./reqMeetVisitorDetails');
 
 const Meeting = sequelize.define('Meetings', {
     meetingID: {
@@ -36,7 +37,7 @@ const Meeting = sequelize.define('Meetings', {
         allowNull: true,
         references: {
           model: RequestMeeting,
-          key: 'visitorID',
+          key: 'reqMeetingID',
         },
     },
     appointmentMeetingID: {
@@ -149,11 +150,12 @@ const Meeting = sequelize.define('Meetings', {
 
 Meeting.belongsTo(Employee, { foreignKey: 'empId', as: 'employee' });
 Meeting.belongsTo(Office, { foreignKey: 'officeID', as: 'office' });
-Meeting.belongsTo(RequestMeeting, { foreignKey: 'visitorID', as: 'requestMeeting' });
+Meeting.belongsTo(RequestMeeting, { foreignKey: 'reqMeetingID', as: 'requestMeeting' });
 Meeting.belongsTo(AppointmentMeeting, { foreignKey: 'appointmentMeetingID', as: 'appointmentMeeting'});
 Meeting.belongsTo(OuterMeeting, { foreignKey: 'outerMeetingID', as: 'outerMeeting' });
 Meeting.belongsTo(MeetingType, { foreignKey: 'meetingTypeID', as: 'meetingType' });
 Meeting.belongsTo(MeetingMode, { foreignKey: 'meetingModeID', as: 'meetingMode' });
 Meeting.belongsTo(ConferenceRoom, { foreignKey: 'conferenceRoomID', as: 'conferenceRoom' });
+RequestMeeting.hasMany(VisitorDetails, { foreignKey: 'reqMeetingID', as: 'visitorDetails' });
 
 module.exports = Meeting;

@@ -4,30 +4,10 @@ const Employee = require('./employee');
 const ReqMeetingDetailsByRecp = require('./reqMeetDetailsByRecp');
 
 const RequestMeeting = sequelize.define('RequestMeetings', {
-    visitorID: {
+    reqMeetingID: {
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true
-    },
-    vFirstName: {
-        type: DataTypes.STRING,
-        allowNull: false
-    },
-    vLastName: {
-        type: DataTypes.STRING,
-        allowNull: false
-    },
-    vDateOfBirth: {
-        type: DataTypes.DATEONLY,
-        allowNull: true
-    },
-    vAnniversaryDate: {
-        type: DataTypes.DATEONLY,
-        allowNull: true
-    },
-    vDesignation: {
-        type: DataTypes.STRING,
-        allowNull: false
     },
     vCompanyName: {
         type: DataTypes.STRING,
@@ -46,14 +26,6 @@ const RequestMeeting = sequelize.define('RequestMeetings', {
         allowNull: false
     },
     purposeOfMeerting: {
-        type: DataTypes.STRING,
-        allowNull: false
-    },
-    vImage: {
-        type: DataTypes.STRING,
-        allowNull: false
-    },
-    vIDDoc: {
         type: DataTypes.STRING,
         allowNull: false
     },
