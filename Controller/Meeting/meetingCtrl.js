@@ -29,33 +29,124 @@ module.exports.createMeeting = async (req, res) => {
   try {
     const { Meeting } = req.app.locals.models;
     if (req.body) {
-      // get value of CreatedBy
-      //   COMMON.setModelCreatedByFieldValue(req);
+      // Set value of createdBy, startedAt, stoppedAt, etc.
+      // COMMON.setModelCreatedByFieldValue(req);
+      // Set other necessary fields
 
       const createdMeeting = await Meeting.create(req.body, {
         fields: inputFieldsMeeting,
       });
 
       if (createdMeeting) {
-        //send mail to related person.
+        // Send mail to related person.
         res.status(200).json({
           message: "Your meeting has been created successfully.",
         });
       } else {
         res.status(400).json({
-          message:
-            "Sorry, Your meeting has not created, Please try again later.",
+          message: "Sorry, Your meeting has not been created. Please try again later.",
         });
       }
     } else {
-      console.log("Invalid perameter");
-      res.status(400).json({ error: "Invalid perameter" });
+      console.log("Invalid parameter");
+      res.status(400).json({ error: "Invalid parameter" });
     }
   } catch (error) {
     console.log(error);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: error.message });
   }
 };
+
+module.exports.startMeeting = async (req, res) => {
+  try {
+    const { Meeting, InternalTeamSelect } = req.app.locals.models;
+    const { meetingID, requestID, meetingStartTime, meetingEndTime, empIds } = req.body;
+
+    if (!meetingID || !requestID || !meetingStartTime || !meetingEndTime || !empIds || !Array.isArray(empIds) || empIds.length === 0) {
+      return res.status(400).json({ error: 'meetingID, requestID, meetingStartTime, meetingEndTime, and non-empty empIds array are required.' });
+    }
+
+    const existingMeeting = await Meeting.findByPk(meetingID);
+
+    if (!existingMeeting) {
+      return res.status(404).json({ error: 'Meeting not found.' });
+    }
+
+    existingMeeting.meetingStartTime = meetingStartTime;
+    existingMeeting.meetingEndTime = meetingEndTime;
+    existingMeeting.requestID = requestID;
+
+    await existingMeeting.save();
+
+    await Promise.all(empIds.map(async (empId) => {
+      await InternalTeamSelect.update(
+        { status: 'Accepted' },
+        { where: { meetingID, empId } }
+      );
+    }));
+
+    return res.status(200).json({ message: 'Meeting started successfully.', meeting: existingMeeting });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: error.message });
+  }
+};
+
+module.exports.rescheduleMeeting = async (req, res) => {
+  try {
+    const { Meeting } = req.app.locals.models;
+    const { meetingID, rescConferenceRoomId, rescMeetingDate, rescMeetingTime } = req.body;
+
+    if (!meetingID || !rescMeetingDate || !rescMeetingTime) {
+      return res.status(400).json({ error: 'Meeting ID, rescMeetingDate, and rescMeetingTime are required in the request body' });
+    }
+
+    const meeting = await Meeting.findByPk(meetingID);
+
+    if (!meeting) {
+      return res.status(404).json({ error: 'Meeting not found for the given ID' });
+    }
+
+    meeting.rescMeetingDate = rescMeetingDate;
+    meeting.rescMeetingStartTime = rescMeetingTime;
+    meeting.rescConferenceRoomID = rescConferenceRoomId;
+
+    meeting.isReschedule = true;
+
+    await meeting.save();
+
+    res.status(200).json({ message: 'Meeting has been rescheduled successfully.' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
+  }
+}
+
+module.exports.endMeeting = async (req, res) => {
+  try {
+    const { Meeting } = req.app.locals.models;
+    const { meetingID } = req.body;
+
+    if (!meetingID) {
+      return res.status(400).json({ error: 'Meeting ID is required in the request body' });
+    }
+
+    const meeting = await Meeting.findByPk(meetingID);
+
+    if (!meeting) {
+      return res.status(404).json({ error: 'Meeting not found for the given ID' });
+    }
+
+    meeting.stoppedAt = new Date();
+
+    await meeting.save();
+
+    res.status(200).json({ message: 'Meeting has ended successfully.' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
+  }
+}
 
 module.exports.getListOfCreatedMeeting = async (req, res) => {
   try {

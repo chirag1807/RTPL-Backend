@@ -8,6 +8,7 @@ const officeRouter = require('../Routes/officeRoute')
 const departmentRouter = require('../Routes/departmentRoute');
 const designationRouter = require('../Routes/designationRoute');
 const employeeRoleRouter = require('../Routes/employeeRoleRoute');
+const meetingRouter = require('../Routes/meetingRoute');
 
 router.use('/employee',employeeRoute);
 router.use('/visitor', visitorRoute);
@@ -15,6 +16,7 @@ router.use('/meetingtype', meetingTypeRouter);
 router.use('/meetingmode', meetingModeRouter);
 router.use('/company',comapanyRouter);
 router.use('/company/office',officeRouter);
+router.use('/meeting',meetingRouter);
 router.use('/department', departmentRouter);
 router.use('/designation', designationRouter);
 router.use('/role', employeeRoleRouter);
