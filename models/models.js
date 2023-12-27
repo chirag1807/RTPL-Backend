@@ -1,4 +1,4 @@
-const Designation = require('./Designation');
+const Designation = require('./designation');
 const Company = require('./company');
 const Department = require('./department');
 const Employee = require('./employee');
@@ -11,8 +11,8 @@ const Office = require('./office');
 const ReqMeetDetailsByRecp = require('./reqMeetDetailsByRecp');
 const AppointmentMeeting = require('./appointmentMeeting');
 const ConferenceRoom = require('./conferenceRoom');
-const InternalTeamSelect = require('./internalTeamSelect');
 const OuterMeeting = require('./outerMeeting');
+const InternalTeamSelect = require('./internalTeamSelect');
 
 module.exports = {
     Company,

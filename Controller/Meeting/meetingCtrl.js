@@ -53,9 +53,91 @@ module.exports.createMeeting = async (req, res) => {
     }
   } catch (error) {
     console.log(error);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: error.message });
   }
 };
+
+module.exports.startMeeting = async (req, res) => {
+  try {
+    const { Meeting } = req.app.locals.models;
+    const { meetingID, requestID, visitors, empIds } = req.body;
+
+    if (!meetingID || !requestID) {
+      return res.status(400).json({ error: 'meetingID and requestID are required.' });
+    }
+
+    const existingMeeting = await Meeting.findOne({ where: { meetingID } });
+
+    if (!existingMeeting) {
+      return res.status(404).json({ error: 'Meeting not found.' });
+    }
+
+    existingMeeting.visitorIDs = visitors;
+    existingMeeting.empIds = empIds;
+
+    await existingMeeting.save();
+
+    return res.status(200).json({ message: 'Meeting started successfully.', meeting: existingMeeting });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: error.message });
+  }
+};
+
+module.exports.rescheduleMeeting = async (req, res) => {
+  try {
+    const { Meeting } = req.app.locals.models;
+    const { meetingID, rescMeetingDate, rescMeetingTime } = req.body;
+
+    if (!meetingID || !rescMeetingDate || !rescMeetingTime) {
+      return res.status(400).json({ error: 'Meeting ID, rescMeetingDate, and rescMeetingTime are required in the request body' });
+    }
+
+    const meeting = await Meeting.findByPk(meetingID);
+
+    if (!meeting) {
+      return res.status(404).json({ error: 'Meeting not found for the given ID' });
+    }
+
+    meeting.rescMeetingDate = rescMeetingDate;
+    meeting.rescMeetingStartTime = rescMeetingTime;
+
+    meeting.isReschedule = true;
+
+    await meeting.save();
+
+    res.status(200).json({ message: 'Meeting has been rescheduled successfully.' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
+  }
+}
+
+module.exports.endMeeting = async (req, res) => {
+  try {
+    const { Meeting } = req.app.locals.models;
+    const { meetingID } = req.body;
+
+    if (!meetingID) {
+      return res.status(400).json({ error: 'Meeting ID is required in the request body' });
+    }
+
+    const meeting = await Meeting.findByPk(meetingID);
+
+    if (!meeting) {
+      return res.status(404).json({ error: 'Meeting not found for the given ID' });
+    }
+
+    meeting.stoppedAt = new Date();
+    
+    await meeting.save();
+
+    res.status(200).json({ message: 'Meeting has ended successfully.' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
+  }
+}
 
 module.exports.getListOfCreatedMeeting = async (req, res) => {
   try {

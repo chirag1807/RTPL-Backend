@@ -45,7 +45,7 @@ const RequestMeeting = sequelize.define('RequestMeetings', {
         type: DataTypes.STRING,
         allowNull: false
     },
-    purposeOfMeerting: {
+    purposeOfMeeting: {
         type: DataTypes.STRING,
         allowNull: false
     },
