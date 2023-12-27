@@ -97,7 +97,7 @@ module.exports.startMeeting = async (req, res) => {
 module.exports.rescheduleMeeting = async (req, res) => {
   try {
     const { Meeting } = req.app.locals.models;
-    const { meetingID, rescConferenceRoomId, rescMeetingDate, rescMeetingTime } = req.body;
+    const { meetingID, rescConferenceRoomId, rescMeetingDate, rescMeetingStartTime, rescMeetingEndTime } = req.body;
 
     if (!meetingID || !rescMeetingDate || !rescMeetingTime) {
       return res.status(400).json({ error: 'Meeting ID, rescMeetingDate, and rescMeetingTime are required in the request body' });
@@ -110,8 +110,9 @@ module.exports.rescheduleMeeting = async (req, res) => {
     }
 
     meeting.rescMeetingDate = rescMeetingDate;
-    meeting.rescMeetingStartTime = rescMeetingTime;
+    meeting.rescMeetingStartTime = rescMeetingStartTime;
     meeting.rescConferenceRoomID = rescConferenceRoomId;
+    meeting.rescMeetingEndTime = rescMeetingEndTime
 
     meeting.isReschedule = true;
 
@@ -140,6 +141,7 @@ module.exports.endMeeting = async (req, res) => {
     }
 
     meeting.stoppedAt = new Date();
+    meeting.isActive = false;
 
     await meeting.save();
 
