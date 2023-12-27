@@ -76,6 +76,8 @@ module.exports.startMeeting = async (req, res) => {
     existingMeeting.meetingEndTime = meetingEndTime;
     existingMeeting.requestID = requestID;
 
+    existingMeeting.isActive = true;
+
     await existingMeeting.save();
 
     await Promise.all(empIds.map(async (empId) => {
