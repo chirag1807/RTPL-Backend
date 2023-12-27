@@ -3,7 +3,7 @@ const sequelize = require('../utils/config');
 const Employee = require('./employee');
 const Meeting = require('./meeting');
 
-const InternalTeamSelect = sequelize.define('InternalTeams', {
+const InternalTeamSelect = sequelize.define('InternalTeamSelection', {
     internalTeamSelectID: {
         type: DataTypes.INTEGER,
         primaryKey: true,

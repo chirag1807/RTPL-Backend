@@ -2,23 +2,29 @@ const validator = require("validator");
 const SendEmailService = require("../../Middleware/emaiService");
 const nodemailer = require("nodemailer");
 const CONSTANT = require("../../constant/constant");
+const Sequelize = require("sequelize");
+
 const inputFieldsRequestmeeting = [
-  "vFirstName",
-  "vLastName",
-  "vDateOfBirth",
-  "vAnniversaryDate",
-  "vDesignation",
   "vCompanyName",
   "vCompanyAddress",
   "vCompanyContact",
   "vCompanyEmail",
   "purposeOfMeerting",
-  "vImage",
-  "vIDDoc",
   "empId",
   "reqMeetDetailsID",
   "ReqStatus",
   "DeclineReason",
+];
+
+const inputFieldsVisitorDetails = [
+  "reqMeetingID",
+  "vFirstName",
+  "vLastName",
+  "vDateOfBirth",
+  "vAnniversaryDate",
+  "vDesignation",
+  "vImage",
+  "vIDDoc",
 ];
 
 const inputFieldsRequestmeetingDetailsbyRecp = [
@@ -33,21 +39,42 @@ const inputFieldsRequestmeetingDetailsbyRecp = [
 
 module.exports.visitorRequestMeeting = async (req, res) => {
   try {
-    const { RequestMeeting } = req.app.locals.models;
+    const { RequestMeeting, ReqMeetVisitorDetails } = req.app.locals.models;
     if (req.body) {
       console.log(req.body);
       if (!validator.isEmail(req.body.vCompanyEmail)) {
         return res.status(400).json({ error: "Invalid email." });
       }
-      if (!validator.isMobilePhone(req.body.vCompanyContact.toString(), "any")) {
+      if (
+        !validator.isMobilePhone(req.body.vCompanyContact.toString(), "any")
+      ) {
         return res.status(400).json({ error: "Invalid phone number." });
       }
-      //save visitor icard and documents to s3 bucket.
-      const visitorRequestMeeting = await RequestMeeting.create(req.body, {
+
+      const requestMeeting = await RequestMeeting.create(req.body, {
         fields: inputFieldsRequestmeeting,
       });
-      if (visitorRequestMeeting) {
+
+      if (requestMeeting) {
         //send mail to company of visitor.
+
+        //save images to s3 bucket then replace url with request body data.
+
+        const updatedList = req.body.visitors.map((visitor) => ({
+          ...visitor,
+          reqMeetingID: requestMeeting.reqMeetingID,
+        }));
+
+        console.log(updatedList);
+
+        await Promise.all(
+          updatedList.map(async (visitor) => {
+            await ReqMeetVisitorDetails.create(visitor, {
+              fields: inputFieldsVisitorDetails,
+            });
+          })
+        );
+
         res.status(200).json({
           message: "Your meeting request has been registered successfully.",
         });
@@ -69,13 +96,18 @@ module.exports.visitorRequestMeeting = async (req, res) => {
 
 module.exports.getVisitorRequestMeeting = async (req, res) => {
   try {
-    const { RequestMeeting, Employee, ReqMeetDetailsByRecp } =
-      req.app.locals.models;
+    const {
+      RequestMeeting,
+      Employee,
+      ReqMeetDetailsByRecp,
+      ReqMeetVisitorDetails,
+    } = req.app.locals.models;
 
     const requestMeetings = await RequestMeeting.findAll({
       include: [
         { model: Employee, as: "employee" },
         { model: ReqMeetDetailsByRecp, as: "reqMeetDetailsByRecp" },
+        { model: ReqMeetVisitorDetails, required: false, as: "visitorDetails" },
       ],
     });
 
@@ -99,7 +131,7 @@ module.exports.saveTokenByReceptionist = async (req, res) => {
   try {
     const { RequestMeeting, ReqMeetDetailsByRecp } = req.app.locals.models;
     if (req.params && req.body) {
-      const { visitorID } = req.params;
+      const { reqMeetingID } = req.params;
       // get value of updatedBy
       // COMMON.setModelUpdatedByFieldValue(req);
 
@@ -108,7 +140,7 @@ module.exports.saveTokenByReceptionist = async (req, res) => {
       });
 
       if (reqMeetDetailsByRecp) {
-        const requestMeeting = await RequestMeeting.findByPk(visitorID);
+        const requestMeeting = await RequestMeeting.findByPk(reqMeetingID);
         if (requestMeeting) {
           requestMeeting.reqMeetDetailsID =
             reqMeetDetailsByRecp.reqMeetDetailsID;
@@ -117,19 +149,14 @@ module.exports.saveTokenByReceptionist = async (req, res) => {
             .status(200)
             .json({ message: "Data and token submited successfully.." });
         } else {
-          res
-            .status(400)
-            .json({
-              message: "ID you've passed is not exist in visitor registration.",
-            });
+          res.status(400).json({
+            message: "ID you've passed is not exist in visitor registration.",
+          });
         }
       } else {
-        res
-          .status(400)
-          .json({
-            message:
-              "Data and token can't be submitted, please try again later.",
-          });
+        res.status(400).json({
+          message: "Data and token can't be submitted, please try again later.",
+        });
       }
     } else {
       console.log("Invalid perameter");
@@ -143,7 +170,7 @@ module.exports.saveTokenByReceptionist = async (req, res) => {
 
 module.exports.getVisitorListByToken = async (req, res) => {
   try {
-    const { RequestMeeting, ReqMeetDetailsByRecp, Employee } =
+    const { RequestMeeting, ReqMeetDetailsByRecp, Employee, ReqMeetVisitorDetails } =
       req.app.locals.models;
     if (req.params) {
       const { TokenNumber } = req.params;
@@ -161,6 +188,7 @@ module.exports.getVisitorListByToken = async (req, res) => {
         include: [
           { model: Employee, as: "employee" },
           { model: ReqMeetDetailsByRecp, as: "reqMeetDetailsByRecp" },
+          { model: ReqMeetVisitorDetails, required: false, as: "visitorDetails" },
         ],
       });
 
@@ -188,22 +216,19 @@ module.exports.updateVisitorMeetingStatus = async (req, res) => {
   try {
     const { RequestMeeting } = req.app.locals.models;
     if (req.params && req.body) {
-      const { visitorID } = req.params;
+      const { reqMeetingID } = req.params;
       const { ReqStatus, DeclineReason } = req.body;
-      console.log(visitorID);
       // get value of updatedBy
       // COMMON.setModelUpdatedByFieldValue(req);
 
       const requestMeeting = await RequestMeeting.findOne({
-        where: { visitorID },
+        where: { reqMeetingID },
       });
 
       if (!requestMeeting) {
-        return res
-          .status(404)
-          .json({
-            error: "Request Meeting not found for the given visitorID.",
-          });
+        return res.status(404).json({
+          error: "Request Meeting not found for the given Request Meeting ID.",
+        });
       }
 
       const updatedReqMeeting = await requestMeeting.update({
@@ -220,12 +245,10 @@ module.exports.updateVisitorMeetingStatus = async (req, res) => {
           .status(200)
           .json({ message: "Status Updated successfully", updatedReqMeeting });
       } else {
-        res
-          .status(400)
-          .json({
-            message: "Status Can't be Updated, Please Try Again Later.",
-            updatedReqMeeting,
-          });
+        res.status(400).json({
+          message: "Status Can't be Updated, Please Try Again Later.",
+          updatedReqMeeting,
+        });
       }
     }
   } catch (error) {
@@ -236,7 +259,8 @@ module.exports.updateVisitorMeetingStatus = async (req, res) => {
 
 module.exports.getVisitorMeetingByEmpID = async (req, res) => {
   try {
-    const { RequestMeeting, Employee, ReqMeetDetailsByRecp } = req.app.locals.models;
+    const { RequestMeeting, Employee, ReqMeetDetailsByRecp, ReqMeetVisitorDetails } =
+      req.app.locals.models;
 
     if (req.params) {
       const { empId } = req.params;
@@ -246,6 +270,7 @@ module.exports.getVisitorMeetingByEmpID = async (req, res) => {
         include: [
           { model: Employee, as: "employee" },
           { model: ReqMeetDetailsByRecp, as: "reqMeetDetailsByRecp" },
+          { model: ReqMeetVisitorDetails, required: false, as: "visitorDetails" },
         ],
       });
 
@@ -266,34 +291,36 @@ module.exports.getVisitorMeetingByEmpID = async (req, res) => {
   }
 };
 
-module.exports.getVisitorMeetingByVisitorID = async (req, res) => {
-    try {
-      const { RequestMeeting, Employee, ReqMeetDetailsByRecp } = req.app.locals.models;
-  
-      if (req.params) {
-        const { visitorId } = req.params;
-  
-        const requestMeetings = await RequestMeeting.findAll({
-          where: { visitorId: visitorId },
-          include: [
-            { model: Employee, as: "employee" },
-            { model: ReqMeetDetailsByRecp, as: "reqMeetDetailsByRecp" },
-          ],
+module.exports.getVisitorMeetingByReqMeetingID = async (req, res) => {
+  try {
+    const { RequestMeeting, Employee, ReqMeetDetailsByRecp, ReqMeetVisitorDetails } =
+      req.app.locals.models;
+
+    if (req.params) {
+      const { reqMeetingID } = req.params;
+
+      const requestMeetings = await RequestMeeting.findAll({
+        where: { reqMeetingID: reqMeetingID },
+        include: [
+          { model: Employee, as: "employee" },
+          { model: ReqMeetDetailsByRecp, as: "reqMeetDetailsByRecp" },
+          { model: ReqMeetVisitorDetails, required: false, as: "visitorDetails" },
+        ],
+      });
+
+      if (requestMeetings) {
+        res.status(200).json({
+          message: "Request Meetings Fetched Successfully.",
+          meetings: requestMeetings,
         });
-  
-        if (requestMeetings) {
-          res.status(200).json({
-            message: "Request Meetings Fetched Successfully.",
-            meetings: requestMeetings,
-          });
-        } else {
-          res.status(400).json({
-            message: "Request Meetings Can't be Fetched.",
-          });
-        }
+      } else {
+        res.status(400).json({
+          message: "Request Meetings Can't be Fetched.",
+        });
       }
-    } catch (error) {
-      console.log(error);
-      res.status(500).json({ error: "Internal server error" });
     }
-  };
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
