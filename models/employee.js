@@ -59,6 +59,11 @@ const Employee = sequelize.define('Employees', {
     allowNull:false,
     defaultValue:false,
   },
+  isActive:{
+    type:DataTypes.BOOLEAN,
+    allowNull:false,
+    defaultValue:false,
+  },
   isDeleted: {
     type: DataTypes.BOOLEAN,
     allowNull: false,

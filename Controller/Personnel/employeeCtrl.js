@@ -238,7 +238,8 @@ module.exports.getNonAdminEmployees = async (req, res) => {
 
         const nonAdminEmployees = await Employee.findAll({
             where: {
-                isAdmin: false
+                isAdmin: false,
+                isActive: true
             }
         });
 
