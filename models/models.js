@@ -14,6 +14,7 @@ const ConferenceRoom = require('./conferenceRoom');
 const OuterMeeting = require('./outerMeeting');
 const InternalTeamSelect = require('./internalTeamSelect');
 const ReqMeetVisitorDetails = require('./reqMeetVisitorDetails');
+const EmailCode = require('./emailCode');
 
 module.exports = {
     Company,
@@ -32,4 +33,5 @@ module.exports = {
     InternalTeamSelect,
     OuterMeeting,
     ReqMeetVisitorDetails,
+    VerifyCode,
 }
