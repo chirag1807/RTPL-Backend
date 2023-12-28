@@ -25,16 +25,20 @@ const inputFieldsMeeting = [
   "createdBy",
 ];
 
-const inputFieldsInternalMembers = [
-  "empId",
-  "meetingID",
+const inputFieldOuterMeeting = [
+  "companyName",
+  "clientName",
+  "clientDesignation",
+  "clientContact",
+  "clientVenue",
 ];
 
-module.exports.createMeeting = async (req, res) => {
+const inputFieldsInternalMembers = ["empId", "meetingID"];
+
+module.exports.createRequestMeeting = async (req, res) => {
   try {
     const { Meeting, InternalTeamSelect } = req.app.locals.models;
     if (req.body) {
-      // Set value of createdBy, startedAt, stoppedAt, etc.
       // COMMON.setModelCreatedByFieldValue(req);
       // Set other necessary fields
 
@@ -59,11 +63,12 @@ module.exports.createMeeting = async (req, res) => {
         // Send mail to related person.
 
         res.status(200).json({
-          message: "Your meeting has been created successfully.",
+          message: "Your visitor meeting has been created successfully.",
         });
       } else {
         res.status(400).json({
-          message: "Sorry, Your meeting has not been created. Please try again later.",
+          message:
+            "Sorry, Your visitor meeting has not been created. Please try again later.",
         });
       }
     } else {
@@ -76,37 +81,252 @@ module.exports.createMeeting = async (req, res) => {
   }
 };
 
+module.exports.createOuterMeeting = async (req, res) => {
+  try {
+    const { Meeting, InternalTeamSelect, OuterMeeting } = req.app.locals.models;
+    if(req.body){
+      // COMMON.setModelCreatedByFieldValue(req);
+      // Set other necessary fields
+
+      const createOuterMeeting = await OuterMeeting.create(req.body.clientDetails, {
+        fields: inputFieldOuterMeeting,
+      });
+
+      if(createOuterMeeting){
+        const createdMeeting = await Meeting.create(req.body, {
+          fields: inputFieldsMeeting,
+        });
+  
+        if (createdMeeting) {
+
+          createdMeeting.outerMeetingID = createOuterMeeting.outerMeetingID;
+          await createdMeeting.save();
+  
+          // const updatedList = req.body.internalMembers.map((internalMember) => ({
+          //   ...internalMember,
+          //   meetingID: createdMeeting.meetingID,
+          // }));
+  
+          // await Promise.all(
+          //   updatedList.map(async (internalMember) => {
+          //     await InternalTeamSelect.create(internalMember, {
+          //       fields: inputFieldsInternalMembers,
+          //     });
+          //   })
+          // );
+  
+          // Send mail to related person.
+  
+          res.status(200).json({
+            message: "Your outer meeting has been created successfully.",
+          });
+        } else {
+          res.status(400).json({
+            message:
+              "Sorry, Your outer meeting has not been created. Please try again later.",
+          });
+        }
+      }
+      else{
+        res.status(400).json({
+          message:
+            "Sorry, Your outer meeting has not been created. Please try again later.",
+        });
+      }
+    }
+    else{
+      console.log("Invalid parameter");
+      res.status(400).json({ error: "Invalid parameter" });
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+module.exports.updateOuterMeetingStatus = async (req, res) => {
+  try {
+    const { OuterMeeting } = req.app.locals.models;
+    if (req.params && req.body) {
+      const { outerMeetingID } = req.params;
+      const { status, DeclineReason } = req.body;
+      // get value of updatedBy
+      // COMMON.setModelUpdatedByFieldValue(req);
+
+      const outerMeeting = await OuterMeeting.findOne({
+        where: { outerMeetingID },
+      });
+
+      if (!outerMeeting) {
+        return res.status(404).json({
+          error: "Outer Meeting not found for the given Outer Meeting ID.",
+        });
+      }
+
+      const updatedOuterMeeting = await outerMeeting.update({
+        status,
+        DeclineReason:
+          status === "Rejected" ? DeclineReason : null,
+      });
+
+      if (updatedOuterMeeting) {
+        res.status(200).json({ message: "Status Updated successfully", updatedOuterMeeting });
+      } else {
+        res.status(400).json({
+          message: "Status Can't be Updated, Please Try Again Later.",
+          updatedOuterMeeting,
+        });
+      }
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+module.exports.createAppointmentMeeting = async (req, res) => {
+  try {
+    const { Meeting, InternalTeamSelect, AppointmentMeeting } = req.app.locals.models;
+    if(req.body){
+      // COMMON.setModelCreatedByFieldValue(req);
+      // Set other necessary fields
+
+      const createAppointmentMeeting = await AppointmentMeeting.create(req.body.appointeeDetails);
+
+      if(createAppointmentMeeting){
+        const createdMeeting = await Meeting.create(req.body, {
+          fields: inputFieldsMeeting,
+        });
+  
+        if (createdMeeting) {
+
+          createdMeeting.appointmentMeetingID = createAppointmentMeeting.appointmentMeetingID;
+          await createdMeeting.save();
+  
+          // const updatedList = req.body.internalMembers.map((internalMember) => ({
+          //   ...internalMember,
+          //   meetingID: createdMeeting.meetingID,
+          // }));
+  
+          // await Promise.all(
+          //   updatedList.map(async (internalMember) => {
+          //     await InternalTeamSelect.create(internalMember, {
+          //       fields: inputFieldsInternalMembers,
+          //     });
+          //   })
+          // );
+  
+          // Send mail to related person.
+  
+          res.status(200).json({
+            message: "Your appointment meeting has been created successfully.",
+          });
+        } else {
+          res.status(400).json({
+            message:
+              "Sorry, Your appointment meeting has not been created. Please try again later.",
+          });
+        }
+      }
+      else{
+        res.status(400).json({
+          message:
+            "Sorry, Your appointment meeting has not been created. Please try again later.",
+        });
+      }
+    }
+    else{
+      console.log("Invalid parameter");
+      res.status(400).json({ error: "Invalid parameter" });
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+module.exports.updateAppointmentMeetingStatus = async (req, res) => {
+  try {
+    const { AppointmentMeeting } = req.app.locals.models;
+    if (req.params && req.body) {
+      const { appointmentMeetingID } = req.params;
+      const { status, DeclineReason } = req.body;
+      // get value of updatedBy
+      // COMMON.setModelUpdatedByFieldValue(req);
+
+      const appointmentMeeting = await AppointmentMeeting.findOne({
+        where: { appointmentMeetingID },
+      });
+
+      if (!appointmentMeeting) {
+        return res.status(404).json({
+          error: "Appointment Meeting not found for the given Outer Meeting ID.",
+        });
+      }
+
+      const updatedAppointmentMeeting = await appointmentMeeting.update({
+        status,
+        DeclineReason:
+          status === "Rejected" ? DeclineReason : null,
+      });
+
+      if (updatedAppointmentMeeting) {
+        res.status(200).json({ message: "Status Updated successfully", updatedAppointmentMeeting });
+      } else {
+        res.status(400).json({
+          message: "Status Can't be Updated, Please Try Again Later.",
+          updatedAppointmentMeeting,
+        });
+      }
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+
 module.exports.startMeeting = async (req, res) => {
   try {
     const { Meeting, InternalTeamSelect } = req.app.locals.models;
-    const { meetingID, requestID, meetingStartTime, meetingEndTime, empIds } = req.body;
+    const { meetingID, empIds } = req.body;
 
-    if (!meetingID || !requestID || !meetingStartTime || !meetingEndTime || !empIds || !Array.isArray(empIds) || empIds.length === 0) {
-      return res.status(400).json({ error: 'meetingID, requestID, meetingStartTime, meetingEndTime, and non-empty empIds array are required.' });
+    if (
+      !meetingID ||
+      !empIds ||
+      !Array.isArray(empIds) ||
+      empIds.length === 0
+    ) {
+      return res
+        .status(400)
+        .json({ error: "meetingID and non-empty empIds array are required." });
     }
 
     const existingMeeting = await Meeting.findByPk(meetingID);
 
     if (!existingMeeting) {
-      return res.status(404).json({ error: 'Meeting not found.' });
+      return res.status(404).json({ error: "Meeting not found." });
     }
 
-    existingMeeting.meetingStartTime = meetingStartTime;
-    existingMeeting.meetingEndTime = meetingEndTime;
-    existingMeeting.requestID = requestID;
-
+    existingMeeting.startedAt = new Date();
     existingMeeting.isActive = true;
 
     await existingMeeting.save();
 
-    await Promise.all(empIds.map(async (empId) => {
-      await InternalTeamSelect.update(
-        { status: 'Accepted' },
-        { where: { meetingID, empId } }
-      );
-    }));
+    await Promise.all(
+      empIds.map(async (empId) => {
+        await InternalTeamSelect.update(
+          { status: "Accepted" },
+          { where: { meetingID, empId } }
+        );
+      })
+    );
 
-    return res.status(200).json({ message: 'Meeting started successfully.', meeting: existingMeeting });
+    return res
+      .status(200)
+      .json({
+        message: "Meeting started successfully.",
+        meeting: existingMeeting,
+      });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: error.message });
@@ -116,33 +336,53 @@ module.exports.startMeeting = async (req, res) => {
 module.exports.rescheduleMeeting = async (req, res) => {
   try {
     const { Meeting } = req.app.locals.models;
-    const { meetingID, rescConferenceRoomId, rescMeetingDate, rescMeetingStartTime, rescMeetingEndTime } = req.body;
+    const {
+      meetingID,
+      rescConferenceRoomId,
+      rescMeetingDate,
+      rescMeetingStartTime,
+      rescMeetingEndTime,
+    } = req.body;
 
-    if (!meetingID || !rescMeetingDate || !rescMeetingTime) {
-      return res.status(400).json({ error: 'Meeting ID, rescMeetingDate, and rescMeetingTime are required in the request body' });
+    if (
+      !meetingID ||
+      !rescMeetingDate ||
+      !rescMeetingStartTime ||
+      !rescMeetingEndTime
+    ) {
+      return res
+        .status(400)
+        .json({
+          error:
+            "Meeting ID, rescMeetingDate, and rescMeetingTimes are required in the request body",
+        });
     }
 
     const meeting = await Meeting.findByPk(meetingID);
 
     if (!meeting) {
-      return res.status(404).json({ error: 'Meeting not found for the given ID' });
+      return res
+        .status(404)
+        .json({ error: "Meeting not found for the given ID" });
     }
 
     meeting.rescMeetingDate = rescMeetingDate;
     meeting.rescMeetingStartTime = rescMeetingStartTime;
     meeting.rescConferenceRoomID = rescConferenceRoomId;
-    meeting.rescMeetingEndTime = rescMeetingEndTime
+    meeting.rescMeetingEndTime = rescMeetingEndTime;
 
     meeting.isReschedule = true;
 
     await meeting.save();
 
-    res.status(200).json({ message: 'Meeting has been rescheduled successfully.' });
+    res
+      .status(200)
+      .json({ message: "Meeting has been rescheduled successfully." });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });
   }
-}
+};
 
 module.exports.endMeeting = async (req, res) => {
   try {
@@ -150,13 +390,17 @@ module.exports.endMeeting = async (req, res) => {
     const { meetingID } = req.body;
 
     if (!meetingID) {
-      return res.status(400).json({ error: 'Meeting ID is required in the request body' });
+      return res
+        .status(400)
+        .json({ error: "Meeting ID is required in the request body" });
     }
 
     const meeting = await Meeting.findByPk(meetingID);
 
     if (!meeting) {
-      return res.status(404).json({ error: 'Meeting not found for the given ID' });
+      return res
+        .status(404)
+        .json({ error: "Meeting not found for the given ID" });
     }
 
     meeting.stoppedAt = new Date();
@@ -164,12 +408,12 @@ module.exports.endMeeting = async (req, res) => {
 
     await meeting.save();
 
-    res.status(200).json({ message: 'Meeting has ended successfully.' });
+    res.status(200).json({ message: "Meeting has ended successfully." });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });
   }
-}
+};
 
 module.exports.getListOfCreatedMeeting = async (req, res) => {
   try {

@@ -3,7 +3,11 @@ const meetingController = require('../Controller/Meeting/meetingCtrl');
 const { authenticateToken } = require('../Middleware/auth');
 const router = express.Router();
 
-router.post('/create_meeting', meetingController.createMeeting);
+router.post('/create_request_meeting', meetingController.createRequestMeeting);
+router.post('/create_outer_meeting', meetingController.createOuterMeeting);
+router.put('/update_outer_meeting_status/:outerMeetingID', meetingController.updateOuterMeetingStatus);
+router.post('/create_appointment_meeting', meetingController.createAppointmentMeeting);
+router.put('/update_appointment_meeting_status/:appointmentMeetingID', meetingController.updateAppointmentMeetingStatus);
 router.post('/start-meeting', meetingController.startMeeting);
 router.post('/end-meeting', meetingController.endMeeting);
 router.post('/reschedule-meeting', meetingController.rescheduleMeeting);
