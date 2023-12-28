@@ -65,8 +65,6 @@ module.exports.visitorRequestMeeting = async (req, res) => {
           reqMeetingID: requestMeeting.reqMeetingID,
         }));
 
-        console.log(updatedList);
-
         await Promise.all(
           updatedList.map(async (visitor) => {
             await ReqMeetVisitorDetails.create(visitor, {
