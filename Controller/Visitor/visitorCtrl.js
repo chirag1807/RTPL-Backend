@@ -9,7 +9,7 @@ const inputFieldsRequestmeeting = [
   "vCompanyAddress",
   "vCompanyContact",
   "vCompanyEmail",
-  "purposeOfMeerting",
+  "purposeOfMeeting",
   "empId",
   "reqMeetDetailsID",
   "ReqStatus",
@@ -41,7 +41,6 @@ module.exports.visitorRequestMeeting = async (req, res) => {
   try {
     const { RequestMeeting, ReqMeetVisitorDetails } = req.app.locals.models;
     if (req.body) {
-      console.log(req.body);
       if (!validator.isEmail(req.body.vCompanyEmail)) {
         return res.status(400).json({ error: "Invalid email." });
       }

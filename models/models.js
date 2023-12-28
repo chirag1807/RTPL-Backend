@@ -31,5 +31,5 @@ module.exports = {
     ConferenceRoom,
     InternalTeamSelect,
     OuterMeeting,
-    ReqMeetVisitorDetails
+    ReqMeetVisitorDetails,
 }

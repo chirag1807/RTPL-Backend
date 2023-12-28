@@ -97,7 +97,7 @@ module.exports.startMeeting = async (req, res) => {
 module.exports.rescheduleMeeting = async (req, res) => {
   try {
     const { Meeting } = req.app.locals.models;
-    const { meetingID, rescConferenceRoomId, rescMeetingDate, rescMeetingTime } = req.body;
+    const { meetingID, rescConferenceRoomId, rescMeetingDate, rescMeetingStartTime, rescMeetingEndTime } = req.body;
 
     if (!meetingID || !rescMeetingDate || !rescMeetingTime) {
       return res.status(400).json({ error: 'Meeting ID, rescMeetingDate, and rescMeetingTime are required in the request body' });
@@ -110,7 +110,8 @@ module.exports.rescheduleMeeting = async (req, res) => {
     }
 
     meeting.rescMeetingDate = rescMeetingDate;
-    meeting.rescMeetingStartTime = rescMeetingTime;
+    meeting.rescMeetingStartTime = rescMeetingStartTime;
+    meeting.rescMeetingEndTime = rescMeetingEndTime;
     meeting.rescConferenceRoomID = rescConferenceRoomId;
 
     meeting.isReschedule = true;
@@ -140,6 +141,7 @@ module.exports.endMeeting = async (req, res) => {
     }
 
     meeting.stoppedAt = new Date();
+    meeting.isActive = false;
 
     await meeting.save();
 
@@ -241,5 +243,34 @@ module.exports.getCreatedMeetingByID = async (req, res) => {
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+module.exports.getMeetingTimesByConferenceRoom = async (req, res) => {
+  try {
+    const { Meeting } = req.app.locals.models;
+    const { conferenceRoomID } = req.params;
+    const { meetingDate } = req.query;
+
+    const whereClause = {
+      conferenceRoomID,
+      meetingDate: meetingDate ? meetingDate : new Date(),
+    };
+
+    console.log(whereClause);
+
+    const meetings = await Meeting.findAll({
+      where: whereClause,
+      attributes: ['meetingStartTime', 'meetingEndTime'],
+    });
+
+    if (!meetings || meetings.length === 0) {
+      return res.status(404).json({ message: 'No meetings found for the provided details.' });
+    }
+
+    res.status(200).json({ meetings });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
   }
 };
