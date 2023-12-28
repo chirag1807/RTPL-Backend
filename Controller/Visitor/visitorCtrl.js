@@ -9,7 +9,7 @@ const inputFieldsRequestmeeting = [
   "vCompanyAddress",
   "vCompanyContact",
   "vCompanyEmail",
-  "purposeOfMeerting",
+  "purposeOfMeeting",
   "empId",
   "reqMeetDetailsID",
   "ReqStatus",
