@@ -25,9 +25,14 @@ const inputFieldsMeeting = [
   "createdBy",
 ];
 
+const inputFieldsInternalMembers = [
+  "empId",
+  "meetingID",
+];
+
 module.exports.createMeeting = async (req, res) => {
   try {
-    const { Meeting } = req.app.locals.models;
+    const { Meeting, InternalTeamSelect } = req.app.locals.models;
     if (req.body) {
       // Set value of createdBy, startedAt, stoppedAt, etc.
       // COMMON.setModelCreatedByFieldValue(req);
@@ -38,7 +43,21 @@ module.exports.createMeeting = async (req, res) => {
       });
 
       if (createdMeeting) {
+        const updatedList = req.body.internalMembers.map((internalMember) => ({
+          ...internalMember,
+          meetingID: createdMeeting.meetingID,
+        }));
+
+        await Promise.all(
+          updatedList.map(async (internalMember) => {
+            await InternalTeamSelect.create(internalMember, {
+              fields: inputFieldsInternalMembers,
+            });
+          })
+        );
+
         // Send mail to related person.
+
         res.status(200).json({
           message: "Your meeting has been created successfully.",
         });
@@ -97,7 +116,7 @@ module.exports.startMeeting = async (req, res) => {
 module.exports.rescheduleMeeting = async (req, res) => {
   try {
     const { Meeting } = req.app.locals.models;
-    const { meetingID, rescConferenceRoomId, rescMeetingDate, rescMeetingTime } = req.body;
+    const { meetingID, rescConferenceRoomId, rescMeetingDate, rescMeetingStartTime, rescMeetingEndTime } = req.body;
 
     if (!meetingID || !rescMeetingDate || !rescMeetingTime) {
       return res.status(400).json({ error: 'Meeting ID, rescMeetingDate, and rescMeetingTime are required in the request body' });
@@ -110,8 +129,9 @@ module.exports.rescheduleMeeting = async (req, res) => {
     }
 
     meeting.rescMeetingDate = rescMeetingDate;
-    meeting.rescMeetingStartTime = rescMeetingTime;
+    meeting.rescMeetingStartTime = rescMeetingStartTime;
     meeting.rescConferenceRoomID = rescConferenceRoomId;
+    meeting.rescMeetingEndTime = rescMeetingEndTime
 
     meeting.isReschedule = true;
 
@@ -140,6 +160,7 @@ module.exports.endMeeting = async (req, res) => {
     }
 
     meeting.stoppedAt = new Date();
+    meeting.isActive = false;
 
     await meeting.save();
 
