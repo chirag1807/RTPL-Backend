@@ -415,6 +415,7 @@ module.exports.endMeeting = async (req, res) => {
   }
 };
 
+//notification of all created Meetings
 module.exports.getListOfCreatedMeeting = async (req, res) => {
   try {
     const {
@@ -506,5 +507,34 @@ module.exports.getCreatedMeetingByID = async (req, res) => {
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+module.exports.getMeetingTimesByConferenceRoom = async (req, res) => {
+  try {
+    const { Meeting } = req.app.locals.models;
+    const { conferenceRoomID } = req.params;
+    const { meetingDate } = req.query;
+
+    const whereClause = {
+      conferenceRoomID,
+      meetingDate: meetingDate ? meetingDate : new Date(),
+    };
+
+    console.log(whereClause);
+
+    const meetings = await Meeting.findAll({
+      where: whereClause,
+      attributes: ['meetingStartTime', 'meetingEndTime'],
+    });
+
+    if (!meetings || meetings.length === 0) {
+      return res.status(404).json({ message: 'No meetings found for the provided details.' });
+    }
+
+    res.status(200).json({ meetings });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
   }
 };
