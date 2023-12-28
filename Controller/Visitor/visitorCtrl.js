@@ -64,8 +64,6 @@ module.exports.visitorRequestMeeting = async (req, res) => {
           reqMeetingID: requestMeeting.reqMeetingID,
         }));
 
-        console.log(updatedList);
-
         await Promise.all(
           updatedList.map(async (visitor) => {
             await ReqMeetVisitorDetails.create(visitor, {
@@ -93,6 +91,7 @@ module.exports.visitorRequestMeeting = async (req, res) => {
   }
 };
 
+//notification for receptionist
 module.exports.getVisitorRequestMeeting = async (req, res) => {
   try {
     const {
@@ -211,6 +210,52 @@ module.exports.getVisitorListByToken = async (req, res) => {
   }
 };
 
+//notification for employee 
+module.exports.getVisitorListByCode = async (req, res) => {
+  try {
+    const { RequestMeeting, ReqMeetDetailsByRecp, Employee, ReqMeetVisitorDetails } =
+      req.app.locals.models;
+    if (req.params) {
+      const { emp_code } = req.params;
+
+      const reqMeetingDetails = await ReqMeetDetailsByRecp.findOne({
+        where: { emp_code },
+      });
+
+      if (!reqMeetingDetails) {
+        return res.status(404).json({ error: "Data not found" });
+      }
+
+      const reqMeeting = await RequestMeeting.findOne({
+        where: { reqMeetDetailsID: reqMeetingDetails.reqMeetDetailsID },
+        include: [
+          { model: Employee, as: "employee" },
+          { model: ReqMeetDetailsByRecp, as: "reqMeetDetailsByRecp" },
+          { model: ReqMeetVisitorDetails, required: false, as: "visitorDetails" },
+        ],
+      });
+
+      if (reqMeeting) {
+        res.status(200).json({
+          message: "Request Meeting Fetched Successfully.",
+          meetings: reqMeeting,
+        });
+      } else {
+        res.status(400).json({
+          message: "Request Meeting Can't be Fetched.",
+        });
+      }
+    } else {
+      console.log("Invalid perameter");
+      res.status(400).json({ error: "Invalid perameter" });
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+//update meeting schedule (accept or reject)
 module.exports.updateVisitorMeetingStatus = async (req, res) => {
   try {
     const { RequestMeeting } = req.app.locals.models;

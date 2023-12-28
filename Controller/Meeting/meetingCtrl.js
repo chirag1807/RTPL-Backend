@@ -25,9 +25,14 @@ const inputFieldsMeeting = [
   "createdBy",
 ];
 
+const inputFieldsInternalMembers = [
+  "empId",
+  "meetingID",
+];
+
 module.exports.createMeeting = async (req, res) => {
   try {
-    const { Meeting } = req.app.locals.models;
+    const { Meeting, InternalTeamSelect } = req.app.locals.models;
     if (req.body) {
       // Set value of createdBy, startedAt, stoppedAt, etc.
       // COMMON.setModelCreatedByFieldValue(req);
@@ -38,7 +43,21 @@ module.exports.createMeeting = async (req, res) => {
       });
 
       if (createdMeeting) {
+        const updatedList = req.body.internalMembers.map((internalMember) => ({
+          ...internalMember,
+          meetingID: createdMeeting.meetingID,
+        }));
+
+        await Promise.all(
+          updatedList.map(async (internalMember) => {
+            await InternalTeamSelect.create(internalMember, {
+              fields: inputFieldsInternalMembers,
+            });
+          })
+        );
+
         // Send mail to related person.
+
         res.status(200).json({
           message: "Your meeting has been created successfully.",
         });
@@ -60,10 +79,10 @@ module.exports.createMeeting = async (req, res) => {
 module.exports.startMeeting = async (req, res) => {
   try {
     const { Meeting, InternalTeamSelect } = req.app.locals.models;
-    const { meetingID, requestID, meetingStartTime, meetingEndTime, empIds } = req.body;
+    const { meetingID, empIds } = req.body;
 
-    if (!meetingID || !requestID || !meetingStartTime || !meetingEndTime || !empIds || !Array.isArray(empIds) || empIds.length === 0) {
-      return res.status(400).json({ error: 'meetingID, requestID, meetingStartTime, meetingEndTime, and non-empty empIds array are required.' });
+    if (!meetingID || !empIds || !Array.isArray(empIds) || empIds.length === 0) {
+      return res.status(400).json({ error: 'meetingID and non-empty empIds array are required.' });
     }
 
     const existingMeeting = await Meeting.findByPk(meetingID);
@@ -72,9 +91,7 @@ module.exports.startMeeting = async (req, res) => {
       return res.status(404).json({ error: 'Meeting not found.' });
     }
 
-    existingMeeting.meetingStartTime = meetingStartTime;
-    existingMeeting.meetingEndTime = meetingEndTime;
-    existingMeeting.requestID = requestID;
+    existingMeeting.startedAt = new Date();
 
     existingMeeting.isActive = true;
 
@@ -99,7 +116,7 @@ module.exports.rescheduleMeeting = async (req, res) => {
     const { Meeting } = req.app.locals.models;
     const { meetingID, rescConferenceRoomId, rescMeetingDate, rescMeetingStartTime, rescMeetingEndTime } = req.body;
 
-    if (!meetingID || !rescMeetingDate || !rescMeetingTime) {
+    if (!meetingID || !rescMeetingDate || !rescMeetingStartTime || !rescMeetingEndTime) {
       return res.status(400).json({ error: 'Meeting ID, rescMeetingDate, and rescMeetingTime are required in the request body' });
     }
 
@@ -111,8 +128,8 @@ module.exports.rescheduleMeeting = async (req, res) => {
 
     meeting.rescMeetingDate = rescMeetingDate;
     meeting.rescMeetingStartTime = rescMeetingStartTime;
-    meeting.rescMeetingEndTime = rescMeetingEndTime;
     meeting.rescConferenceRoomID = rescConferenceRoomId;
+    meeting.rescMeetingEndTime = rescMeetingEndTime
 
     meeting.isReschedule = true;
 

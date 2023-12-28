@@ -54,6 +54,11 @@ const Employee = sequelize.define('Employees', {
     type: DataTypes.STRING,
     allowNull: false
   },
+  isAdmin:{
+    type:DataTypes.BOOLEAN,
+    allowNull:false,
+    defaultValue:false,
+  },
   isDeleted: {
     type: DataTypes.BOOLEAN,
     allowNull: false,

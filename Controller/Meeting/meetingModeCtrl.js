@@ -120,6 +120,10 @@ module.exports.updateMeetingMode = async (req, res) => {
             else{
                 res.status(400).json({message: "Meeting Mode has not been Updated, Please Try Again Later."});
             }
+        }
+        else{
+            console.log("Invalid perameter");
+            res.status(400).json({ error: "Invalid perameter" });
         }   
     } catch (error) {
         console.error(error);

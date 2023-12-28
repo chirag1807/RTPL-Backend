@@ -8,7 +8,7 @@ router.post('/start-meeting', meetingController.startMeeting);
 router.post('/end-meeting', meetingController.endMeeting);
 router.post('/reschedule-meeting', meetingController.rescheduleMeeting);
 router.get('/get_meeting_ByCnfRoom/:conferenceRoomID',meetingController.getMeetingTimesByConferenceRoom);
-// router.get('/get_meeting_list', meetingController.getListOfCreatedMeeting);
-// router.get('/get_meeting_ById/:meetingID', meetingController);
+router.get('/get_meeting_list', meetingController.getListOfCreatedMeeting);
+router.get('/get_meeting_ById/:meetingID', meetingController.getCreatedMeetingByID);
 
 module.exports = router;

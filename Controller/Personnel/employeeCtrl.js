@@ -128,32 +128,24 @@ module.exports.employeeRegistration = async (req, res) => {
 module.exports.updateEmployee = async (req, res) => {
     try {
         const { Employee } = req.app.locals.models;
-        if (req.params.id) {
-            const empID = req.params.id;
-            // get value of CreatedBy 
-            COMMON.setModelUpdatedByFieldValue(req);
-            return await Employee.update(req.body, {
-                where: {
-                    empID: empID
-                },
-                fields: inputFieldsEmployee
-            }).then(() => {
-                // Return a success response
-                res.status(200).json({ message: 'Employee registered successfully' });
-            }).catch((error) => {
-                console.error('An error occurred:', error);
-                // Return an error response
-                res.status(500).json({ error: 'Internal server error' });
-            });
-        } else {
-            console.log('Invalid perameter');
-            // Return an error response indicating missing data
-            res.status(400).json({ error: 'Invalid perameter' });
+        const { id } = req.params;
+
+        const employeeExists = await Employee.findByPk(id);
+        if (!employeeExists) {
+            return res.status(404).json({ error: `Employee with id ${id} not found` });
         }
+
+        COMMON.setModelUpdatedByFieldValue(req);
+
+        await Employee.update(req.body, {
+            where: { empID: id },
+            fields: inputFieldsEmployee
+        });
+
+        res.status(200).json({ message: 'Employee updated successfully' });
     } catch (error) {
         console.error('An error occurred:', error);
-        // Return an error response
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ error: error.message });
     }
 }
 
@@ -165,12 +157,15 @@ module.exports.deleteEmployee = async (req, res) => {
             const empID = req.params.id;
             const employeeDetails = await Employee.findByPk(empID);
             if (employeeDetails) {
-                await employeeDetails.update({ isDeleted: 1, deletedBy: req.user.empID })
+                await employeeDetails.update({
+                    isDeleted: 1,
+                    // deletedBy: req.user.empID  //pending to set deletion id of person
+                })
                 await employeeDetails.destroy();
                 // Return a success response
                 res.json({ message: 'Employee deleted successfully.' });
             } else {
-                res.status(404).json({ error: 'Employee not found.' });
+                res.status(404).json({ error: `Employee with id ${empID} not found.` });
             }
 
         } else {
@@ -181,7 +176,7 @@ module.exports.deleteEmployee = async (req, res) => {
     } catch (error) {
         console.error('An error occurred:', error);
         // Return an error response
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ error: error.message });
     }
 };
 
@@ -235,3 +230,25 @@ module.exports.changePassword = async (req, res) => {
 
     }
 };
+
+//get All Employees
+module.exports.getNonAdminEmployees = async (req, res) => {
+    try {
+        const { Employee } = req.app.locals.models;
+
+        const nonAdminEmployees = await Employee.findAll({
+            where: {
+                isAdmin: false
+            }
+        });
+
+        if (nonAdminEmployees.length === 0) {
+            return res.status(404).json({ message: 'No employees found' });
+        }
+
+        res.status(200).json({ message: "Employees Fetched Successfully.", data: nonAdminEmployees });
+    } catch (error) {
+        console.error('An error occurred:', error);
+        res.status(500).json({ error: error.message });
+    }
+}
