@@ -16,4 +16,10 @@ router.delete('/:id',
     // authenticateToken,
     employeeController.deleteEmployee);
 
+router.post('/forgotPassword', employeeController.forgotPassword);
+
+router.post('/sendCode', employeeController.sendCode);
+
+router.post('/verifyCode', employeeController.verifyCode);
+
 module.exports = router;
