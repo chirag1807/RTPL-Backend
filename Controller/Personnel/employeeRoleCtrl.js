@@ -49,7 +49,38 @@ module.exports.getEmployeeRoles = async (req, res) => {
     try {
         const { EmployeeRole } = req.app.locals.models;
 
-        const employeeRoles = await EmployeeRole.findAll({});
+        let { page, pageSize, sort, sortBy, searchField, isActive } = req.query;
+
+    page = Math.max(1, parseInt(page, 10)) || 1;
+    pageSize = Math.max(1, parseInt(pageSize, 10)) || 10;
+
+    const offset = (page - 1) * pageSize;
+
+    // Ensure sortOrder is either 'ASC' or 'DESC', default to 'ASC' if undefined
+    sort = sort ? sort.toUpperCase() : "ASC";
+
+    const queryOptions = {
+      limit: pageSize,
+      offset: offset,
+    };
+
+    if (sortBy) {
+      queryOptions.order = [[sortBy, sort]];
+    }
+
+    if (
+      searchField &&
+      typeof searchField === "string" &&
+      searchField.trim() !== ""
+    ) {
+      queryOptions.where = {
+        [Op.or]: [{ role: { [Op.like]: `%${searchField}%` } }],
+      };
+    }
+
+    queryOptions.where = { ...queryOptions.where, isActive: isActive ? isActive : true };
+
+    const employeeRoles = await EmployeeRole.findAll(queryOptions);
 
         if (employeeRoles) {
             res.status(200).json({
@@ -74,7 +105,10 @@ module.exports.getEmployeeRoleByID = async (req, res) => {
             const { roleID } = req.params;
             console.log(req.params);
             const employeeRole = await EmployeeRole.findOne({
-                where: { roleID },
+                where: { 
+                    roleID,
+                    // isActive: true,
+                },
             });
 
             if (employeeRole) {

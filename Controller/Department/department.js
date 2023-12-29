@@ -49,7 +49,38 @@ module.exports.getDepartments = async (req, res) => {
   try {
     const { Department } = req.app.locals.models;
 
-    const departments = await Department.findAll({});
+    let { page, pageSize, sort, sortBy, searchField, isActive } = req.query;
+
+    page = Math.max(1, parseInt(page, 10)) || 1;
+    pageSize = Math.max(1, parseInt(pageSize, 10)) || 10;
+
+    const offset = (page - 1) * pageSize;
+
+    // Ensure sortOrder is either 'ASC' or 'DESC', default to 'ASC' if undefined
+    sort = sort ? sort.toUpperCase() : "ASC";
+
+    const queryOptions = {
+      limit: pageSize,
+      offset: offset,
+    };
+
+    if (sortBy) {
+      queryOptions.order = [[sortBy, sort]];
+    }
+
+    if (
+      searchField &&
+      typeof searchField === "string" &&
+      searchField.trim() !== ""
+    ) {
+      queryOptions.where = {
+        [Op.or]: [{ department: { [Op.like]: `%${searchField}%` } }],
+      };
+    }
+
+    queryOptions.where = { ...queryOptions.where, isActive: isActive ? isActive : true };
+
+    const departments = await Department.findAll(queryOptions);
 
     if (departments) {
       res.status(200).json({
@@ -68,33 +99,35 @@ module.exports.getDepartments = async (req, res) => {
 }
 
 module.exports.getDepartmentByID = async (req, res) => {
-  try {
-    const { Department } = req.app.locals.models;
-    if (req.params) {
-      const { departmentID } = req.params;
-      const department = await Department.findOne({
-        where: { departmentID },
-      });
-
-      if (department) {
-        res.status(200).json({
-          message: "Department Fetched Successfully.",
-          department: department,
-        });
-      } else {
-        res.status(400).json({
-          message: "Department Can't be Fetched, Please Try Again Later.",
-        });
-      }
+    try {
+        const { Department } = req.app.locals.models;
+        if(req.params){
+            const { departmentID } = req.params;
+            const department = await Department.findOne({
+                where: { departmentID,
+                  //  isActive: true
+                  },
+            });
+        
+            if (department) {
+              res.status(200).json({
+                message: "Department Fetched Successfully.",
+                department: department,
+              });
+            } else {
+              res.status(400).json({
+                message: "Department Can't be Fetched, Please Try Again Later.",
+              });
+            }
+        }
+        else{
+            console.log("Invalid perameter");
+            res.status(400).json({ error: "Invalid perameter" });
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Internal server error" });
     }
-    else {
-      console.log("Invalid perameter");
-      res.status(400).json({ error: "Invalid perameter" });
-    }
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: error.message });
-  }
 }
 
 module.exports.updateDepartment = async (req, res) => {

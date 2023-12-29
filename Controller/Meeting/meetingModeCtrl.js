@@ -49,7 +49,37 @@ module.exports.getMeetingModes = async (req, res) => {
     try {
         const { MeetingMode } = req.app.locals.models;
 
-        const meetingModes = await MeetingMode.findAll({});
+        let { page, pageSize, sort, sortBy, searchField, isActive } = req.query;
+
+    page = Math.max(1, parseInt(page, 10)) || 1;
+    pageSize = Math.max(1, parseInt(pageSize, 10)) || 10;
+
+    const offset = (page - 1) * pageSize;
+
+    sort = sort ? sort.toUpperCase() : "ASC";
+
+    const queryOptions = {
+      limit: pageSize,
+      offset: offset,
+    };
+
+    if (sortBy) {
+      queryOptions.order = [[sortBy, sort]];
+    }
+
+    if (
+      searchField &&
+      typeof searchField === "string" &&
+      searchField.trim() !== ""
+    ) {
+      queryOptions.where = {
+        [Op.or]: [{ meetingMode: { [Op.like]: `%${searchField}%` } }],
+      };
+    }
+
+    queryOptions.where = { ...queryOptions.where, isActive: isActive ? isActive : true };
+
+    const meetingModes = await MeetingMode.findAll(queryOptions);
 
         if (meetingModes) {
             res.status(200).json({
@@ -74,7 +104,9 @@ module.exports.getMeetingModeByID = async (req, res) => {
             const { meetingModeID } = req.params;
             console.log(req.params);
             const meetingModes = await MeetingMode.findOne({
-                where: { meetingModeID },
+                where: { meetingModeID,
+                    // isActive: true,
+                },
             });
 
             if (meetingModes) {

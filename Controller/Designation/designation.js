@@ -50,9 +50,43 @@ module.exports.getDesignations = async (req, res) => {
     try {
         const { Department, Designation } = req.app.locals.models;
 
-        const designations = await Designation.findAll({
-            include: { model: Department, as: "department" },
+        let { page, pageSize, sort, sortBy, searchField, isActive } = req.query;
+
+        page = Math.max(1, parseInt(page, 10)) || 1;
+        pageSize = Math.max(1, parseInt(pageSize, 10)) || 10;
+
+        const offset = (page - 1) * pageSize;
+
+        sort = sort ? sort.toUpperCase() : "ASC";
+
+        const queryOptions = {
+            limit: pageSize,
+            offset: offset,
+            include: [],
+        };
+
+        if (sortBy) {
+            queryOptions.order = [[sortBy, sort]];
+        }
+
+        if (
+            searchField &&
+            typeof searchField === "string" &&
+            searchField.trim() !== ""
+        ) {
+            queryOptions.where = {
+                [Op.or]: [{ designation: { [Op.like]: `%${searchField}%` } }],
+            };
+        }
+
+        queryOptions.include.push({
+            model: Department,
+            as: "department"
         });
+
+        queryOptions.where = { ...queryOptions.where, isActive: isActive ? isActive : true };
+
+        const designations = await Designation.findAll(queryOptions);
 
         if (designations) {
             res.status(200).json({
@@ -72,11 +106,17 @@ module.exports.getDesignations = async (req, res) => {
 
 module.exports.getDesignationByID = async (req, res) => {
     try {
-        const { Designation } = req.app.locals.models;
+        const { Designation, Department } = req.app.locals.models;
         if (req.params) {
             const { designationID } = req.params;
             const designation = await Designation.findOne({
-                where: { designationID },
+                where: {
+                    designationID,
+                    // isActive: true
+                },
+                include: [
+                    { model: Department, as: "department" },
+                ]
             });
 
             if (designation) {
@@ -116,6 +156,7 @@ module.exports.updateDesignation = async (req, res) => {
             }
             req.body.updatedBy = updatedBy;
             const updatedDesignation = await Designation.update(req.body, {
+                where: { designationID },
                 fields: inputFieldsDesignation,
             });
 

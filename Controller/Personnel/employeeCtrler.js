@@ -87,41 +87,82 @@ module.exports.deleteEmployee = async (req, res) => {
 //get All Employees
 module.exports.getNonAdminEmployees = async (req, res) => {
   try {
-    const { Employee, Company, Office, Department, Designation, EmployeeRole } = req.app.locals.models;
+    const { Employee, Company, Office, Department, Designation, EmployeeRole } =
+      req.app.locals.models;
 
-    const nonAdminEmployees = await Employee.findAll({
-      where: {
-        isAdmin: false,
-        isActive: true,
+    let { page, pageSize, sort, sortBy, searchField, isActive } = req.query;
+
+    page = Math.max(1, parseInt(page, 10)) || 1;
+    pageSize = Math.max(1, parseInt(pageSize, 10)) || 10;
+
+    const offset = (page - 1) * pageSize;
+
+    sort = sort ? sort.toUpperCase() : "ASC";
+
+    const queryOptions = {
+      limit: pageSize,
+      offset: offset,
+      include: [],
+    };
+
+    if (sortBy) {
+      queryOptions.order = [[sortBy, sort]];
+    }
+
+    if (
+      searchField &&
+      typeof searchField === "string" &&
+      searchField.trim() !== ""
+    ) {
+      queryOptions.where = {
+        [Op.or]: [
+          { aadharNumber: { [Op.like]: `%${searchField}%` } },
+          { firstName: { [Op.like]: `%${searchField}%` } },
+          { lastName: { [Op.like]: `%${searchField}%` } },
+          { emp_code: { [Op.like]: `%${searchField}%` } },
+          { birthDate: { [Op.like]: `%${searchField}%` } },
+          { joiningDate: { [Op.like]: `%${searchField}%` } },
+          { email: { [Op.like]: `%${searchField}%` } },
+          { phone: { [Op.like]: `%${searchField}%` } },
+        ],
+      };
+    }
+
+    queryOptions.include.push(
+      {
+        model: Company,
+        as: "companyDetails",
+        attributes: ["companyID", "Name", "contact", "email", "isDeleted"],
       },
-      include: [
-        {
-          model: Company,
-          as: 'companyDetails',
-          attributes: ['companyID', 'Name', 'contact', 'email', 'isDeleted'],
-        },
-        {
-          model: Office,
-          as: 'officeDetails',
-          attributes: ['officeID', 'Address', 'companyID', 'isDeleted'],
-        },
-        {
-          model: Department,
-          as: 'employeeDepartment',
-          attributes: ['departmentID', 'department', 'isDeleted'],
-        },
-        {
-          model: Designation,
-          as: 'employeeDesignation',
-          attributes: ['designationID', 'designation', 'isDeleted'],
-        },
-        {
-          model: EmployeeRole,
-          as: 'role',
-          attributes: ['roleID', 'role', 'isDeleted'],
-        },
-      ],
-    });
+      {
+        model: Office,
+        as: "officeDetails",
+        attributes: ["officeID", "Address", "companyID", "isDeleted"],
+      },
+      {
+        model: Department,
+        as: "employeeDepartment",
+        attributes: ["departmentID", "department", "isDeleted"],
+      },
+      {
+        model: Designation,
+        as: "employeeDesignation",
+        attributes: ["designationID", "designation", "isDeleted"],
+      },
+      {
+        model: EmployeeRole,
+        as: "role",
+        attributes: ["roleID", "role", "isDeleted"],
+      }
+    );
+
+    queryOptions.where = {
+      ...queryOptions.where,
+      isActive: isActive ? isActive : true,
+      isAdmin: false,
+    };
+
+    const nonAdminEmployees = await Employee.findAll(queryOptions);
 
     if (nonAdminEmployees.length === 0) {
       return res.status(404).json({ message: "No employees found" });
@@ -140,40 +181,41 @@ module.exports.getNonAdminEmployees = async (req, res) => {
 //get Employee By Id
 module.exports.getNonAdminEmployeesById = async (req, res) => {
   try {
-    const { Employee, Company, Office, Department, Designation, EmployeeRole } = req.app.locals.models;
+    const { Employee, Company, Office, Department, Designation, EmployeeRole } =
+      req.app.locals.models;
     const { empID } = req.params;
 
     const nonAdminEmployees = await Employee.findAll({
       where: {
         isAdmin: false,
-        isActive: true,
+        // isActive: true,
         empID: empID,
       },
       include: [
         {
           model: Company,
-          as: 'companyDetails',
-          attributes: ['companyID', 'Name', 'contact', 'email', 'isDeleted'],
+          as: "companyDetails",
+          attributes: ["companyID", "Name", "contact", "email", "isDeleted"],
         },
         {
           model: Office,
-          as: 'officeDetails',
-          attributes: ['officeID', 'Address', 'companyID', 'isDeleted'],
+          as: "officeDetails",
+          attributes: ["officeID", "Address", "companyID", "isDeleted"],
         },
         {
           model: Department,
-          as: 'employeeDepartment',
-          attributes: ['departmentID', 'department', 'isDeleted'],
+          as: "employeeDepartment",
+          attributes: ["departmentID", "department", "isDeleted"],
         },
         {
           model: Designation,
-          as: 'employeeDesignation',
-          attributes: ['designationID', 'designation', 'isDeleted'],
+          as: "employeeDesignation",
+          attributes: ["designationID", "designation", "isDeleted"],
         },
         {
           model: EmployeeRole,
-          as: 'role',
-          attributes: ['roleID', 'role', 'isDeleted'],
+          as: "role",
+          attributes: ["roleID", "role", "isDeleted"],
         },
       ],
     });

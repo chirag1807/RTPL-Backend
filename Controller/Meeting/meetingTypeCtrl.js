@@ -1,7 +1,7 @@
-const validator = require('validator');
-const COMMON = require('../../Common/common');
-const { createAccessToken } = require('../../Middleware/auth');
-const CONSTANT = require('../../constant/constant');
+const validator = require("validator");
+const COMMON = require("../../Common/common");
+const { createAccessToken } = require("../../Middleware/auth");
+const CONSTANT = require("../../constant/constant");
 
 const inputFieldsMeetingType = [
     "meetingType",
@@ -49,7 +49,40 @@ module.exports.getMeetingTypes = async (req, res) => {
     try {
         const { MeetingType } = req.app.locals.models;
 
-        const meetingTypes = await MeetingType.findAll({});
+        let { page, pageSize, sort, sortBy, searchField, isActive } = req.query;
+
+        page = Math.max(1, parseInt(page, 10)) || 1;
+        pageSize = Math.max(1, parseInt(pageSize, 10)) || 10;
+
+        const offset = (page - 1) * pageSize;
+
+        sort = sort ? sort.toUpperCase() : "ASC";
+
+        const queryOptions = {
+            limit: pageSize,
+            offset: offset,
+        };
+
+        if (sortBy) {
+            queryOptions.order = [[sortBy, sort]];
+        }
+
+        if (
+            searchField &&
+            typeof searchField === "string" &&
+            searchField.trim() !== ""
+        ) {
+            queryOptions.where = {
+                [Op.or]: [{ meetingType: { [Op.like]: `%${searchField}%` } }],
+            };
+        }
+
+        queryOptions.where = {
+            ...queryOptions.where,
+            isActive: isActive ? isActive : true,
+        };
+
+        const meetingTypes = await MeetingType.findAll(queryOptions);
 
         if (meetingTypes) {
             res.status(200).json({
@@ -74,6 +107,7 @@ module.exports.getMeetingTypeByID = async (req, res) => {
             const { meetingTypeID } = req.params;
             const meetingType = await MeetingType.findOne({
                 where: { meetingTypeID },
+                // isActive: true,
             });
 
             if (meetingType) {
@@ -100,17 +134,17 @@ module.exports.getMeetingTypeByID = async (req, res) => {
 module.exports.updateMeetingType = async (req, res) => {
     try {
         const { MeetingType } = req.app.locals.models;
-        const updatedBy = req.decodedEmpCode;
         // get value of updatedBy
         // COMMON.setModelUpdatedByFieldValue(req);
         if (req.params && req.body) {
             const { meetingTypeID } = req.params;
-            req.body.updatedBy = updatedBy;
 
             const meetingType = await MeetingType.findByPk(meetingTypeID);
 
             if (!meetingType) {
-                return res.status(404).json({ error: 'MeetingType not found for the given ID' });
+                return res
+                    .status(404)
+                    .json({ error: "MeetingType not found for the given ID" });
             }
 
             const updatedMeetingType = await meetingType.update(req.body, {
@@ -130,14 +164,13 @@ module.exports.updateMeetingType = async (req, res) => {
         }
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: "Internal server error" });
     }
 }
 
 module.exports.deleteMeetingType = async (req, res) => {
     try {
         const { MeetingType } = req.app.locals.models;
-        const updatedBy = req.decodedEmpCode;
         // get value of deletedBy
         // COMMON.setModelDeletedByFieldValue(req);
         if (req.params) {
@@ -146,7 +179,9 @@ module.exports.deleteMeetingType = async (req, res) => {
             const meetingType = await MeetingType.findByPk(meetingTypeID);
 
             if (!meetingType) {
-                return res.status(404).json({ error: 'MeetingType not found for the given ID' });
+                return res
+                    .status(404)
+                    .json({ error: "MeetingType not found for the given ID" });
             }
 
             const updatedMeetingType = await meetingType.update({ deletedBy: updatedBy, isDeleted: true, isActive: false });
@@ -159,16 +194,14 @@ module.exports.deleteMeetingType = async (req, res) => {
                 else {
                     res.status(400).json({ message: "Meeting Type has not been Deleted, Please Try Again Later." });
                 }
-            } else {
-                res.status(400).json({ message: "Meeting Type has not been Deleted, Please Try Again Later." });
             }
-        }
-        else {
-            console.log("Invalid perameter");
-            res.status(400).json({ error: "Invalid perameter" });
+            else {
+                console.log("Invalid perameter");
+                res.status(400).json({ error: "Invalid perameter" });
+            }
         }
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: "Internal server error" });
     }
 }

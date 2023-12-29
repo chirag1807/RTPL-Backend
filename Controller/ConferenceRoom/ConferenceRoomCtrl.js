@@ -44,9 +44,44 @@ module.exports.addConferenceRoom = async (req, res) => {
 
 module.exports.getConferenceRooms = async (req, res) => {
   try {
-    const { ConferenceRoom } = req.app.locals.models;
+    const { Office, ConferenceRoom } = req.app.locals.models;
 
-    const conferenceRooms = await ConferenceRoom.findAll({});
+    let { page, pageSize, sort, sortBy, searchField } = req.query;
+
+    page = Math.max(1, parseInt(page, 10)) || 1;
+    pageSize = Math.max(1, parseInt(pageSize, 10)) || 10;
+
+    const offset = (page - 1) * pageSize;
+
+    // Ensure sortOrder is either 'ASC' or 'DESC', default to 'ASC' if undefined
+    sort = sort ? sort.toUpperCase() : "ASC";
+
+    const queryOptions = {
+      limit: pageSize,
+      offset: offset,
+      include: [],
+    };
+
+    if (sortBy) {
+      queryOptions.order = [[sortBy, sort]];
+    }
+
+    if (
+      searchField &&
+      typeof searchField === "string" &&
+      searchField.trim() !== ""
+    ) {
+      queryOptions.where = {
+        [Op.or]: [{ conferenceRoomName: { [Op.like]: `%${searchField}%` } }],
+      };
+    }
+
+    queryOptions.include.push({
+        model: Office,
+        as: "office"
+    });
+
+    const conferenceRooms = await ConferenceRoom.findAll(queryOptions);
 
     if (conferenceRooms) {
       res.status(200).json({
@@ -66,11 +101,14 @@ module.exports.getConferenceRooms = async (req, res) => {
 
 module.exports.getConferenceRoomByID = async (req, res) => {
   try {
-    const { ConferenceRoom } = req.app.locals.models;
+    const { ConferenceRoom, Office } = req.app.locals.models;
     if (req.params) {
       const { conferenceRoomID } = req.params;
       const conferenceRoom = await ConferenceRoom.findOne({
         where: { conferenceRoomID },
+        include: [
+          { model: Office, as: "office" },
+        ]
       });
 
       if (conferenceRoom) {
@@ -96,12 +134,48 @@ module.exports.getConferenceRoomByID = async (req, res) => {
 
 module.exports.getConferenceRoomByOfficeID = async (req, res) => {
   try {
-    const { ConferenceRoom } = req.app.locals.models;
+    const { Office, ConferenceRoom } = req.app.locals.models;
     if (req.params) {
       const { officeID } = req.params;
-      const conferenceRooms = await ConferenceRoom.findOne({
-        where: { officeID },
-      });
+
+      let { page, pageSize, sort, sortBy, searchField } = req.query;
+
+    page = Math.max(1, parseInt(page, 10)) || 1;
+    pageSize = Math.max(1, parseInt(pageSize, 10)) || 10;
+
+    const offset = (page - 1) * pageSize;
+
+    // Ensure sortOrder is either 'ASC' or 'DESC', default to 'ASC' if undefined
+    sort = sort ? sort.toUpperCase() : "ASC";
+
+    const queryOptions = {
+      limit: pageSize,
+      offset: offset,
+      include: [],
+    };
+
+    if (sortBy) {
+      queryOptions.order = [[sortBy, sort]];
+    }
+
+    if (
+      searchField &&
+      typeof searchField === "string" &&
+      searchField.trim() !== ""
+    ) {
+      queryOptions.where = {
+        [Op.or]: [{ conferenceRoomName: { [Op.like]: `%${searchField}%` } }],
+      };
+    }
+
+    queryOptions.where = { ...queryOptions.where, officeID: officeID };
+
+    queryOptions.include.push({
+        model: Office,
+        as: "office"
+    });
+
+      const conferenceRooms = await ConferenceRoom.findAll(queryOptions);
 
       if (conferenceRooms) {
         res.status(200).json({
@@ -139,6 +213,7 @@ module.exports.updateConferenceRoom = async (req, res) => {
       }
 
       const updatedConferenceRoom = await ConferenceRoom.update(req.body, {
+        where: {conferenceRoomID},
         fields: inputFieldsConferenceRoom,
       });
 

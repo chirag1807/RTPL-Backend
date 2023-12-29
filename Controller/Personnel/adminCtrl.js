@@ -71,7 +71,12 @@ module.exports.addAdmin = async (req, res) => {
                     let subject = "Registeration Successfully Done";
                     let message = `UserID:${employee.emp_code}\nUrl:http://www.rptl.com `;
 
-                    const result = await sendMail(req.body.email, sender, subject, message);
+                    const result = await sendMail(
+                        req.body.email,
+                        sender,
+                        subject,
+                        message
+                    );
                     if (result.success) {
                         res.status(201).json({ message: "Admin registered successfully" });
                     } else {
@@ -204,16 +209,12 @@ module.exports.getAllData = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
-
-//get Admins
+//get Employee By Id
 module.exports.getAdmins = async (req, res) => {
     try {
         const { Employee, Company, Office, Department, Designation, EmployeeRole } = req.app.locals.models;
 
-        const nonAdminEmployees = await Employee.findAll({
-            where: {
-                isAdmin: true,
-            },
+        const data = await Employee.findAll({
             include: [
                 {
                     model: Company,
@@ -243,6 +244,96 @@ module.exports.getAdmins = async (req, res) => {
             ],
         });
 
+        if (data.length === 0) {
+            return res.status(404).json({ message: "No Admins found" });
+        }
+
+        res.status(200).json({
+            message: "data Fetched Successfully.",
+            data: data,
+        });
+    } catch (error) {
+        console.error("An error occurred:", error);
+        res.status(500).json({ error: error.message });
+    }
+};
+
+//get Admins
+module.exports.getAdmins = async (req, res) => {
+    try {
+        const { Employee, Company, Office, Department, Designation, EmployeeRole } =
+            req.app.locals.models;
+
+        let { page, pageSize, sort, sortBy, searchField, isActive } = req.query;
+
+        page = Math.max(1, parseInt(page, 10)) || 1;
+        pageSize = Math.max(1, parseInt(pageSize, 10)) || 10;
+
+        const offset = (page - 1) * pageSize;
+
+        sort = sort ? sort.toUpperCase() : "ASC";
+
+        const queryOptions = {
+            limit: pageSize,
+            offset: offset,
+            include: [],
+        };
+
+        if (sortBy) {
+            queryOptions.order = [[sortBy, sort]];
+        }
+
+        if (
+            searchField &&
+            typeof searchField === "string" &&
+            searchField.trim() !== ""
+        ) {
+            queryOptions.where = {
+                [Op.or]: [
+                    { aadharNumber: { [Op.like]: `%${searchField}%` } },
+                    { firstName: { [Op.like]: `%${searchField}%` } },
+                    { lastName: { [Op.like]: `%${searchField}%` } },
+                    { emp_code: { [Op.like]: `%${searchField}%` } },
+                    { birthDate: { [Op.like]: `%${searchField}%` } },
+                    { joiningDate: { [Op.like]: `%${searchField}%` } },
+                    { email: { [Op.like]: `%${searchField}%` } },
+                    { phone: { [Op.like]: `%${searchField}%` } },
+                ],
+            };
+        }
+
+        queryOptions.include.push(
+            {
+                model: Company,
+                as: "companyDetails",
+                attributes: ["companyID", "Name", "contact", "email", "isDeleted"],
+            },
+            {
+                model: Office,
+                as: "officeDetails",
+                attributes: ["officeID", "Address", "companyID", "isDeleted"],
+            },
+            {
+                model: Department,
+                as: "employeeDepartment",
+                attributes: ["departmentID", "department", "isDeleted"],
+            },
+            {
+                model: Designation,
+                as: "employeeDesignation",
+                attributes: ["designationID", "designation", "isDeleted"],
+            },
+            {
+                model: EmployeeRole,
+                as: "role",
+                attributes: ["roleID", "role", "isDeleted"],
+            },
+        );
+
+        queryOptions.where = { ...queryOptions.where, isActive: isActive ? isActive : true, isAdmin: true };
+
+        const nonAdminEmployees = await Employee.findAll(queryOptions);
+
         if (nonAdminEmployees.length === 0) {
             return res.status(404).json({ message: "No Admins found" });
         }
@@ -266,9 +357,7 @@ module.exports.updateAdmin = async (req, res) => {
 
         const employeeExists = await Employee.findByPk(id);
         if (!employeeExists) {
-            return res
-                .status(404)
-                .json({ error: `Admin with id ${id} not found` });
+            return res.status(404).json({ error: `Admin with id ${id} not found` });
         }
 
         COMMON.setModelUpdatedByFieldValue(req);
