@@ -1,12 +1,33 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../utils/config');
 const EmployeeRole = require('./employeeRole');
+const Company = require('./company');
+const Office = require('./office');
+const Department = require('./department');
+const Designation = require('./designation');
 
 const Employee = sequelize.define('Employees', {
   empID: {
     type: DataTypes.INTEGER,
     primaryKey: true,
     autoIncrement: true
+  },
+  empProfileImg: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  empIDCard: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  empAadharCard: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  aadharNumber: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true,
   },
   firstName: {
     type: DataTypes.STRING,
@@ -21,13 +42,13 @@ const Employee = sequelize.define('Employees', {
     allowNull: false,
     unique: true
   },
-  department: {
-    type: DataTypes.STRING,
-    allowNull: false
+  birthDate: {
+    type: DataTypes.DATEONLY,
+    allowNull: true,
   },
-  destination: {
-    type: DataTypes.STRING,
-    allowNull: false
+  joiningDate: {
+    type: DataTypes.DATEONLY,
+    allowNull: true,
   },
   email: {
     type: DataTypes.STRING,
@@ -37,32 +58,28 @@ const Employee = sequelize.define('Employees', {
       isEmail: true,
     }
   },
+  featureString: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
   phone: {
     type: DataTypes.STRING,
     allowNull: false,
     unique: true
   },
-  company: {
-    type: DataTypes.STRING,
-    allowNull: false
-  },
-  Office: {
-    type: DataTypes.STRING,
-    allowNull: false
-  },
   password: {
     type: DataTypes.STRING,
     allowNull: false
   },
-  isAdmin:{
-    type:DataTypes.BOOLEAN,
-    allowNull:false,
-    defaultValue:false,
+  isAdmin: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
   },
-  isActive:{
-    type:DataTypes.BOOLEAN,
-    allowNull:false,
-    defaultValue:false,
+  isActive: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
   },
   isDeleted: {
     type: DataTypes.BOOLEAN,
@@ -86,12 +103,15 @@ const Employee = sequelize.define('Employees', {
   paranoid: true
 });
 
-// Employee.belongsTo(EmployeeRole, {
-//   as: 'role',
-//   foreignKey: {
-//     name: 'roleID', allowNull: false
-//   }
-// })
-
+Employee.belongsTo(EmployeeRole, {
+  as: 'role',
+  foreignKey: {
+    name: 'roleID', allowNull: false
+  }
+})
+Employee.belongsTo(Company, { foreignKey: 'companyID', as: 'companyDetails' });
+Employee.belongsTo(Office, { foreignKey: 'officeID', as: 'officeDetails' });
+Employee.belongsTo(Department, { foreignKey: 'departmentID', as: 'employeeDepartment' });
+Employee.belongsTo(Designation, { foreignKey: 'designationID', as: 'employeeDesignation' });
 
 module.exports = Employee;
