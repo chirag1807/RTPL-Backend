@@ -88,7 +88,7 @@ module.exports.getOfficesByCompany = async (req, res) => {
         .json({ error: "Missing companyID in request parameters." });
     }
 
-    let { page, pageSize, sort, sortBy, searchField } = req.query;
+    let { page, pageSize, sort, sortBy, searchField, isActive } = req.query;
 
     page = Math.max(1, parseInt(page, 10)) || 1;
     pageSize = Math.max(1, parseInt(pageSize, 10)) || 10;
@@ -118,7 +118,7 @@ module.exports.getOfficesByCompany = async (req, res) => {
       };
     }
 
-    queryOptions.where = { ...queryOptions.where, companyID: companyID };
+    queryOptions.where = { ...queryOptions.where, companyID: companyID, isActive: isActive ? isActive : true };
 
     queryOptions.include.push({
         model: Company,
@@ -138,7 +138,7 @@ module.exports.getOffices = async (req, res) => {
   try {
     const { Company, Office } = req.app.locals.models;
 
-    let { page, pageSize, sort, sortBy, searchField } = req.query;
+    let { page, pageSize, sort, sortBy, searchField, isActive } = req.query;
 
     page = Math.max(1, parseInt(page, 10)) || 1;
     pageSize = Math.max(1, parseInt(pageSize, 10)) || 10;
@@ -172,6 +172,8 @@ module.exports.getOffices = async (req, res) => {
         model: Company,
         as: "company"
     });
+
+    queryOptions.where = { ...queryOptions.where, isActive: isActive ? isActive : true };
 
     const offices = await Office.findAll(queryOptions);
 
@@ -197,7 +199,9 @@ module.exports.getOfficeByID = async (req, res) => {
     if (req.params) {
       const { officeID } = req.params;
       const office = await Office.findAll({
-        where: { officeID },
+        where: { officeID,
+            // isActive: true
+         },
         include: [
             { model: Company, as: "company" },
         ]

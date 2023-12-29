@@ -46,7 +46,7 @@ module.exports.addCompany = async (req, res) => {
 module.exports.getCompanies = async (req, res) => {
   try {
     const { Company } = req.app.locals.models;
-    let { page, pageSize, sort, sortBy, searchField } = req.query;
+    let { page, pageSize, sort, sortBy, searchField, isActive } = req.query;
 
     page = Math.max(1, parseInt(page, 10)) || 1;
     pageSize = Math.max(1, parseInt(pageSize, 10)) || 10;
@@ -79,6 +79,8 @@ module.exports.getCompanies = async (req, res) => {
       };
     }
 
+    queryOptions.where = { ...queryOptions.where, isActive: isActive ? isActive : true };
+    
     const company = await Company.findAll(queryOptions);
 
     if (company) {
@@ -103,7 +105,9 @@ module.exports.getCompanyByID = async (req, res) => {
     if (req.params) {
       const { companyID } = req.params;
       const company = await Company.findOne({
-        where: { companyID },
+        where: { companyID,
+          //  isActive: true
+          },
       });
 
       if (company) {

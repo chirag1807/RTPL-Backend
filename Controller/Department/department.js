@@ -47,7 +47,38 @@ module.exports.getDepartments = async (req, res) => {
     try {
     const { Department } = req.app.locals.models;
 
-    const departments = await Department.findAll({});
+    let { page, pageSize, sort, sortBy, searchField, isActive } = req.query;
+
+    page = Math.max(1, parseInt(page, 10)) || 1;
+    pageSize = Math.max(1, parseInt(pageSize, 10)) || 10;
+
+    const offset = (page - 1) * pageSize;
+
+    // Ensure sortOrder is either 'ASC' or 'DESC', default to 'ASC' if undefined
+    sort = sort ? sort.toUpperCase() : "ASC";
+
+    const queryOptions = {
+      limit: pageSize,
+      offset: offset,
+    };
+
+    if (sortBy) {
+      queryOptions.order = [[sortBy, sort]];
+    }
+
+    if (
+      searchField &&
+      typeof searchField === "string" &&
+      searchField.trim() !== ""
+    ) {
+      queryOptions.where = {
+        [Op.or]: [{ department: { [Op.like]: `%${searchField}%` } }],
+      };
+    }
+
+    queryOptions.where = { ...queryOptions.where, isActive: isActive ? isActive : true };
+
+    const departments = await Department.findAll(queryOptions);
 
     if (departments) {
       res.status(200).json({
@@ -71,7 +102,9 @@ module.exports.getDepartmentByID = async (req, res) => {
         if(req.params){
             const { departmentID } = req.params;
             const department = await Department.findOne({
-                where: { departmentID },
+                where: { departmentID,
+                  //  isActive: true
+                  },
             });
         
             if (department) {
@@ -110,6 +143,7 @@ module.exports.updateDepartment = async (req, res) => {
           }
 
           const updatedDepartment = await Department.update(req.body, {
+              where: {departmentID},
               fields: inputFieldsDepartment,
           });
 
