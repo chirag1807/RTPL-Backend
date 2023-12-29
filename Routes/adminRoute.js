@@ -1,17 +1,21 @@
 const express = require('express');
 const adminController = require('../Controller/Personnel/adminCtrl');
-const { authenticateToken } = require('../Middleware/auth');
+const { isAdmin } = require('../Middleware/auth');
 const router = express.Router();
 
 router.post('/addAdmin',
-    // authenticateToken,
+    isAdmin,
     adminController.addAdmin);
-router.get('/getAdminList', adminController.getAdmins);
+router.post('/addReceptionist',
+    isAdmin,
+    adminController.addReceptionist);
+router.get('/getAdminList', isAdmin, adminController.getAdmins);
+router.get('/getDataList', isAdmin, adminController.getAllData);
 router.put('/:id',
-    // authenticateToken,
+    isAdmin,
     adminController.updateAdmin);
 router.delete('/:id',
-    // authenticateToken,
+    isAdmin,
     adminController.deleteAdmin);
 
 module.exports = router;

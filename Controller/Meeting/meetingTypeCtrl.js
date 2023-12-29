@@ -1,6 +1,6 @@
 const validator = require('validator');
 const COMMON = require('../../Common/common');
-const {createAccessToken} = require('../../Middleware/auth');
+const { createAccessToken } = require('../../Middleware/auth');
 const CONSTANT = require('../../constant/constant');
 
 const inputFieldsMeetingType = [
@@ -15,31 +15,33 @@ const inputFieldsMeetingType = [
 module.exports.addMeetingType = async (req, res) => {
     try {
         const { MeetingType } = req.app.locals.models;
+        const updatedBy = req.decodedEmpCode;
         // get value of CreatedBy 
         // COMMON.setModelCreatedByFieldValue(req);
         // check createdBy is admin or not (means put this condition in below if condition.)
-        if(req.body){
+        if (req.body) {
+            req.body.createdBy = updatedBy;
             const meetingType = await MeetingType.create(req.body, {
                 fields: inputFieldsMeetingType,
-              });
-              if (meetingType) {
+            });
+            if (meetingType) {
                 res.status(200).json({
-                  message: "Your meeting type has been registered successfully.",
+                    message: "Your meeting type has been registered successfully.",
                 });
-              } else {
+            } else {
                 res.status(400).json({
-                  message:
-                    "Sorry, Your meeting type has not registered. Please try again later",
+                    message:
+                        "Sorry, Your meeting type has not registered. Please try again later",
                 });
-              }
+            }
         }
-        else{
+        else {
             console.log("Invalid perameter");
             res.status(400).json({ error: "Invalid perameter" });
         }
     } catch (error) {
         console.log(error);
-        res.status(500).json({ error: "Internal server error" });
+        res.status(500).json({ error: error.message });
     }
 }
 
@@ -47,61 +49,63 @@ module.exports.getMeetingTypes = async (req, res) => {
     try {
         const { MeetingType } = req.app.locals.models;
 
-    const meetingTypes = await MeetingType.findAll({});
+        const meetingTypes = await MeetingType.findAll({});
 
-    if (meetingTypes) {
-      res.status(200).json({
-        message: "Meeting Types Fetched Successfully.",
-        meetings: meetingTypes,
-      });
-    } else {
-      res.status(400).json({
-        message: "Meeting Types Can't be Fetched, Please Try Again Later.",
-      });
-    }
+        if (meetingTypes) {
+            res.status(200).json({
+                message: "Meeting Types Fetched Successfully.",
+                meetings: meetingTypes,
+            });
+        } else {
+            res.status(400).json({
+                message: "Meeting Types Can't be Fetched, Please Try Again Later.",
+            });
+        }
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: "Internal server error" });
+        res.status(500).json({ error: error.message });
     }
 }
 
 module.exports.getMeetingTypeByID = async (req, res) => {
     try {
         const { MeetingType } = req.app.locals.models;
-        if(req.params){
+        if (req.params) {
             const { meetingTypeID } = req.params;
             const meetingType = await MeetingType.findOne({
                 where: { meetingTypeID },
             });
-        
+
             if (meetingType) {
-              res.status(200).json({
-                message: "Meeting Type Fetched Successfully.",
-                meeting: meetingType,
-              });
+                res.status(200).json({
+                    message: "Meeting Type Fetched Successfully.",
+                    meeting: meetingType,
+                });
             } else {
-              res.status(400).json({
-                message: "Meeting Type Can't be Fetched, Please Try Again Later.",
-              });
+                res.status(400).json({
+                    message: "Meeting Type Can't be Fetched, Please Try Again Later.",
+                });
             }
         }
-        else{
+        else {
             console.log("Invalid perameter");
             res.status(400).json({ error: "Invalid perameter" });
         }
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: "Internal server error" });
+        res.status(500).json({ error: error.message });
     }
 }
 
 module.exports.updateMeetingType = async (req, res) => {
     try {
         const { MeetingType } = req.app.locals.models;
+        const updatedBy = req.decodedEmpCode;
         // get value of updatedBy
         // COMMON.setModelUpdatedByFieldValue(req);
-        if(req.params && req.body){
+        if (req.params && req.body) {
             const { meetingTypeID } = req.params;
+            req.body.updatedBy = updatedBy;
 
             const meetingType = await MeetingType.findByPk(meetingTypeID);
 
@@ -113,29 +117,30 @@ module.exports.updateMeetingType = async (req, res) => {
                 fields: inputFieldsMeetingType,
             });
 
-            if(updatedMeetingType){
-                res.status(200).json({message: "Meeting Type has been Updated Successfully."});
+            if (updatedMeetingType) {
+                res.status(200).json({ message: "Meeting Type has been Updated Successfully." });
             }
-            else{
-                res.status(400).json({message: "Meeting Type has not been Updated, Please Try Again Later."});
+            else {
+                res.status(400).json({ message: "Meeting Type has not been Updated, Please Try Again Later." });
             }
         }
-        else{
+        else {
             console.log("Invalid perameter");
             res.status(400).json({ error: "Invalid perameter" });
-        }   
+        }
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: "Internal server error" });
+        res.status(500).json({ error: error.message });
     }
 }
 
 module.exports.deleteMeetingType = async (req, res) => {
     try {
         const { MeetingType } = req.app.locals.models;
+        const updatedBy = req.decodedEmpCode;
         // get value of deletedBy
         // COMMON.setModelDeletedByFieldValue(req);
-        if(req.params){
+        if (req.params) {
             const { meetingTypeID } = req.params;
 
             const meetingType = await MeetingType.findByPk(meetingTypeID);
@@ -144,21 +149,26 @@ module.exports.deleteMeetingType = async (req, res) => {
                 return res.status(404).json({ error: 'MeetingType not found for the given ID' });
             }
 
-            const deletedMeetingType = await meetingType.destroy();
+            const updatedMeetingType = await meetingType.update({ deletedBy: updatedBy, isDeleted: true, isActive: false });
+            if (updatedMeetingType) {
+                const deletedMeetingType = await meetingType.destroy();
 
-            if(deletedMeetingType){
-                res.status(200).json({message: "Meeting Type has been Deleted Successfully."});
-            }
-            else{
-                res.status(400).json({message: "Meeting Type has not been Deleted, Please Try Again Later."});
+                if (deletedMeetingType) {
+                    res.status(200).json({ message: "Meeting Type has been Deleted Successfully." });
+                }
+                else {
+                    res.status(400).json({ message: "Meeting Type has not been Deleted, Please Try Again Later." });
+                }
+            } else {
+                res.status(400).json({ message: "Meeting Type has not been Deleted, Please Try Again Later." });
             }
         }
-        else{
+        else {
             console.log("Invalid perameter");
             res.status(400).json({ error: "Invalid perameter" });
-        } 
+        }
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: "Internal server error" });
+        res.status(500).json({ error: error.message });
     }
 }

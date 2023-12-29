@@ -1,12 +1,12 @@
 const express = require('express');
 const companyController = require('../Controller/Company/Company');
-const {authenticateToken} = require('../Middleware/auth');
+const { isAdmin } = require('../Middleware/auth');
 const router = express.Router();
 
-router.post('/addCompany', companyController.addCompany);
+router.post('/addCompany', isAdmin, companyController.addCompany);
 router.get('/getCompanyList', companyController.getCompanies);
-router.put('/:companyID', companyController.updatedCompany);
+router.put('/:companyID', isAdmin, companyController.updatedCompany);
 router.get('/:companyID', companyController.getCompanyByID);
-router.delete('/:companyID', companyController.deleteCompany);
+router.delete('/:companyID', isAdmin, companyController.deleteCompany);
 
 module.exports = router;

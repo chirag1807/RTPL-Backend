@@ -15,6 +15,7 @@ const inputFieldsEmployee = [
   "company",
   "Office",
   "password",
+  "isActive",
   "isDeleted",
   "createdBy",
   "updatedBy",
@@ -27,6 +28,7 @@ module.exports.updateEmployee = async (req, res) => {
   try {
     const { Employee } = req.app.locals.models;
     const { id } = req.params;
+    const updatedBy = req.decodedEmpCode;
 
     const employeeExists = await Employee.findByPk(id);
     if (!employeeExists) {
@@ -36,6 +38,8 @@ module.exports.updateEmployee = async (req, res) => {
     }
 
     COMMON.setModelUpdatedByFieldValue(req);
+
+    req.body.updatedBy = updatedBy;
 
     await Employee.update(req.body, {
       where: { empID: id },
@@ -53,13 +57,14 @@ module.exports.updateEmployee = async (req, res) => {
 module.exports.deleteEmployee = async (req, res) => {
   try {
     const { Employee } = req.app.locals.models;
+    const updatedBy = req.decodedEmpCode;
     if (req.params.id) {
       const empID = req.params.id;
       const employeeDetails = await Employee.findByPk(empID);
       if (employeeDetails) {
         await employeeDetails.update({
           isDeleted: 1,
-          // deletedBy: req.user.empID  //pending to set deletion id of person
+          deletedBy: updatedBy
         });
         await employeeDetails.destroy();
         // Return a success response
@@ -191,7 +196,8 @@ module.exports.getNonAdminEmployeesById = async (req, res) => {
 module.exports.activateEmployee = async (req, res) => {
   try {
     const { Employee } = req.app.locals.models;
-    const { empID , isActive } = req.body;
+    const { empID, isActive } = req.body;
+    const updatedBy = req.decodedEmpCode;
 
     if (!empID) {
       return res.status(400).json({ error: "empID is required" });
@@ -204,7 +210,7 @@ module.exports.activateEmployee = async (req, res) => {
     }
 
     // Update isActive to true
-    await Employee.update({ isActive: isActive }, { where: { empID } });
+    await Employee.update({ isActive: isActive, updatedBy: updatedBy }, { where: { empID } });
 
     res.status(200).json({ message: "Employee activated successfully." });
   } catch (error) {

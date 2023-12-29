@@ -168,7 +168,7 @@ module.exports.changePassword = async (req, res) => {
             .catch((error) => {
               console.error("An error occurred:", error);
               // Return an error response
-              res.status(500).json({ error: "Internal server error" });
+              res.status(500).json({ error: error.message });
             });
         } else {
           res
@@ -184,7 +184,7 @@ module.exports.changePassword = async (req, res) => {
   } catch (error) {
     console.error("An error occurred:", error);
     // Return an error response
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: error.message });
   }
 };
 
@@ -224,8 +224,11 @@ module.exports.sendCode = async (req, res) => {
   try {
     const { Employee, VerifyCode } = req.app.locals.models;
     if (req.body) {
-      const user = Employee.findOne({
-        //find user using token here
+      const decodedData = jwt.verify(req.headers.authorization.split(' ')[1], CONSTANT.JWT.SECRET);
+      const user = await Employee.findOne({
+        where: {
+          empID: decodedData.empID,
+        },
       });
 
       if (user) {

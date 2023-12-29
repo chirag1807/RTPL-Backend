@@ -17,7 +17,9 @@ module.exports.addOffice = async (req, res) => {
         // get value of CreatedBy 
         // COMMON.setModelCreatedByFieldValue(req);
         // check createdBy is admin or not (put this condition below)
+        const updatedBy = req.decodedEmpCode;
         if (req.body) {
+            req.body.createdBy = updatedBy;
             const office = await Office.create(req.body, {
                 fields: inputFieldsOffice,
             });
@@ -44,6 +46,7 @@ module.exports.updateOffice = async (req, res) => {
     try {
         const { Office } = req.app.locals.models;
         const { officeID } = req.params;
+        const updatedBy = req.decodedEmpCode;
 
         if (!officeID || !req.body.Address) {
             return res.status(400).json({ error: "Invalid parameter or missing Address in the request body." });
@@ -55,7 +58,7 @@ module.exports.updateOffice = async (req, res) => {
             return res.status(404).json({ error: "Office not found for the given ID." });
         }
 
-        const updatedOffice = await office.update({ Address: req.body.Address });
+        const updatedOffice = await office.update({ updatedBy: updatedBy, Address: req.body.Address });
 
         if (updatedOffice) {
             res.status(200).json({ message: "Office address has been updated successfully." });
@@ -144,6 +147,7 @@ module.exports.deleteOffice = async (req, res) => {
     try {
         const { Office } = req.app.locals.models;
         const { officeID } = req.params;
+        const updatedBy = req.decodedEmpCode;
 
         if (!officeID) {
             return res.status(400).json({ error: "Missing officeID in request parameters." });
@@ -155,7 +159,7 @@ module.exports.deleteOffice = async (req, res) => {
             return res.status(404).json({ error: "Office not found for the given ID." });
         }
 
-        const updatedOffice = await office.update({ isDeleted: true, isActive: false });
+        const updatedOffice = await office.update({ deletedBy: updatedBy, isDeleted: true, isActive: false });
 
         if (updatedOffice) {
             const deletedOffice = await office.destroy();

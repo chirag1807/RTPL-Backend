@@ -1,6 +1,6 @@
 const validator = require('validator');
 const COMMON = require('../../Common/common');
-const {createAccessToken} = require('../../Middleware/auth');
+const { createAccessToken } = require('../../Middleware/auth');
 const CONSTANT = require('../../constant/constant');
 
 const inputFieldsEmployeeRole = [
@@ -15,31 +15,33 @@ const inputFieldsEmployeeRole = [
 module.exports.addEmployeeRole = async (req, res) => {
     try {
         const { EmployeeRole } = req.app.locals.models;
+        const updatedBy = req.decodedEmpCode;
         // get value of CreatedBy 
         // COMMON.setModelCreatedByFieldValue(req);
         // check createdBy is admin or not (means put this condition in below if condition.)
-        if(req.body){
+        if (req.body) {
+            req.body.createdBy = updatedBy
             const employeeRole = await EmployeeRole.create(req.body, {
                 fields: inputFieldsEmployeeRole,
-              });
-              if (employeeRole) {
+            });
+            if (employeeRole) {
                 res.status(200).json({
-                  message: "Employee Role has been registered successfully.",
+                    message: "Employee Role has been registered successfully.",
                 });
-              } else {
+            } else {
                 res.status(400).json({
-                  message:
-                    "Sorry, Employee Role has not registered. Please try again later",
+                    message:
+                        "Sorry, Employee Role has not registered. Please try again later",
                 });
-              }
+            }
         }
-        else{
+        else {
             console.log("Invalid perameter");
             res.status(400).json({ error: "Invalid perameter" });
         }
     } catch (error) {
         console.log(error);
-        res.status(500).json({ error: "Internal server error" });
+        res.status(500).json({ error: error.message });
     }
 }
 
@@ -47,62 +49,64 @@ module.exports.getEmployeeRoles = async (req, res) => {
     try {
         const { EmployeeRole } = req.app.locals.models;
 
-    const employeeRoles = await EmployeeRole.findAll({});
+        const employeeRoles = await EmployeeRole.findAll({});
 
-    if (employeeRoles) {
-      res.status(200).json({
-        message: "Employee Roles Fetched Successfully.",
-        employeeRoles: employeeRoles,
-      });
-    } else {
-      res.status(400).json({
-        message: "Employee Roles Can't be Fetched, Please Try Again Later.",
-      });
-    }
+        if (employeeRoles) {
+            res.status(200).json({
+                message: "Employee Roles Fetched Successfully.",
+                employeeRoles: employeeRoles,
+            });
+        } else {
+            res.status(400).json({
+                message: "Employee Roles Can't be Fetched, Please Try Again Later.",
+            });
+        }
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: "Internal server error" });
+        res.status(500).json({ error: error.message });
     }
 }
 
 module.exports.getEmployeeRoleByID = async (req, res) => {
     try {
         const { EmployeeRole } = req.app.locals.models;
-        if(req.params){
+        if (req.params) {
             const { roleID } = req.params;
             console.log(req.params);
             const employeeRole = await EmployeeRole.findOne({
                 where: { roleID },
             });
-        
+
             if (employeeRole) {
-              res.status(200).json({
-                message: "Employee Role Fetched Successfully.",
-                employeeRole: employeeRole,
-              });
+                res.status(200).json({
+                    message: "Employee Role Fetched Successfully.",
+                    employeeRole: employeeRole,
+                });
             } else {
-              res.status(400).json({
-                message: "Employee Role Can't be Fetched, Please Try Again Later.",
-              });
+                res.status(400).json({
+                    message: "Employee Role Can't be Fetched, Please Try Again Later.",
+                });
             }
         }
-        else{
+        else {
             console.log("Invalid perameter");
             res.status(400).json({ error: "Invalid perameter" });
         }
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: "Internal server error" });
+        res.status(500).json({ error: error.message });
     }
 }
 
 module.exports.updateEmployeeRole = async (req, res) => {
     try {
         const { EmployeeRole } = req.app.locals.models;
+        const updatedBy = req.decodedEmpCode;
         // get value of updatedBy
         // COMMON.setModelUpdatedByFieldValue(req);
-        if(req.params && req.body){
+        if (req.params && req.body) {
             const { roleID } = req.params;
+            req.body.updatedBy = updatedBy;
 
             const employeeRole = await EmployeeRole.findByPk(roleID);
 
@@ -114,16 +118,16 @@ module.exports.updateEmployeeRole = async (req, res) => {
                 fields: inputFieldsEmployeeRole,
             });
 
-            if(updatedEmployeeRole){
-                res.status(200).json({message: "Employee Role has been Updated Successfully."});
+            if (updatedEmployeeRole) {
+                res.status(200).json({ message: "Employee Role has been Updated Successfully." });
             }
-            else{
-                res.status(400).json({message: "Employee Role has not been Updated, Please Try Again Later."});
+            else {
+                res.status(400).json({ message: "Employee Role has not been Updated, Please Try Again Later." });
             }
-        }   
+        }
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: "Internal server error" });
+        res.status(500).json({ error: error.message });
     }
 }
 
@@ -132,7 +136,8 @@ module.exports.deleteEmployeeRole = async (req, res) => {
         const { EmployeeRole } = req.app.locals.models;
         // get value of deletedBy
         // COMMON.setModelDeletedByFieldValue(req);
-        if(req.params){
+        const updatedBy = req.decodedEmpCode;
+        if (req.params) {
             const { roleID } = req.params;
 
             const employeeRole = await EmployeeRole.findByPk(roleID);
@@ -141,17 +146,23 @@ module.exports.deleteEmployeeRole = async (req, res) => {
                 return res.status(404).json({ error: 'Employee Role not found for the given ID' });
             }
 
-            const deletedEmployeeRole = await employeeRole.destroy();
+            const updatedEmployeeRole = await employeeRole.update({ deletedBy: updatedBy, isDeleted: true, isActive: false });
 
-            if(deletedEmployeeRole){
-                res.status(200).json({message: "Employee Role has been Deleted Successfully."});
+            if (updatedEmployeeRole) {
+                const deletedEmployeeRole = await employeeRole.destroy();
+
+                if (deletedEmployeeRole) {
+                    res.status(200).json({ message: "Employee Role has been Deleted Successfully." });
+                }
+                else {
+                    res.status(400).json({ message: "Employee Role has not been Deleted, Please Try Again Later." });
+                }
+            } else {
+                res.status(400).json({ message: "Employee Role has not been Deleted, Please Try Again Later." });
             }
-            else{
-                res.status(400).json({message: "Employee Role has not been Deleted, Please Try Again Later."});
-            }
-        }   
+        }
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: "Internal server error" });
+        res.status(500).json({ error: error.message });
     }
 }

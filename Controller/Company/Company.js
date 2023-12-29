@@ -15,10 +15,12 @@ const inputFieldsCompany = [
 module.exports.addCompany = async (req, res) => {
     try {
         const { Company } = req.app.locals.models;
+        const createdBy = req.decodedEmpCode;
         // get value of CreatedBy 
         // COMMON.setModelCreatedByFieldValue(req);
         // check createdBy is admin or not (means put this condition in below if condition.)
         if (req.body) {
+            req.body.createdBy = createdBy;
             const comapany = await Company.create(req.body, {
                 fields: inputFieldsCompany,
             });
@@ -100,8 +102,10 @@ module.exports.updatedCompany = async (req, res) => {
         const { Company } = req.app.locals.models;
         // get value of updatedBy
         // COMMON.setModelUpdatedByFieldValue(req);
+        const updatedBy = req.decodedEmpCode;
         if (req.params && req.body) {
             const { companyID } = req.params;
+            req.body.updatedBy = updatedBy;
 
             const company = await Company.findByPk(companyID);
 
@@ -134,12 +138,13 @@ module.exports.updatedCompany = async (req, res) => {
 module.exports.deleteCompany = async (req, res) => {
     try {
         const { Company } = req.app.locals.models;
+        const updatedBy = req.decodedEmpCode;
 
         if (req.params) {
             const { companyID } = req.params;
 
             const updatedCompany = await Company.update(
-                { isDeleted: true, isActive: false },
+                { deletedBy: updatedBy, isDeleted: true, isActive: false },
                 { where: { companyID: companyID } }
             );
 
