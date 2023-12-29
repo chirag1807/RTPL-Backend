@@ -1,28 +1,32 @@
 const validator = require("validator");
-const SendEmailService = require("../../Middleware/emaiService");
 const COMMON = require("../../Common/common");
 const { createAccessToken } = require("../../Middleware/auth");
-const nodemailer = require("nodemailer");
 const CONSTANT = require("../../constant/constant");
+const sendMail = require("../../Middleware/emaiService");
 const inputFieldsEmployee = [
+  "empProfileImg",
+  "empIDCard",
+  "empAadharCard",
+  "aadharNumber",
   "firstName",
   "lastName",
   "emp_code",
-  "department",
-  "destination",
+  "birthDate",
+  "joiningDate",
   "email",
+  "featureString",
   "phone",
-  "company",
-  "Office",
   "password",
-  "isDeleted",
   "createdBy",
-  "updatedBy",
-  "deletedBy",
-  // 'roleID'
+  "roleID",
+  "companyID",
+  "officeID",
+  "departmentID",
+  "designationID",
 ];
-// login employee
-module.exports.loginEmployee = async (req, res) => {
+
+// login
+module.exports.login = async (req, res) => {
   try {
     const { Employee } = req.app.locals.models;
     if (req.body.emp_code && req.body.password) {
@@ -59,18 +63,17 @@ module.exports.loginEmployee = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-// create employee
-module.exports.employeeRegistration = async (req, res) => {
+// register
+module.exports.Registration = async (req, res) => {
   try {
     const { Employee } = req.app.locals.models;
     if (req.body) {
       // get value of CreatedBy
-      //   COMMON.setModelCreatedByFieldValue(req);
+      // COMMON.setModelCreatedByFieldValue(req);
       // Validate email
       if (!validator.isEmail(req.body.email)) {
         return res.status(400).json({ error: "Invalid email" });
       }
-      let password = req.body.password;
       // Validate phone number
       if (!validator.isMobilePhone(req.body.phone.toString(), "any")) {
         return res.status(400).json({ error: "Invalid phone number" });
@@ -92,30 +95,16 @@ module.exports.employeeRegistration = async (req, res) => {
           fields: inputFieldsEmployee,
         });
         if (employee) {
-          let SendEmailService = nodemailer.createTransport({
-            host: "smtp.gmail.com",
-            port: 587,
-            secure: false,
-            requireTLS: true,
-            auth: {
-              user: "ridhamchauhan693@gmail.com",
-              pass: "yrnjrpxrybemoiyg",
-            },
-          });
-          const mailOptions = {
-            from: "dummy703666@gmail.com",
-            to: req.body.email,
-            subject: "Registration Details",
-            text: `UserID:${employee.emp_code}\n Password:${password}\n Url:http://www.rptl.com `,
-          };
+          let sender = "rtpl@rtplgroup.com"
           let subject = "Registeration Successfully Done";
-          let message = `UserID:${employee.emp_code}\n Password:${password}\n Url:http://www.rptl.com `;
-          await SendEmailService.sendMail(mailOptions);
-          res.status(201).json({ message: "Employee registered successfully" });
-        } else {
-          res
-            .status(400)
-            .json({ message: "Employee registered unsuccessfully" });
+          let message = `UserID:${employee.emp_code}\nUrl:http://www.rptl.com `;
+
+          const result = await sendMail(req.body.email, sender, subject, message);
+          if (result.success) {
+            res.status(201).json({ message: "Employee registered successfully" });
+          } else {
+            res.status(400).json({ error: result.message });
+          }
         }
       } else {
         res
@@ -128,63 +117,6 @@ module.exports.employeeRegistration = async (req, res) => {
     }
   } catch (error) {
     console.error("An error occurred:", error);
-    res.status(500).json({ error: error.message });
-  }
-};
-
-// update employees details
-module.exports.updateEmployee = async (req, res) => {
-  try {
-    const { Employee } = req.app.locals.models;
-    const { id } = req.params;
-
-    const employeeExists = await Employee.findByPk(id);
-    if (!employeeExists) {
-      return res
-        .status(404)
-        .json({ error: `Employee with id ${id} not found` });
-    }
-
-    COMMON.setModelUpdatedByFieldValue(req);
-
-    await Employee.update(req.body, {
-      where: { empID: id },
-      fields: inputFieldsEmployee,
-    });
-
-    res.status(200).json({ message: "Employee updated successfully" });
-  } catch (error) {
-    console.error("An error occurred:", error);
-    res.status(500).json({ error: error.message });
-  }
-};
-
-// delete employees details
-module.exports.deleteEmployee = async (req, res) => {
-  try {
-    const { Employee } = req.app.locals.models;
-    if (req.params.id) {
-      const empID = req.params.id;
-      const employeeDetails = await Employee.findByPk(empID);
-      if (employeeDetails) {
-        await employeeDetails.update({
-          isDeleted: 1,
-          // deletedBy: req.user.empID  //pending to set deletion id of person
-        });
-        await employeeDetails.destroy();
-        // Return a success response
-        res.json({ message: "Employee deleted successfully." });
-      } else {
-        res.status(404).json({ error: `Employee with id ${empID} not found.` });
-      }
-    } else {
-      console.log("Invalid perameter");
-      // Return an error response indicating missing data
-      res.status(400).json({ error: "Invalid perameter" });
-    }
-  } catch (error) {
-    console.error("An error occurred:", error);
-    // Return an error response
     res.status(500).json({ error: error.message });
   }
 };
@@ -256,32 +188,6 @@ module.exports.changePassword = async (req, res) => {
   }
 };
 
-//get All Employees
-module.exports.getNonAdminEmployees = async (req, res) => {
-  try {
-    const { Employee } = req.app.locals.models;
-
-    const nonAdminEmployees = await Employee.findAll({
-      where: {
-        isAdmin: false,
-        isActive: true,
-      },
-    });
-
-    if (nonAdminEmployees.length === 0) {
-      return res.status(404).json({ message: "No employees found" });
-    }
-
-    res.status(200).json({
-      message: "Employees Fetched Successfully.",
-      data: nonAdminEmployees,
-    });
-  } catch (error) {
-    console.error("An error occurred:", error);
-    res.status(500).json({ error: error.message });
-  }
-};
-
 module.exports.forgotPassword = async (req, res) => {
   try {
     const { Employee } = req.app.locals.models;
@@ -296,8 +202,8 @@ module.exports.forgotPassword = async (req, res) => {
         }
         user.password = hashedPassword;
         const updatedPassword = await user.save();
-        if(!updatedPassword){
-            res.status(400).json({ message: "Password Can not be Setted, Please Try Again Later.", });
+        if (!updatedPassword) {
+          res.status(400).json({ message: "Password Can not be Setted, Please Try Again Later.", });
         }
 
         res.status(200).json({ message: "User Password Changed Successfully.", });
@@ -352,23 +258,11 @@ module.exports.sendCode = async (req, res) => {
     </html>
 `;
 
-        let SendEmailService = nodemailer.createTransport({
-          host: "smtp.gmail.com",
-          port: 587,
-          secure: false,
-          requireTLS: true,
-          auth: {
-            user: "ridhamchauhan693@gmail.com",
-            pass: "yrnjrpxrybemoiyg",
-          },
-        });
-        const mailOptions = {
-          from: "dummy703666@gmail.com",
-          to: req.body.newEmail,
-          subject: "Verify Your Email",
-          html: htmlContent,
-        };
-        await SendEmailService.sendMail(mailOptions);
+
+
+        let subject = "Verify Your Email"
+        const res = await sendMail(req.body.newEmail, "rtpl@rtplgroup.com", subject, htmlContent)
+        console.log(res);
 
         const email = await VerifyCode.create({
           verificationCode,

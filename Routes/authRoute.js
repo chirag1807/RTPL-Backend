@@ -1,0 +1,19 @@
+const express = require('express');
+const authController = require('../Controller/Personnel/authCtrl');
+const { authenticateToken } = require('../Middleware/auth');
+const router = express.Router();
+
+router.post('/register',
+    // authenticateToken,
+    authController.Registration);
+router.post('/loginEmployee', authController.login);
+
+router.post('/changePassword', authenticateToken, authController.changePassword);
+
+router.post('/forgotPassword', authController.forgotPassword);
+
+router.post('/sendCode', authController.sendCode);
+
+router.post('/verifyCode', authController.verifyCode);
+
+module.exports = router;
