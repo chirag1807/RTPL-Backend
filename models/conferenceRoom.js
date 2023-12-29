@@ -19,10 +19,11 @@ const ConferenceRoom = sequelize.define('ConferenceRoom', {
     conferenceRoomName: {
       type: DataTypes.STRING,
       allowNull: false,
+      unique: true
     },
     createdBy: {
         type: DataTypes.STRING,
-        allowNull: true
+        allowNull: false
     },
     updatedBy: {
         type: DataTypes.STRING,

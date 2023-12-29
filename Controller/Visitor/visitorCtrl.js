@@ -101,13 +101,48 @@ module.exports.getVisitorRequestMeeting = async (req, res) => {
       ReqMeetVisitorDetails,
     } = req.app.locals.models;
 
-    const requestMeetings = await RequestMeeting.findAll({
-      include: [
-        { model: Employee, as: "employee" },
-        { model: ReqMeetDetailsByRecp, as: "reqMeetDetailsByRecp" },
-        { model: ReqMeetVisitorDetails, required: false, as: "visitorDetails" },
-      ],
-    });
+    let { page, pageSize, sort, sortBy, searchField } = req.query;
+
+    page = Math.max(1, parseInt(page, 10)) || 1;
+    pageSize = Math.max(1, parseInt(pageSize, 10)) || 10;
+
+    const offset = (page - 1) * pageSize;
+
+    // Ensure sortOrder is either 'ASC' or 'DESC', default to 'ASC' if undefined
+    sort = sort ? sort.toUpperCase() : "ASC";
+
+    const queryOptions = {
+      limit: pageSize,
+      offset: offset,
+      include: [],
+    };
+
+    if (sortBy) {
+      queryOptions.order = [[sortBy, sort]];
+    }
+
+    if (
+      searchField &&
+      typeof searchField === "string" &&
+      searchField.trim() !== ""
+    ) {
+      queryOptions.where = {
+        [Op.or]: [
+          { ReqStatus: { [Op.like]: `%${searchField}%` } },
+          { purposeOfMeeting: { [Op.like]: `%${searchField}%` } },
+          { vCompanyName: { [Op.like]: `%${searchField}%` } },
+          { vCompanyContact: { [Op.like]: `%${searchField}%` } },
+        ],
+      };
+    }
+
+    queryOptions.include.push(
+      { model: Employee, as: "employee" },
+      { model: ReqMeetDetailsByRecp, as: "reqMeetDetailsByRecp" },
+      { model: ReqMeetVisitorDetails, required: false, as: "visitorDetails" }
+    );
+
+    const requestMeetings = await RequestMeeting.findAll(queryOptions);
 
     if (requestMeetings) {
       res.status(200).json({
@@ -168,8 +203,12 @@ module.exports.saveTokenByReceptionist = async (req, res) => {
 
 module.exports.getVisitorListByToken = async (req, res) => {
   try {
-    const { RequestMeeting, ReqMeetDetailsByRecp, Employee, ReqMeetVisitorDetails } =
-      req.app.locals.models;
+    const {
+      RequestMeeting,
+      ReqMeetDetailsByRecp,
+      Employee,
+      ReqMeetVisitorDetails,
+    } = req.app.locals.models;
     if (req.params) {
       const { TokenNumber } = req.params;
 
@@ -186,7 +225,11 @@ module.exports.getVisitorListByToken = async (req, res) => {
         include: [
           { model: Employee, as: "employee" },
           { model: ReqMeetDetailsByRecp, as: "reqMeetDetailsByRecp" },
-          { model: ReqMeetVisitorDetails, required: false, as: "visitorDetails" },
+          {
+            model: ReqMeetVisitorDetails,
+            required: false,
+            as: "visitorDetails",
+          },
         ],
       });
 
@@ -210,11 +253,15 @@ module.exports.getVisitorListByToken = async (req, res) => {
   }
 };
 
-//notification for employee 
+//notification for employee
 module.exports.getVisitorListByCode = async (req, res) => {
   try {
-    const { RequestMeeting, ReqMeetDetailsByRecp, Employee, ReqMeetVisitorDetails } =
-      req.app.locals.models;
+    const {
+      RequestMeeting,
+      ReqMeetDetailsByRecp,
+      Employee,
+      ReqMeetVisitorDetails,
+    } = req.app.locals.models;
     if (req.params) {
       const { emp_code } = req.params;
 
@@ -231,7 +278,11 @@ module.exports.getVisitorListByCode = async (req, res) => {
         include: [
           { model: Employee, as: "employee" },
           { model: ReqMeetDetailsByRecp, as: "reqMeetDetailsByRecp" },
-          { model: ReqMeetVisitorDetails, required: false, as: "visitorDetails" },
+          {
+            model: ReqMeetVisitorDetails,
+            required: false,
+            as: "visitorDetails",
+          },
         ],
       });
 
@@ -303,20 +354,60 @@ module.exports.updateVisitorMeetingStatus = async (req, res) => {
 
 module.exports.getVisitorMeetingByEmpID = async (req, res) => {
   try {
-    const { RequestMeeting, Employee, ReqMeetDetailsByRecp, ReqMeetVisitorDetails } =
-      req.app.locals.models;
+    const {
+      RequestMeeting,
+      Employee,
+      ReqMeetDetailsByRecp,
+      ReqMeetVisitorDetails,
+    } = req.app.locals.models;
 
     if (req.params) {
       const { empId } = req.params;
 
-      const requestMeetings = await RequestMeeting.findAll({
-        where: { empId: empId },
-        include: [
-          { model: Employee, as: "employee" },
-          { model: ReqMeetDetailsByRecp, as: "reqMeetDetailsByRecp" },
-          { model: ReqMeetVisitorDetails, required: false, as: "visitorDetails" },
-        ],
-      });
+      let { page, pageSize, sort, sortBy, searchField } = req.query;
+
+      page = Math.max(1, parseInt(page, 10)) || 1;
+      pageSize = Math.max(1, parseInt(pageSize, 10)) || 10;
+
+      const offset = (page - 1) * pageSize;
+
+      // Ensure sortOrder is either 'ASC' or 'DESC', default to 'ASC' if undefined
+      sort = sort ? sort.toUpperCase() : "ASC";
+
+      const queryOptions = {
+        limit: pageSize,
+        offset: offset,
+        include: [],
+      };
+
+      if (sortBy) {
+        queryOptions.order = [[sortBy, sort]];
+      }
+
+      if (
+        searchField &&
+        typeof searchField === "string" &&
+        searchField.trim() !== ""
+      ) {
+        queryOptions.where = {
+          [Op.or]: [
+            { ReqStatus: { [Op.like]: `%${searchField}%` } },
+            { purposeOfMeeting: { [Op.like]: `%${searchField}%` } },
+            { vCompanyName: { [Op.like]: `%${searchField}%` } },
+            { vCompanyContact: { [Op.like]: `%${searchField}%` } },
+          ],
+        };
+      }
+
+      queryOptions.include.push(
+        { model: Employee, as: "employee" },
+        { model: ReqMeetDetailsByRecp, as: "reqMeetDetailsByRecp" },
+        { model: ReqMeetVisitorDetails, required: false, as: "visitorDetails" }
+      );
+
+      queryOptions.where = { ...queryOptions.where, empId: empId, };
+
+      const requestMeetings = await RequestMeeting.findAll(queryOptions);
 
       if (requestMeetings) {
         res.status(200).json({
@@ -337,8 +428,12 @@ module.exports.getVisitorMeetingByEmpID = async (req, res) => {
 
 module.exports.getVisitorMeetingByReqMeetingID = async (req, res) => {
   try {
-    const { RequestMeeting, Employee, ReqMeetDetailsByRecp, ReqMeetVisitorDetails } =
-      req.app.locals.models;
+    const {
+      RequestMeeting,
+      Employee,
+      ReqMeetDetailsByRecp,
+      ReqMeetVisitorDetails,
+    } = req.app.locals.models;
 
     if (req.params) {
       const { reqMeetingID } = req.params;
@@ -348,7 +443,11 @@ module.exports.getVisitorMeetingByReqMeetingID = async (req, res) => {
         include: [
           { model: Employee, as: "employee" },
           { model: ReqMeetDetailsByRecp, as: "reqMeetDetailsByRecp" },
-          { model: ReqMeetVisitorDetails, required: false, as: "visitorDetails" },
+          {
+            model: ReqMeetVisitorDetails,
+            required: false,
+            as: "visitorDetails",
+          },
         ],
       });
 
