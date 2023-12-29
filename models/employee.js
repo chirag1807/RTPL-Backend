@@ -76,6 +76,11 @@ const Employee = sequelize.define('Employees', {
     allowNull: false,
     defaultValue: false,
   },
+  isRecept: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
+  },
   isActive: {
     type: DataTypes.BOOLEAN,
     allowNull: false,
@@ -100,7 +105,6 @@ const Employee = sequelize.define('Employees', {
   },
 }, {
   timestamps: true,
-  paranoid: true
 });
 
 Employee.belongsTo(EmployeeRole, {

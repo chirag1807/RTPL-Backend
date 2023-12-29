@@ -1,8 +1,6 @@
 const validator = require("validator");
-const SendEmailService = require("../../Middleware/emaiService");
-const nodemailer = require("nodemailer");
 const CONSTANT = require("../../constant/constant");
-const Sequelize = require("sequelize");
+const sendMail = require("../../Middleware/emaiService");
 
 const inputFieldsRequestmeeting = [
   "vCompanyName",
@@ -55,7 +53,11 @@ module.exports.visitorRequestMeeting = async (req, res) => {
       });
 
       if (requestMeeting) {
-        //send mail to company of visitor.
+
+        const mailSubject = 'Meeting Request Created';
+        const mailMessage = 'Your meeting request has been registered successfully.';
+
+        await sendMail(vCompanyEmail, "rtpl@rtplgroup.com", mailSubject, mailMessage);
 
         //save images to s3 bucket then replace url with request body data.
 
@@ -71,7 +73,7 @@ module.exports.visitorRequestMeeting = async (req, res) => {
             });
           })
         );
-
+  
         res.status(200).json({
           message: "Your meeting request has been registered successfully.",
         });
@@ -156,7 +158,7 @@ module.exports.getVisitorRequestMeeting = async (req, res) => {
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: error.message });
   }
 };
 
@@ -197,7 +199,7 @@ module.exports.saveTokenByReceptionist = async (req, res) => {
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: error.message });
   }
 };
 
@@ -249,7 +251,7 @@ module.exports.getVisitorListByToken = async (req, res) => {
     }
   } catch (error) {
     console.log(error);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: error.message });
   }
 };
 
@@ -330,7 +332,7 @@ module.exports.updateVisitorMeetingStatus = async (req, res) => {
         ReqStatus,
         DeclineReason:
           ReqStatus === "ReceptionistRejected" ||
-          ReqStatus === "EmployeeRejected"
+            ReqStatus === "EmployeeRejected"
             ? DeclineReason
             : null,
       });
@@ -348,7 +350,7 @@ module.exports.updateVisitorMeetingStatus = async (req, res) => {
     }
   } catch (error) {
     console.log(error);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: error.message });
   }
 };
 
@@ -422,7 +424,7 @@ module.exports.getVisitorMeetingByEmpID = async (req, res) => {
     }
   } catch (error) {
     console.log(error);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: error.message });
   }
 };
 
@@ -464,6 +466,6 @@ module.exports.getVisitorMeetingByReqMeetingID = async (req, res) => {
     }
   } catch (error) {
     console.log(error);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: error.message });
   }
 };

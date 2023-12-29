@@ -60,7 +60,26 @@ module.exports.createRequestMeeting = async (req, res) => {
           })
         );
 
-        // Send mail to related person.
+        const internalMembers = req.body.internalMembers;
+
+        const internalMemberIds = internalMembers.map((member) => member.empId);
+
+        const internalTeamEmails = await Employee.findAll({
+          attributes: ['email'],
+          where: {
+            empID: internalMemberIds,
+          },
+          raw: true,
+        });
+
+        const emailPromises = internalTeamEmails.map(async (member) => {
+          const mailSubject = 'Meeting Created';
+          const mailMessage = 'A new meeting has been created.';
+
+          await sendMail(member.email, "rtpl@rtplgroup.com", mailSubject, mailMessage);
+        });
+
+        await Promise.all(emailPromises);
 
         res.status(200).json({
           message: "Your visitor meeting has been created successfully.",
@@ -84,6 +103,7 @@ module.exports.createRequestMeeting = async (req, res) => {
 module.exports.createOuterMeeting = async (req, res) => {
   try {
     const { Meeting, InternalTeamSelect, OuterMeeting } = req.app.locals.models;
+    const updatedBy = req.decodedEmpCode;
     if (req.body) {
       // COMMON.setModelCreatedByFieldValue(req);
       // Set other necessary fields
@@ -96,6 +116,7 @@ module.exports.createOuterMeeting = async (req, res) => {
       );
 
       if (createOuterMeeting) {
+        req.body.createdBy = updatedBy;
         const createdMeeting = await Meeting.create(req.body, {
           fields: inputFieldsMeeting,
         });
@@ -104,20 +125,39 @@ module.exports.createOuterMeeting = async (req, res) => {
           createdMeeting.outerMeetingID = createOuterMeeting.outerMeetingID;
           await createdMeeting.save();
 
-          // const updatedList = req.body.internalMembers.map((internalMember) => ({
-          //   ...internalMember,
-          //   meetingID: createdMeeting.meetingID,
-          // }));
+          const updatedList = req.body.internalMembers.map((internalMember) => ({
+            ...internalMember,
+            meetingID: createdMeeting.meetingID,
+          }));
 
-          // await Promise.all(
-          //   updatedList.map(async (internalMember) => {
-          //     await InternalTeamSelect.create(internalMember, {
-          //       fields: inputFieldsInternalMembers,
-          //     });
-          //   })
-          // );
+          await Promise.all(
+            updatedList.map(async (internalMember) => {
+              await InternalTeamSelect.create(internalMember, {
+                fields: inputFieldsInternalMembers,
+              });
+            })
+          );
 
-          // Send mail to related person.
+          const internalMembers = req.body.internalMembers;
+
+          const internalMemberIds = internalMembers.map((member) => member.empId);
+
+          const internalTeamEmails = await Employee.findAll({
+            attributes: ['email'],
+            where: {
+              empID: internalMemberIds,
+            },
+            raw: true,
+          });
+
+          const emailPromises = internalTeamEmails.map(async (member) => {
+            const mailSubject = 'Meeting Created';
+            const mailMessage = 'A new meeting has been created.';
+
+            await sendMail(member.email, "rtpl@rtplgroup.com", mailSubject, mailMessage);
+          });
+
+          await Promise.all(emailPromises);
 
           res.status(200).json({
             message: "Your outer meeting has been created successfully.",
@@ -128,13 +168,15 @@ module.exports.createOuterMeeting = async (req, res) => {
               "Sorry, Your outer meeting has not been created. Please try again later.",
           });
         }
-      } else {
+      }
+      else {
         res.status(400).json({
           message:
             "Sorry, Your outer meeting has not been created. Please try again later.",
         });
       }
-    } else {
+    }
+    else {
       console.log("Invalid parameter");
       res.status(400).json({ error: "Invalid parameter" });
     }
@@ -184,14 +226,14 @@ module.exports.updateOuterMeetingStatus = async (req, res) => {
     }
   } catch (error) {
     console.log(error);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: error.message });
   }
 };
 
 module.exports.createAppointmentMeeting = async (req, res) => {
   try {
-    const { Meeting, InternalTeamSelect, AppointmentMeeting } =
-      req.app.locals.models;
+    const { Meeting, InternalTeamSelect, AppointmentMeeting } = req.app.locals.models;
+    const updatedBy = req.decodedEmpCode;
     if (req.body) {
       // COMMON.setModelCreatedByFieldValue(req);
       // Set other necessary fields
@@ -201,6 +243,7 @@ module.exports.createAppointmentMeeting = async (req, res) => {
       );
 
       if (createAppointmentMeeting) {
+        req.body.createdBy = updatedBy;
         const createdMeeting = await Meeting.create(req.body, {
           fields: inputFieldsMeeting,
         });
@@ -210,20 +253,39 @@ module.exports.createAppointmentMeeting = async (req, res) => {
             createAppointmentMeeting.appointmentMeetingID;
           await createdMeeting.save();
 
-          // const updatedList = req.body.internalMembers.map((internalMember) => ({
-          //   ...internalMember,
-          //   meetingID: createdMeeting.meetingID,
-          // }));
+          const updatedList = req.body.internalMembers.map((internalMember) => ({
+            ...internalMember,
+            meetingID: createdMeeting.meetingID,
+          }));
 
-          // await Promise.all(
-          //   updatedList.map(async (internalMember) => {
-          //     await InternalTeamSelect.create(internalMember, {
-          //       fields: inputFieldsInternalMembers,
-          //     });
-          //   })
-          // );
+          await Promise.all(
+            updatedList.map(async (internalMember) => {
+              await InternalTeamSelect.create(internalMember, {
+                fields: inputFieldsInternalMembers,
+              });
+            })
+          );
 
-          // Send mail to related person.
+          const internalMembers = req.body.internalMembers;
+
+          const internalMemberIds = internalMembers.map((member) => member.empId);
+
+          const internalTeamEmails = await Employee.findAll({
+            attributes: ['email'],
+            where: {
+              empID: internalMemberIds,
+            },
+            raw: true,
+          });
+
+          const emailPromises = internalTeamEmails.map(async (member) => {
+            const mailSubject = 'Meeting Created';
+            const mailMessage = 'A new meeting has been created.';
+
+            await sendMail(member.email, "rtpl@rtplgroup.com", mailSubject, mailMessage);
+          });
+
+          await Promise.all(emailPromises);
 
           res.status(200).json({
             message: "Your appointment meeting has been created successfully.",
@@ -234,13 +296,15 @@ module.exports.createAppointmentMeeting = async (req, res) => {
               "Sorry, Your appointment meeting has not been created. Please try again later.",
           });
         }
-      } else {
+      }
+      else {
         res.status(400).json({
           message:
             "Sorry, Your appointment meeting has not been created. Please try again later.",
         });
       }
-    } else {
+    }
+    else {
       console.log("Invalid parameter");
       res.status(400).json({ error: "Invalid parameter" });
     }
@@ -291,7 +355,7 @@ module.exports.updateAppointmentMeetingStatus = async (req, res) => {
     }
   } catch (error) {
     console.log(error);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: error.message });
   }
 };
 
@@ -344,6 +408,7 @@ module.exports.startMeeting = async (req, res) => {
 module.exports.rescheduleMeeting = async (req, res) => {
   try {
     const { Meeting } = req.app.locals.models;
+    const updatedBy = req.decodedEmpCode;
     const {
       meetingID,
       rescConferenceRoomId,
@@ -373,6 +438,7 @@ module.exports.rescheduleMeeting = async (req, res) => {
     }
 
     meeting.rescMeetingDate = rescMeetingDate;
+    meeting.updatedBy = updatedBy;
     meeting.rescMeetingStartTime = rescMeetingStartTime;
     meeting.rescConferenceRoomID = rescConferenceRoomId;
     meeting.rescMeetingEndTime = rescMeetingEndTime;
@@ -394,6 +460,7 @@ module.exports.endMeeting = async (req, res) => {
   try {
     const { Meeting } = req.app.locals.models;
     const { meetingID } = req.body;
+    const updatedBy = req.decodedEmpCode;
 
     if (!meetingID) {
       return res
@@ -411,6 +478,7 @@ module.exports.endMeeting = async (req, res) => {
 
     meeting.stoppedAt = new Date();
     meeting.isActive = false;
+    meeting.deletedBy = updatedBy;
 
     await meeting.save();
 
@@ -495,7 +563,7 @@ module.exports.getListOfCreatedMeeting = async (req, res) => {
     }
   } catch (error) {
     console.log(error);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: error.message });
   }
 };
 
@@ -546,7 +614,7 @@ module.exports.getCreatedMeetingByID = async (req, res) => {
     }
   } catch (error) {
     console.log(error);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: error.message });
   }
 };
 
