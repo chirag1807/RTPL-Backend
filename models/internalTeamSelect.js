@@ -36,7 +36,12 @@ const InternalTeamSelect = sequelize.define('InternalTeamSelection', {
     DeclineReason: {
         type: DataTypes.STRING,
         allowNull: true,
-    }
+    },
+    isAttended: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+    },
 }, {
     timestamps: true,
     paranoid: true

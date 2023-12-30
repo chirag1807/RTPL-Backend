@@ -16,6 +16,14 @@ const Meeting = sequelize.define('Meetings', {
         primaryKey: true,
         autoIncrement: true
     },
+    empId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        references: {
+            model: Employee,
+            key: 'empId',
+        },
+    },
     officeID: {
         type: DataTypes.INTEGER,
         allowNull: true,
@@ -121,6 +129,14 @@ const Meeting = sequelize.define('Meetings', {
     stoppedAt: {
        type: DataTypes.TIME,
        allowNull: true,
+    },
+    meetingDoc: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
+    remark: {
+        type: DataTypes.STRING,
+        allowNull: true,
     },
     rescMeetingEndTime: {
         type: DataTypes.TIME,

@@ -459,7 +459,7 @@ module.exports.rescheduleMeeting = async (req, res) => {
 module.exports.endMeeting = async (req, res) => {
   try {
     const { Meeting } = req.app.locals.models;
-    const { meetingID } = req.body;
+    const { meetingID, remark } = req.body;
     const updatedBy = req.decodedEmpCode;
 
     if (!meetingID) {
@@ -478,6 +478,10 @@ module.exports.endMeeting = async (req, res) => {
 
     meeting.stoppedAt = new Date();
     meeting.isActive = false;
+    meeting.remark = remark;
+
+    //handle meeting.meetingDoc using s3 bucket here.
+    
     meeting.deletedBy = updatedBy;
 
     await meeting.save();
