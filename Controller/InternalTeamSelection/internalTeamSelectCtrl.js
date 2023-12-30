@@ -187,3 +187,34 @@ module.exports.deleteInternalMember = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+module.exports.takeAttendanceOfInternalMembers = async (req, res) => {
+  try {
+    const { InternalTeamSelect } = req.app.locals.models;
+    
+    if(req.body){
+
+      const meetingID = req.body.meetingID;
+      const empIds = req.body.empIds;
+
+      const teamMembers = await InternalTeamSelect.findAll({
+        where: { meetingID },
+      });
+
+      for (const teamMember of teamMembers) {
+        if (empIds.includes(teamMember.empId)) {
+          await teamMember.update({ isAttended: true });
+        }
+      }
+
+      res.status(200).json({ message: 'Attendance marked successfully.' });
+    }
+    else{
+      console.log("Invalid perameter");
+      res.status(400).json({ error: "Invalid perameter" });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
+  }
+}

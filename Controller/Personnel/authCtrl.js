@@ -3,6 +3,7 @@ const COMMON = require("../../Common/common");
 const { createAccessToken } = require("../../Middleware/auth");
 const CONSTANT = require("../../constant/constant");
 const sendMail = require("../../Middleware/emaiService");
+const uploadToS3 = require("../../Middleware/uploadFile");
 const inputFieldsEmployee = [
   "empProfileImg",
   "empIDCard",
@@ -95,6 +96,19 @@ module.exports.Registration = async (req, res) => {
           fields: inputFieldsEmployee,
         });
         if (employee) {
+          const imageData = req.file.img;
+          const pdfData = req.file.pdfData;
+
+          const imageUrl = await uploadToS3('your-s3-bucket-name', 'path/to/uploaded/image.jpg', imageData);
+          const pdfUrl = await uploadToS3('your-s3-bucket-name', 'path/to/uploaded/document.pdf', pdfData);
+
+          console.log(imageUrl + " " + pdfUrl);
+
+          employee.empProfileImg = imageUrl;
+          employee.empIDCard = pdfUrl;
+
+          await employee.save();
+          
           let sender = "rtpl@rtplgroup.com"
           let subject = "Registeration Successfully Done";
           let message = `UserID:${employee.emp_code}\nUrl:http://www.rptl.com `;

@@ -7,5 +7,6 @@ router.get('/getInternalTeam/:meetingID', internalTeamController.getInternalMemb
 router.get('/getMeetings/:empId', internalTeamController.getMeetingsForInternalTeam);
 router.put('/updateInternalMember', internalTeamController.updateInternalMember);
 router.delete('/deleteInternalMember', internalTeamController.deleteInternalMember);
+router.put('/takeAttendance', internalTeamController.takeAttendanceOfInternalMembers);
 
 module.exports = router;

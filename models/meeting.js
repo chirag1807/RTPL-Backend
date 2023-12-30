@@ -122,6 +122,14 @@ const Meeting = sequelize.define('Meetings', {
        type: DataTypes.TIME,
        allowNull: true,
     },
+    meetingDoc: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
+    remark: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
     rescMeetingEndTime: {
         type: DataTypes.TIME,
         allowNull: true,
