@@ -99,35 +99,36 @@ module.exports.getDepartments = async (req, res) => {
 }
 
 module.exports.getDepartmentByID = async (req, res) => {
-    try {
-        const { Department } = req.app.locals.models;
-        if(req.params){
-            const { departmentID } = req.params;
-            const department = await Department.findOne({
-                where: { departmentID,
-                  //  isActive: true
-                  },
-            });
-        
-            if (department) {
-              res.status(200).json({
-                message: "Department Fetched Successfully.",
-                department: department,
-              });
-            } else {
-              res.status(400).json({
-                message: "Department Can't be Fetched, Please Try Again Later.",
-              });
-            }
-        }
-        else{
-            console.log("Invalid perameter");
-            res.status(400).json({ error: "Invalid perameter" });
-        }
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: "Internal server error" });
+  try {
+    const { Department } = req.app.locals.models;
+    if (req.params) {
+      const { departmentID } = req.params;
+      const department = await Department.findOne({
+        where: {
+          departmentID,
+          //  isActive: true
+        },
+      });
+
+      if (department) {
+        res.status(200).json({
+          message: "Department Fetched Successfully.",
+          department: department,
+        });
+      } else {
+        res.status(400).json({
+          message: "Department Can't be Fetched, Please Try Again Later.",
+        });
+      }
     }
+    else {
+      console.log("Invalid perameter");
+      res.status(400).json({ error: "Invalid perameter" });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal server error" });
+  }
 }
 
 module.exports.updateDepartment = async (req, res) => {
@@ -147,6 +148,7 @@ module.exports.updateDepartment = async (req, res) => {
       req.body.updatedBy = updatedBy;
       const updatedDepartment = await Department.update(req.body, {
         fields: inputFieldsDepartment,
+        where: { departmentID: departmentID }
       });
 
       if (updatedDepartment) {

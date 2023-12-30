@@ -13,6 +13,7 @@ const meetingRouter = require('../Routes/meetingRoute');
 const internalTeamRouter = require('../Routes/internalTeamRoute')
 const adminRouter = require('../Routes/adminRoute');
 const conferenceRoomRouter = require('../Routes/conferenceRoomRoute');
+const notificationRouter = require('../Routes/notificationRoute');
 
 router.use('/admin',adminRouter);
 router.use('/auth',authRoute);
@@ -28,5 +29,6 @@ router.use('/designation', designationRouter);
 router.use('/role', employeeRoleRouter);
 router.use('/internalTeam',internalTeamRouter);
 router.use('/conferenceRoom', conferenceRoomRouter);
+router.use('/notification', notificationRouter);
 
 module.exports = router

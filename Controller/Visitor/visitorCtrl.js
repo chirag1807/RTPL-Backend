@@ -57,7 +57,7 @@ module.exports.visitorRequestMeeting = async (req, res) => {
         const mailSubject = 'Meeting Request Created';
         const mailMessage = 'Your meeting request has been registered successfully.';
 
-        await sendMail(vCompanyEmail, "rtpl@rtplgroup.com", mailSubject, mailMessage);
+        await sendMail(req.body.vCompanyEmail, "rtpl@rtplgroup.com", mailSubject, mailMessage);
 
         //save images to s3 bucket then replace url with request body data.
 
@@ -166,6 +166,7 @@ module.exports.saveTokenByReceptionist = async (req, res) => {
   try {
     const { RequestMeeting, ReqMeetDetailsByRecp } = req.app.locals.models;
     if (req.params && req.body) {
+
       const { reqMeetingID } = req.params;
       // get value of updatedBy
       // COMMON.setModelUpdatedByFieldValue(req);
@@ -354,7 +355,7 @@ module.exports.updateVisitorMeetingStatus = async (req, res) => {
   }
 };
 
-module.exports.getVisitorMeetingByEmpID = async (req, res) => {
+module.exports.getVisitorMeetingByempId = async (req, res) => {
   try {
     const {
       RequestMeeting,

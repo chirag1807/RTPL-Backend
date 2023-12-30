@@ -22,7 +22,7 @@ const InternalTeamSelect = sequelize.define('InternalTeamSelection', {
         allowNull: false,
         references: {
           model: Employee,
-          key: 'empID',
+          key: 'empId',
         },
     },
     status: {

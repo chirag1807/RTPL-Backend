@@ -21,7 +21,7 @@ module.exports.addDesignation = async (req, res) => {
         // COMMON.setModelCreatedByFieldValue(req);
         // check createdBy is admin or not (means put this condition in below if condition.)
         if (req.body) {
-            req.body.updatedBy = updatedBy;
+            req.body.createdBy = updatedBy;
             const designation = await Designation.create(req.body, {
                 fields: inputFieldsDesignation,
             });

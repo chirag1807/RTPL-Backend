@@ -7,7 +7,7 @@ const Department = require('./department');
 const Designation = require('./designation');
 
 const Employee = sequelize.define('Employees', {
-  empID: {
+  empId: {
     type: DataTypes.INTEGER,
     primaryKey: true,
     autoIncrement: true
@@ -16,7 +16,7 @@ const Employee = sequelize.define('Employees', {
     type: DataTypes.STRING,
     allowNull: true
   },
-  empIDCard: {
+  empIdCard: {
     type: DataTypes.STRING,
     allowNull: true
   },
