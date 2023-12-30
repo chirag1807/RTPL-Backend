@@ -5,7 +5,7 @@ const CONSTANT = require("../../constant/constant");
 const sendMail = require("../../Middleware/emaiService");
 const inputFieldsEmployee = [
     "empProfileImg",
-    "empIDCard",
+    "empIdCard",
     "empAadharCard",
     "aadharNumber",
     "firstName",
@@ -362,10 +362,18 @@ module.exports.updateAdmin = async (req, res) => {
 
         COMMON.setModelUpdatedByFieldValue(req);
 
+        const hashedPassword = await COMMON.ENCRYPT(req.body.password);
+        if (!hashedPassword) {
+            return res
+                .status(500)
+                .json({ error: CONSTANT.MESSAGE_CONSTANT.SOMETHING_WENT_WRONG });
+        }
+        req.body.password = hashedPassword;
+
         req.body.updatedBy = updatedBy;
 
         await Employee.update(req.body, {
-            where: { empID: id },
+            where: { empId: id },
             fields: inputFieldsEmployee,
         });
 
@@ -381,18 +389,18 @@ module.exports.deleteAdmin = async (req, res) => {
     try {
         const { Employee } = req.app.locals.models;
         if (req.params.id) {
-            const empID = req.params.id;
-            const employeeDetails = await Employee.findByPk(empID);
+            const empId = req.params.id;
+            const employeeDetails = await Employee.findByPk(empId);
             if (employeeDetails) {
                 await employeeDetails.update({
                     isDeleted: 1,
-                    // deletedBy: req.user.empID  //pending to set deletion id of person
+                    // deletedBy: req.user.empId  //pending to set deletion id of person
                 });
                 await employeeDetails.destroy();
                 // Return a success response
                 res.json({ message: "Admin deleted successfully." });
             } else {
-                res.status(404).json({ error: `Admin with id ${empID} not found.` });
+                res.status(404).json({ error: `Admin with id ${empId} not found.` });
             }
         } else {
             console.log("Invalid perameter");

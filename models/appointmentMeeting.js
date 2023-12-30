@@ -13,7 +13,7 @@ const AppointmentMeeting = sequelize.define('AppointmentMeeting', {
         allowNull: false,
         references: {
           model: Employee,
-          key: 'empID',
+          key: 'empId',
         },
     },
     status: {

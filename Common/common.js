@@ -17,13 +17,13 @@ const COMMON = Object.freeze({
   },
   setModelCreatedByFieldValue: (req) => {
     if (req && req.body && req.user) {
-        (req.body || req)["createdBy"] = req.user.empID;
+        (req.body || req)["createdBy"] = req.user.empId;
         (req.body || req)["createdAt"] = COMMON.getCurrentUTC();
     }
 },
 setModelUpdatedByFieldValue: (req) => {
   if (req && req.body && req.user) {
-      (req.body || req)["updatedBy"] = req.user.empID;
+      (req.body || req)["updatedBy"] = req.user.empId;
       (req.body || req)["updatedAt"] = COMMON.getCurrentUTC();
   }
 }

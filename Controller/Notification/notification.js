@@ -3,17 +3,17 @@ module.exports.getNotification = async (req, res) => {
     const { Employee, RequestMeeting, OuterMeeting, Meeting, AppointmentMeeting } =
       req.app.locals.models;
 
+    console.log(req.user.empId);
+
     if (req.user.isAdmin == true) {
       const inactiveEmployees = await Employee.findAll({
         attributes: [
-          "empID",
+          "empId",
           "emp_code",
           "firstName",
           "lastName",
           "empProfileImg",
-          "createdAt",
-          [literal("DATE_FORMAT(`Employee`.`createdAt`, '%Y-%m-%d')"), "date"],
-          [literal("DATE_FORMAT(`Employee`.`createdAt`, '%H:%i:%s')"), "time"],
+          "createdAt"
         ],
         where: { isActive: false },
       });
@@ -38,9 +38,7 @@ module.exports.getNotification = async (req, res) => {
       const pendingRequestMeetings = await RequestMeeting.findAll({
         attributes: [
           "reqMeetingID",
-          "createdAt",
-          [literal("DATE_FORMAT(`Employee`.`createdAt`, '%Y-%m-%d')"), "date"],
-          [literal("DATE_FORMAT(`Employee`.`createdAt`, '%H:%i:%s')"), "time"],
+          "createdAt"
         ],
         where: { ReqStatus: "Pending" },
       });
@@ -48,9 +46,7 @@ module.exports.getNotification = async (req, res) => {
       const pendingOuterMeetings = await OuterMeeting.findAll({
         attributes: [
           "outerMeetingID",
-          "createdAt",
-          [literal("DATE_FORMAT(`Employee`.`createdAt`, '%Y-%m-%d')"), "date"],
-          [literal("DATE_FORMAT(`Employee`.`createdAt`, '%H:%i:%s')"), "time"],
+          "createdAt"
         ],
         where: { status: "Pending" },
       });
@@ -83,13 +79,12 @@ module.exports.getNotification = async (req, res) => {
           });
       }
     } else {
+
       const receptionistAcceptedReqMeetings = await RequestMeeting.findAll({
         attributes: [
-            "reqMeetingID",
-            "createdAt",
-            [literal("DATE_FORMAT(`Employee`.`createdAt`, '%Y-%m-%d')"), "date"],
-            [literal("DATE_FORMAT(`Employee`.`createdAt`, '%H:%i:%s')"), "time"],
-          ],
+          "reqMeetingID",
+          "createdAt"
+        ],
         where: { ReqStatus: "ReceptionistAccepted", empId: req.user.empId },
       });
 
@@ -101,11 +96,9 @@ module.exports.getNotification = async (req, res) => {
       );
       const receptionistAcceptedEmployeeOuterMeetings = await Meeting.findAll({
         attributes: [
-            "meetingID",
-            "createdAt",
-            [literal("DATE_FORMAT(`Employee`.`createdAt`, '%Y-%m-%d')"), "date"],
-            [literal("DATE_FORMAT(`Employee`.`createdAt`, '%H:%i:%s')"), "time"],
-          ],
+          "meetingID",
+          "createdAt"
+        ],
         where: { outerMeetingID: outerMeetingIds, empId: req.user.empId },
       });
 
@@ -117,11 +110,9 @@ module.exports.getNotification = async (req, res) => {
       );
       const createdAppointmentMeetings = await Meeting.findAll({
         attributes: [
-            "meetingID",
-            "createdAt",
-            [literal("DATE_FORMAT(`Employee`.`createdAt`, '%Y-%m-%d')"), "date"],
-            [literal("DATE_FORMAT(`Employee`.`createdAt`, '%H:%i:%s')"), "time"],
-          ],
+          "meetingID",
+          "createdAt"
+        ],
         where: { appointmentMeetingID: appointmentMeetingIds },
       });
 
@@ -137,11 +128,13 @@ module.exports.getNotification = async (req, res) => {
           "meetingID"
         ),
         ...createNotificationsForEmployee(
-            createdAppointmentMeetings,
-            "Appointment Meeting",
-            "meetingID"
+          createdAppointmentMeetings,
+          "Appointment Meeting",
+          "meetingID"
         )
       ];
+
+      res.status(201).json({ message: "success", data: employeeNotifications });
     }
   } catch (error) {
     console.error("An error occurred:", error);
@@ -155,10 +148,9 @@ function createNotificationsForAdmin(inactiveEmployees) {
       notificationFor: "admin",
       message: `Employee ${employee.firstName} ${employee.lastName} is inactive. Please verify and activate the employee`,
       respondWith: "ActivateEmployee",
-      id: employee.empID,
+      id: employee.empId,
       img: employee.empProfileImg,
-      date: employee.date,
-      time: employee.time,
+      createdAt: meeting.createdAt
     };
   });
 }
@@ -175,27 +167,25 @@ function createNotificationsForReceptionist(
       respondWith: meetingType,
       id: meeting[meetingIdField],
       img: "",
-      date: meeting.date,
-      time: meeting.time,
+      createdAt: meeting.createdAt
     };
   });
 }
 
 function createNotificationsForEmployee(meetings, meetingType, meetingIdField) {
-    return meetings.map((meeting) => {
-        const message = meetingType == "Request Meeting" ?
-        `${meetingType} with ID ${meeting[meetingIdField]} is accepted by receptionist. Please Verify and accept/reject It.` :
-        meetingType == "Outer Meeting" ?
-        `${meetingType} with ID ${meeting[meetingIdField]} is accepted by receptionist. Please take a note on it.` : 
+  return meetings.map((meeting) => {
+    const message = meetingType == "Request Meeting" ?
+      `${meetingType} with ID ${meeting[meetingIdField]} is accepted by receptionist. Please Verify and accept/reject It.` :
+      meetingType == "Outer Meeting" ?
+        `${meetingType} with ID ${meeting[meetingIdField]} is accepted by receptionist. Please take a note on it.` :
         `${meetingType} with ID ${meeting[meetingIdField]} is created for you. Please Verify and accept/reject It.`
-        return {
-            notificationFor: "employee",
-            message: message,
-            respondWith: meetingType,
-            id: meeting[meetingIdField],
-            img: "",
-            date: meeting.date,
-            time: meeting.time,
-        }
-    });
+    return {
+      notificationFor: "employee",
+      message: message,
+      respondWith: meetingType,
+      id: meeting[meetingIdField],
+      img: "",
+      createdAt: meeting.createdAt
+    }
+  });
 }

@@ -14,34 +14,34 @@ const ReqMeetDetailsByRecp = sequelize.define('ReqMeetDetailsByRecp', {
     companyID: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        // references: {
-        //     model : Company,
-        //     key:'companyID',
-        // },
+        references: {
+            model : Company,
+            key:'companyID',
+        },
     },
     officeID: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        // references: {
-        //   model: Office,
-        //   key: 'officeID',
-        // },
+        references: {
+          model: Office,
+          key: 'officeID',
+        },
     },
     departmentID:{
         type: DataTypes.INTEGER,
         allowNull: false,
-        // references: {
-        //     model: Department,
-        //     key:'departmentID',
-        // },
+        references: {
+            model: Department,
+            key:'departmentID',
+        },
     },
     designationID: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        // references: {
-        //     model: Designation,
-        //     key: 'designationID'
-        // }
+        references: {
+            model: Designation,
+            key: 'designationID'
+        }
     },
     emp_name: {
         type: DataTypes.STRING,
@@ -61,9 +61,9 @@ const ReqMeetDetailsByRecp = sequelize.define('ReqMeetDetailsByRecp', {
     paranoid: true
 });
 
-// ReqMeetDetailsByRecp.belongsTo(Company, { foreignKey: 'companyID', as: 'company' });
-// ReqMeetDetailsByRecp.belongsTo(Office, { foreignKey: 'officeID', as: 'office' });
-// ReqMeetDetailsByRecp.belongsTo(Department, { foreignKey: 'departmentID', as: 'department' });
-// ReqMeetDetailsByRecp.belongsTo(Designation, {foreignKey: 'designationID', as: 'designation'})
+ReqMeetDetailsByRecp.belongsTo(Company, { foreignKey: 'companyID', as: 'company' });
+ReqMeetDetailsByRecp.belongsTo(Office, { foreignKey: 'officeID', as: 'office' });
+ReqMeetDetailsByRecp.belongsTo(Department, { foreignKey: 'departmentID', as: 'department' });
+ReqMeetDetailsByRecp.belongsTo(Designation, {foreignKey: 'designationID', as: 'designation'})
 
 module.exports = ReqMeetDetailsByRecp;

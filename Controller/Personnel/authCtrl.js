@@ -3,10 +3,9 @@ const COMMON = require("../../Common/common");
 const { createAccessToken } = require("../../Middleware/auth");
 const CONSTANT = require("../../constant/constant");
 const sendMail = require("../../Middleware/emaiService");
-const uploadToS3 = require("../../Middleware/uploadFile");
 const inputFieldsEmployee = [
   "empProfileImg",
-  "empIDCard",
+  "empIdCard",
   "empAadharCard",
   "aadharNumber",
   "firstName",
@@ -96,19 +95,7 @@ module.exports.Registration = async (req, res) => {
           fields: inputFieldsEmployee,
         });
         if (employee) {
-          const imageData = req.file.img;
-          const pdfData = req.file.pdfData;
 
-          const imageUrl = await uploadToS3('your-s3-bucket-name', 'path/to/uploaded/image.jpg', imageData);
-          const pdfUrl = await uploadToS3('your-s3-bucket-name', 'path/to/uploaded/document.pdf', pdfData);
-
-          console.log(imageUrl + " " + pdfUrl);
-
-          employee.empProfileImg = imageUrl;
-          employee.empIDCard = pdfUrl;
-
-          await employee.save();
-          
           let sender = "rtpl@rtplgroup.com"
           let subject = "Registeration Successfully Done";
           let message = `UserID:${employee.emp_code}\nUrl:http://www.rptl.com `;
@@ -142,12 +129,12 @@ module.exports.changePassword = async (req, res) => {
     if (
       req &&
       req.body &&
-      req.body.empID &&
+      req.body.empId &&
       req.body.currentPassword &&
       req.body.newPassword
     ) {
-      if (req.body.empID === req.user.empID || req.user.roleID === -1) {
-        const employeeDetails = await Employee.findByPk(req.body.empID);
+      if (req.body.empId === req.user.empId || req.user.roleID === -1) {
+        const employeeDetails = await Employee.findByPk(req.body.empId);
         if (employeeDetails) {
           // Compare the password
           const passwordMatch = await COMMON.DECRYPT(
@@ -169,7 +156,7 @@ module.exports.changePassword = async (req, res) => {
             },
             {
               where: {
-                empID: req.body.empID,
+                empId: req.body.empId,
               },
             }
           )
@@ -241,7 +228,7 @@ module.exports.sendCode = async (req, res) => {
       const decodedData = jwt.verify(req.headers.authorization.split(' ')[1], CONSTANT.JWT.SECRET);
       const user = await Employee.findOne({
         where: {
-          empID: decodedData.empID,
+          empId: decodedData.empId,
         },
       });
 

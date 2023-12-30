@@ -17,7 +17,9 @@ module.exports.addConferenceRoom = async (req, res) => {
     // get value of CreatedBy 
     // COMMON.setModelCreatedByFieldValue(req);
     // check createdBy is admin or not (means put this condition in below if condition.)
+    const updatedBy = req.decodedEmpCode;
     if (req.body) {
+      req.body.createdBy = updatedBy;
       const conferenceRoom = await ConferenceRoom.create(req.body, {
         fields: inputFieldsConferenceRoom,
       });
@@ -77,8 +79,8 @@ module.exports.getConferenceRooms = async (req, res) => {
     }
 
     queryOptions.include.push({
-        model: Office,
-        as: "office"
+      model: Office,
+      as: "office"
     });
 
     const conferenceRooms = await ConferenceRoom.findAll(queryOptions);
@@ -140,40 +142,40 @@ module.exports.getConferenceRoomByOfficeID = async (req, res) => {
 
       let { page, pageSize, sort, sortBy, searchField } = req.query;
 
-    page = Math.max(1, parseInt(page, 10)) || 1;
-    pageSize = Math.max(1, parseInt(pageSize, 10)) || 10;
+      page = Math.max(1, parseInt(page, 10)) || 1;
+      pageSize = Math.max(1, parseInt(pageSize, 10)) || 10;
 
-    const offset = (page - 1) * pageSize;
+      const offset = (page - 1) * pageSize;
 
-    // Ensure sortOrder is either 'ASC' or 'DESC', default to 'ASC' if undefined
-    sort = sort ? sort.toUpperCase() : "ASC";
+      // Ensure sortOrder is either 'ASC' or 'DESC', default to 'ASC' if undefined
+      sort = sort ? sort.toUpperCase() : "ASC";
 
-    const queryOptions = {
-      limit: pageSize,
-      offset: offset,
-      include: [],
-    };
-
-    if (sortBy) {
-      queryOptions.order = [[sortBy, sort]];
-    }
-
-    if (
-      searchField &&
-      typeof searchField === "string" &&
-      searchField.trim() !== ""
-    ) {
-      queryOptions.where = {
-        [Op.or]: [{ conferenceRoomName: { [Op.like]: `%${searchField}%` } }],
+      const queryOptions = {
+        limit: pageSize,
+        offset: offset,
+        include: [],
       };
-    }
 
-    queryOptions.where = { ...queryOptions.where, officeID: officeID };
+      if (sortBy) {
+        queryOptions.order = [[sortBy, sort]];
+      }
 
-    queryOptions.include.push({
+      if (
+        searchField &&
+        typeof searchField === "string" &&
+        searchField.trim() !== ""
+      ) {
+        queryOptions.where = {
+          [Op.or]: [{ conferenceRoomName: { [Op.like]: `%${searchField}%` } }],
+        };
+      }
+
+      queryOptions.where = { ...queryOptions.where, officeID: officeID };
+
+      queryOptions.include.push({
         model: Office,
         as: "office"
-    });
+      });
 
       const conferenceRooms = await ConferenceRoom.findAll(queryOptions);
 
@@ -213,7 +215,7 @@ module.exports.updateConferenceRoom = async (req, res) => {
       }
 
       const updatedConferenceRoom = await ConferenceRoom.update(req.body, {
-        where: {conferenceRoomID},
+        where: { conferenceRoomID },
         fields: inputFieldsConferenceRoom,
       });
 

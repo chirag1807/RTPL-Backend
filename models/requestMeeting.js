@@ -34,7 +34,7 @@ const RequestMeeting = sequelize.define('RequestMeetings', {
         allowNull: true,
         references: {
           model: Employee,
-          key: 'empID',
+          key: 'empId',
         },
     },
     reqMeetDetailsID: {
