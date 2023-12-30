@@ -510,8 +510,6 @@ module.exports.getListOfCreatedMeeting = async (req, res) => {
       InternalTeamSelect
     } = req.app.locals.models;
 
-    console.log(req.app.locals.models);
-
     let { page, pageSize, sort, sortBy, searchField, isActive } = req.query;
 
     page = Math.max(1, parseInt(page, 10)) || 1;
@@ -558,6 +556,8 @@ module.exports.getListOfCreatedMeeting = async (req, res) => {
     };
 
     const createdMeetings = await Meeting.findAll(queryOptions);
+
+    // const internalMembers = await InternalTeamSelect.find();
 
     if (createdMeetings) {
       res.status(200).json({
