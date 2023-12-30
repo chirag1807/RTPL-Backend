@@ -16,6 +16,14 @@ const Meeting = sequelize.define('Meetings', {
         primaryKey: true,
         autoIncrement: true
     },
+    empId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        references: {
+            model: Employee,
+            key: 'empId',
+        },
+    },
     officeID: {
         type: DataTypes.INTEGER,
         allowNull: true,

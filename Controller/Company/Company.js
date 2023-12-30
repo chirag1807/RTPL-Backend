@@ -14,34 +14,37 @@ const inputFieldsCompany = [
 ];
 
 module.exports.addCompany = async (req, res) => {
-  try {
-    const { Company } = req.app.locals.models;
-    // get value of CreatedBy
-    // COMMON.setModelCreatedByFieldValue(req);
-    // check createdBy is admin or not (means put this condition in below if condition.)
-    if (req.body) {
-      const comapany = await Company.create(req.body, {
-        fields: inputFieldsCompany,
-      });
-      if (comapany) {
-        res.status(200).json({
-          message: "Your company has been registered successfully.",
-        });
-      } else {
-        res.status(400).json({
-          message:
-            "Sorry, Your company has not registered. Please try again later",
-        });
-      }
-    } else {
-      console.log("Invalid perameter");
-      res.status(400).json({ error: "Invalid perameter" });
+    try {
+        const { Company } = req.app.locals.models;
+        const createdBy = req.decodedEmpCode;
+        // get value of CreatedBy 
+        // COMMON.setModelCreatedByFieldValue(req);
+        // check createdBy is admin or not (means put this condition in below if condition.)
+        if (req.body) {
+            req.body.createdBy = createdBy;
+            const comapany = await Company.create(req.body, {
+                fields: inputFieldsCompany,
+            });
+            if (comapany) {
+                res.status(200).json({
+                    message: "Your company has been registered successfully.",
+                });
+            } else {
+                res.status(400).json({
+                    message:
+                        "Sorry, Your company has not registered. Please try again later",
+                });
+            }
+        }
+        else {
+            console.log("Invalid perameter");
+            res.status(400).json({ error: "Invalid perameter" });
+        }
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ error: error.message });
     }
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ error: error.message });
-  }
-};
+}
 
 module.exports.getCompanies = async (req, res) => {
   try {
@@ -131,12 +134,14 @@ module.exports.getCompanyByID = async (req, res) => {
 };
 
 module.exports.updatedCompany = async (req, res) => {
-  try {
-    const { Company } = req.app.locals.models;
-    // get value of updatedBy
-    // COMMON.setModelUpdatedByFieldValue(req);
-    if (req.params && req.body) {
-      const { companyID } = req.params;
+    try {
+        const { Company } = req.app.locals.models;
+        // get value of updatedBy
+        // COMMON.setModelUpdatedByFieldValue(req);
+        const updatedBy = req.decodedEmpCode;
+        if (req.params && req.body) {
+            const { companyID } = req.params;
+            req.body.updatedBy = updatedBy;
 
       const company = await Company.findByPk(companyID);
 
@@ -171,16 +176,17 @@ module.exports.updatedCompany = async (req, res) => {
 };
 
 module.exports.deleteCompany = async (req, res) => {
-  try {
-    const { Company } = req.app.locals.models;
+    try {
+        const { Company } = req.app.locals.models;
+        const updatedBy = req.decodedEmpCode;
 
     if (req.params) {
       const { companyID } = req.params;
 
-      const updatedCompany = await Company.update(
-        { isDeleted: true, isActive: false },
-        { where: { companyID: companyID } }
-      );
+            const updatedCompany = await Company.update(
+                { deletedBy: updatedBy, isDeleted: true, isActive: false },
+                { where: { companyID: companyID } }
+            );
 
       if (updatedCompany) {
         const deletedCompany = await Company.destroy({
