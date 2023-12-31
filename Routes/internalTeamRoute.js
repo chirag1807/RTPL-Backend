@@ -1,6 +1,5 @@
 const express = require('express');
 const internalTeamController = require('../Controller/InternalTeamSelection/internalTeamSelectCtrl');
-const { isActive } = require('../Middleware/auth');
 const router = express.Router();
 
 router.get('/getInternalTeam/:meetingID', internalTeamController.getInternalMembersByMeetingID);

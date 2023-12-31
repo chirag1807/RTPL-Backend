@@ -1,6 +1,6 @@
 const express = require('express');
 const meetingModeController = require('../Controller/Meeting/meetingModeCtrl');
-const { isActive, isAdmin } = require('../Middleware/auth');
+const { isAdmin } = require('../Middleware/auth');
 const router = express.Router();
 
 router.post('/add_meetingMode', isAdmin, meetingModeController.addMeetingMode);

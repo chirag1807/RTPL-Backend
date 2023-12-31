@@ -1,6 +1,5 @@
 const validator = require("validator");
 const COMMON = require("../../Common/common");
-const { createAccessToken } = require("../../Middleware/auth");
 const CONSTANT = require("../../constant/constant");
 const sendMail = require("../../Middleware/emaiService");
 const inputFieldsEmployee = [

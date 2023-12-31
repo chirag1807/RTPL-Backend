@@ -1,11 +1,7 @@
 const express = require('express');
 const app = express();
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const nodemailer = require('nodemailer');
 const chalk = require('ansi-colors');
 require('dotenv').config();
-// const config = require('./config');
 const models = require('./models/models');
 
 app.use(express.json())
@@ -19,9 +15,9 @@ app.use((req, res, next) => {
     next();
   });
 
-// app.get('/', (req, res) => { 
-//   res.send('Hello World!')
-// })
+app.get('/', (req, res) => { 
+  res.send('Hello, Warm Regards from RTPL Group!')
+})
 
 app.use('/api',require('./Routes/routeIndex'));
 

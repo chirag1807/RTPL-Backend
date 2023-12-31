@@ -1,5 +1,4 @@
 const validator = require("validator");
-const CONSTANT = require("../../constant/constant");
 const sendMail = require("../../Middleware/emaiService");
 
 const inputFieldsRequestmeeting = [
