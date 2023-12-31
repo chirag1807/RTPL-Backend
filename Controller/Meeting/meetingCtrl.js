@@ -547,7 +547,15 @@ module.exports.getListOfCreatedMeeting = async (req, res) => {
       { model: OuterMeeting, as: "outerMeeting" },
       { model: MeetingType, as: "meetingType" },
       { model: MeetingMode, as: "meetingMode" },
-      { model: ConferenceRoom, as: "conferenceRoom" }
+      { model: ConferenceRoom, as: "conferenceRoom" },
+      { model: InternalTeamSelect, as: 'internalTeamSelect',
+      include: [
+        {
+          model: Employee,
+          as: 'employee'
+        },
+      ],
+    }
     );
 
     queryOptions.where = {
@@ -556,8 +564,6 @@ module.exports.getListOfCreatedMeeting = async (req, res) => {
     };
 
     const createdMeetings = await Meeting.findAll(queryOptions);
-
-    // const internalMembers = await InternalTeamSelect.find();
 
     if (createdMeetings) {
       res.status(200).json({
@@ -587,6 +593,7 @@ module.exports.getCreatedMeetingByID = async (req, res) => {
       MeetingType,
       MeetingMode,
       ConferenceRoom,
+      InternalTeamSelect,
     } = req.app.locals.models;
 
     if (req.params) {
@@ -603,6 +610,7 @@ module.exports.getCreatedMeetingByID = async (req, res) => {
           { model: MeetingType, as: "meetingType" },
           { model: MeetingMode, as: "meetingMode" },
           { model: ConferenceRoom, as: "conferenceRoom" },
+          { model: InternalTeamSelect, as: 'internalTeamSelect' }
         ],
       });
 
