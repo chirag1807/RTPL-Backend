@@ -1,10 +1,19 @@
-const multer = require('multer');
+const multer = require("multer");
+const fs = require("fs");
 
-// Multer storage configuration for file upload
-const storage = multer.diskStorage({});
-const fileUpload = multer({ storage: storage });
+if (!fs.existsSync("./uploads")) {
+    fs.mkdirSync("./uploads");
+}
 
-// Multer storage configuration for form data (text fields)
-const formData = multer();
+var storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, "./uploads");
+    },
+    filename: function (req, file, cb) {
+        cb(null, file.originalname);
+    },
+});
+  
+var upload = multer({ storage: storage });
 
-module.exports = { fileUpload, formData };
+module.exports = { upload };
