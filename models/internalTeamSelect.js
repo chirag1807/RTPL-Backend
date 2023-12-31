@@ -22,7 +22,7 @@ const InternalTeamSelect = sequelize.define('InternalTeamSelection', {
         allowNull: false,
         references: {
           model: Employee,
-          key: 'empID',
+          key: 'empId',
         },
     },
     status: {
@@ -47,7 +47,8 @@ const InternalTeamSelect = sequelize.define('InternalTeamSelection', {
     paranoid: true
 });
 
-InternalTeamSelect.belongsTo(Employee, { foreignKey: 'empId', as: 'employee' });
+Meeting.hasMany(InternalTeamSelect, { foreignKey: 'meetingID', as: 'internalTeamSelect' });
 InternalTeamSelect.belongsTo(Meeting, { foreignKey: 'meetingID', as: 'meeting' });
+InternalTeamSelect.belongsTo(Employee, { foreignKey: 'empId', as: 'employee' });
 
 module.exports = InternalTeamSelect;

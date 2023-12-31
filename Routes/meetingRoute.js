@@ -3,11 +3,11 @@ const meetingController = require('../Controller/Meeting/meetingCtrl');
 const { isRecept, isActive } = require('../Middleware/auth');
 const router = express.Router();
 
-router.post('/create_request_meeting', meetingController.createRequestMeeting);
-router.post('/create_outer_meeting', meetingController.createOuterMeeting);
+router.post('/create_request_meeting',isActive, meetingController.createRequestMeeting);
+router.post('/create_outer_meeting', isActive, meetingController.createOuterMeeting);
 router.put('/update_outer_meeting_status/:outerMeetingID', isRecept, meetingController.updateOuterMeetingStatus);
-router.post('/create_appointment_meeting', meetingController.createAppointmentMeeting);
-router.put('/update_appointment_meeting_status/:appointmentMeetingID', isRecept, meetingController.updateAppointmentMeetingStatus);
+router.post('/create_appointment_meeting', isActive, meetingController.createAppointmentMeeting);
+router.put('/update_appointment_meeting_status/:appointmentMeetingID', isActive, meetingController.updateAppointmentMeetingStatus);
 router.post('/start-meeting', isActive, meetingController.startMeeting);
 router.post('/end-meeting', isActive, meetingController.endMeeting);
 router.post('/reschedule-meeting', isActive, meetingController.rescheduleMeeting);

@@ -1,9 +1,4 @@
-const validator = require("validator");
-const SendEmailService = require("../../Middleware/emaiService");
-const COMMON = require("../../Common/common");
-const { createAccessToken } = require("../../Middleware/auth");
-const nodemailer = require("nodemailer");
-const CONSTANT = require("../../constant/constant");
+const sendMail = require("../../Middleware/emaiService");
 
 const inputFieldsMeeting = [
   "empId",
@@ -37,11 +32,13 @@ const inputFieldsInternalMembers = ["empId", "meetingID"];
 
 module.exports.createRequestMeeting = async (req, res) => {
   try {
-    const { Meeting, InternalTeamSelect } = req.app.locals.models;
+    const { Meeting, InternalTeamSelect, Employee } = req.app.locals.models;
+    const updatedBy = req.decodedEmpCode;
+    // console.log(updatedBy);
     if (req.body) {
       // COMMON.setModelCreatedByFieldValue(req);
       // Set other necessary fields
-
+      req.body.createdBy = updatedBy;
       const createdMeeting = await Meeting.create(req.body, {
         fields: inputFieldsMeeting,
       });
@@ -67,7 +64,7 @@ module.exports.createRequestMeeting = async (req, res) => {
         const internalTeamEmails = await Employee.findAll({
           attributes: ['email'],
           where: {
-            empID: internalMemberIds,
+            empId: internalMemberIds,
           },
           raw: true,
         });
@@ -102,7 +99,7 @@ module.exports.createRequestMeeting = async (req, res) => {
 
 module.exports.createOuterMeeting = async (req, res) => {
   try {
-    const { Meeting, InternalTeamSelect, OuterMeeting } = req.app.locals.models;
+    const { Meeting, InternalTeamSelect, OuterMeeting, Employee } = req.app.locals.models;
     const updatedBy = req.decodedEmpCode;
     if (req.body) {
       // COMMON.setModelCreatedByFieldValue(req);
@@ -125,39 +122,41 @@ module.exports.createOuterMeeting = async (req, res) => {
           createdMeeting.outerMeetingID = createOuterMeeting.outerMeetingID;
           await createdMeeting.save();
 
-          const updatedList = req.body.internalMembers.map((internalMember) => ({
-            ...internalMember,
-            meetingID: createdMeeting.meetingID,
-          }));
+          if (req.body.internalMembers) {
+            const updatedList = req.body.internalMembers.map((internalMember) => ({
+              ...internalMember,
+              meetingID: createdMeeting.meetingID,
+            }));
 
-          await Promise.all(
-            updatedList.map(async (internalMember) => {
-              await InternalTeamSelect.create(internalMember, {
-                fields: inputFieldsInternalMembers,
-              });
-            })
-          );
+            await Promise.all(
+              updatedList.map(async (internalMember) => {
+                await InternalTeamSelect.create(internalMember, {
+                  fields: inputFieldsInternalMembers,
+                });
+              })
+            );
 
-          const internalMembers = req.body.internalMembers;
+            const internalMembers = req.body.internalMembers;
 
-          const internalMemberIds = internalMembers.map((member) => member.empId);
+            const internalMemberIds = internalMembers.map((member) => member.empId);
 
-          const internalTeamEmails = await Employee.findAll({
-            attributes: ['email'],
-            where: {
-              empID: internalMemberIds,
-            },
-            raw: true,
-          });
+            const internalTeamEmails = await Employee.findAll({
+              attributes: ['email'],
+              where: {
+                empId: internalMemberIds,
+              },
+              raw: true,
+            });
 
-          const emailPromises = internalTeamEmails.map(async (member) => {
-            const mailSubject = 'Meeting Created';
-            const mailMessage = 'A new meeting has been created.';
+            const emailPromises = internalTeamEmails.map(async (member) => {
+              const mailSubject = 'Meeting Created';
+              const mailMessage = 'A new meeting has been created.';
 
-            await sendMail(member.email, "rtpl@rtplgroup.com", mailSubject, mailMessage);
-          });
+              await sendMail(member.email, "rtpl@rtplgroup.com", mailSubject, mailMessage);
+            });
 
-          await Promise.all(emailPromises);
+            await Promise.all(emailPromises);
+          }
 
           res.status(200).json({
             message: "Your outer meeting has been created successfully.",
@@ -232,7 +231,7 @@ module.exports.updateOuterMeetingStatus = async (req, res) => {
 
 module.exports.createAppointmentMeeting = async (req, res) => {
   try {
-    const { Meeting, InternalTeamSelect, AppointmentMeeting } = req.app.locals.models;
+    const { Meeting, InternalTeamSelect, AppointmentMeeting, Employee } = req.app.locals.models;
     const updatedBy = req.decodedEmpCode;
     if (req.body) {
       // COMMON.setModelCreatedByFieldValue(req);
@@ -253,39 +252,41 @@ module.exports.createAppointmentMeeting = async (req, res) => {
             createAppointmentMeeting.appointmentMeetingID;
           await createdMeeting.save();
 
-          const updatedList = req.body.internalMembers.map((internalMember) => ({
-            ...internalMember,
-            meetingID: createdMeeting.meetingID,
-          }));
+          if (req.body.internalMembers) {
+            const updatedList = req.body.internalMembers.map((internalMember) => ({
+              ...internalMember,
+              meetingID: createdMeeting.meetingID,
+            }));
 
-          await Promise.all(
-            updatedList.map(async (internalMember) => {
-              await InternalTeamSelect.create(internalMember, {
-                fields: inputFieldsInternalMembers,
-              });
-            })
-          );
+            await Promise.all(
+              updatedList.map(async (internalMember) => {
+                await InternalTeamSelect.create(internalMember, {
+                  fields: inputFieldsInternalMembers,
+                });
+              })
+            );
 
-          const internalMembers = req.body.internalMembers;
+            const internalMembers = req.body.internalMembers;
 
-          const internalMemberIds = internalMembers.map((member) => member.empId);
+            const internalMemberIds = internalMembers.map((member) => member.empId);
 
-          const internalTeamEmails = await Employee.findAll({
-            attributes: ['email'],
-            where: {
-              empID: internalMemberIds,
-            },
-            raw: true,
-          });
+            const internalTeamEmails = await Employee.findAll({
+              attributes: ['email'],
+              where: {
+                empId: internalMemberIds,
+              },
+              raw: true,
+            });
 
-          const emailPromises = internalTeamEmails.map(async (member) => {
-            const mailSubject = 'Meeting Created';
-            const mailMessage = 'A new meeting has been created.';
+            const emailPromises = internalTeamEmails.map(async (member) => {
+              const mailSubject = 'Meeting Created';
+              const mailMessage = 'A new meeting has been created.';
 
-            await sendMail(member.email, "rtpl@rtplgroup.com", mailSubject, mailMessage);
-          });
+              await sendMail(member.email, "rtpl@rtplgroup.com", mailSubject, mailMessage);
+            });
 
-          await Promise.all(emailPromises);
+            await Promise.all(emailPromises);
+          }
 
           res.status(200).json({
             message: "Your appointment meeting has been created successfully.",
@@ -481,7 +482,7 @@ module.exports.endMeeting = async (req, res) => {
     meeting.remark = remark;
 
     //handle meeting.meetingDoc using s3 bucket here.
-    
+
     meeting.deletedBy = updatedBy;
 
     await meeting.save();
@@ -506,6 +507,7 @@ module.exports.getListOfCreatedMeeting = async (req, res) => {
       MeetingType,
       MeetingMode,
       ConferenceRoom,
+      InternalTeamSelect
     } = req.app.locals.models;
 
     let { page, pageSize, sort, sortBy, searchField, isActive } = req.query;
@@ -545,12 +547,20 @@ module.exports.getListOfCreatedMeeting = async (req, res) => {
       { model: OuterMeeting, as: "outerMeeting" },
       { model: MeetingType, as: "meetingType" },
       { model: MeetingMode, as: "meetingMode" },
-      { model: ConferenceRoom, as: "conferenceRoom" }
+      { model: ConferenceRoom, as: "conferenceRoom" },
+      { model: InternalTeamSelect, as: 'internalTeamSelect',
+      include: [
+        {
+          model: Employee,
+          as: 'employee'
+        },
+      ],
+    }
     );
 
     queryOptions.where = {
       ...queryOptions.where,
-      isActive: isActive ? isActive : true,
+      isActive: isActive ? isActive : false,
     };
 
     const createdMeetings = await Meeting.findAll(queryOptions);
@@ -583,6 +593,7 @@ module.exports.getCreatedMeetingByID = async (req, res) => {
       MeetingType,
       MeetingMode,
       ConferenceRoom,
+      InternalTeamSelect,
     } = req.app.locals.models;
 
     if (req.params) {
@@ -599,6 +610,7 @@ module.exports.getCreatedMeetingByID = async (req, res) => {
           { model: MeetingType, as: "meetingType" },
           { model: MeetingMode, as: "meetingMode" },
           { model: ConferenceRoom, as: "conferenceRoom" },
+          { model: InternalTeamSelect, as: 'internalTeamSelect' }
         ],
       });
 

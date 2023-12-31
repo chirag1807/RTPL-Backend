@@ -1,8 +1,4 @@
-const validator = require("validator");
-const SendEmailService = require("../../Middleware/emaiService");
 const COMMON = require("../../Common/common");
-const { createAccessToken } = require("../../Middleware/auth");
-const nodemailer = require("nodemailer");
 const CONSTANT = require("../../constant/constant");
 const inputFieldsEmployee = [
   "firstName",
@@ -39,10 +35,18 @@ module.exports.updateEmployee = async (req, res) => {
 
     COMMON.setModelUpdatedByFieldValue(req);
 
+    const hashedPassword = await COMMON.ENCRYPT(req.body.password);
+    if (!hashedPassword) {
+      return res
+        .status(500)
+        .json({ error: CONSTANT.MESSAGE_CONSTANT.SOMETHING_WENT_WRONG });
+    }
+    req.body.password = hashedPassword;
+
     req.body.updatedBy = updatedBy;
 
     await Employee.update(req.body, {
-      where: { empID: id },
+      where: { empId: id },
       fields: inputFieldsEmployee,
     });
 
@@ -59,8 +63,8 @@ module.exports.deleteEmployee = async (req, res) => {
     const { Employee } = req.app.locals.models;
     const updatedBy = req.decodedEmpCode;
     if (req.params.id) {
-      const empID = req.params.id;
-      const employeeDetails = await Employee.findByPk(empID);
+      const empId = req.params.id;
+      const employeeDetails = await Employee.findByPk(empId);
       if (employeeDetails) {
         await employeeDetails.update({
           isDeleted: 1,
@@ -70,7 +74,7 @@ module.exports.deleteEmployee = async (req, res) => {
         // Return a success response
         res.json({ message: "Employee deleted successfully." });
       } else {
-        res.status(404).json({ error: `Employee with id ${empID} not found.` });
+        res.status(404).json({ error: `Employee with id ${empId} not found.` });
       }
     } else {
       console.log("Invalid perameter");
@@ -183,13 +187,13 @@ module.exports.getNonAdminEmployeesById = async (req, res) => {
   try {
     const { Employee, Company, Office, Department, Designation, EmployeeRole } =
       req.app.locals.models;
-    const { empID } = req.params;
+    const { empId } = req.params;
 
     const nonAdminEmployees = await Employee.findAll({
       where: {
         isAdmin: false,
         // isActive: true,
-        empID: empID,
+        empId: empId,
       },
       include: [
         {
@@ -234,25 +238,25 @@ module.exports.getNonAdminEmployeesById = async (req, res) => {
   }
 };
 
-// Activate an employee by empID
+// Activate an employee by empId
 module.exports.activateEmployee = async (req, res) => {
   try {
     const { Employee } = req.app.locals.models;
-    const { empID, isActive } = req.body;
+    const { empId, isActive } = req.body;
     const updatedBy = req.decodedEmpCode;
 
-    if (!empID) {
-      return res.status(400).json({ error: "empID is required" });
+    if (!empId) {
+      return res.status(400).json({ error: "empId is required" });
     }
 
-    const employee = await Employee.findOne({ where: { empID } });
+    const employee = await Employee.findOne({ where: { empId } });
 
     if (!employee) {
       return res.status(404).json({ message: "Employee not found" });
     }
 
     // Update isActive to true
-    await Employee.update({ isActive: isActive, updatedBy: updatedBy }, { where: { empID } });
+    await Employee.update({ isActive: isActive, updatedBy: updatedBy }, { where: { empId } });
 
     res.status(200).json({ message: "Employee activated successfully." });
   } catch (error) {

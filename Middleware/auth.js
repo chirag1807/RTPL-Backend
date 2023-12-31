@@ -11,7 +11,7 @@ exports.authenticateToken = (req, res, next) => {
 
   jwt.verify(token, CONSTANT.JWT.SECRET, async (err, user) => {
     if (err) return res.status(403).json({ error: MESSAGE_CONSTANT.INVALID_TOKEN });
-    const userDetails = await Employee.findByPk(user.empID);
+    const userDetails = await Employee.findByPk(user.empId);
     req.user = userDetails;
     next();
   });
@@ -21,7 +21,7 @@ exports.createAccessToken = (user) => {
   return jwt.sign(user, CONSTANT.JWT.SECRET, { expiresIn: '7d' })
 }
 exports.createRefreshToken = (req, res, next) => {
-  req.body.auth = jwt.sign({ empID: 124, empCode: 321, Name: 'ROOT JAS' }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: '7d' })
+  req.body.auth = jwt.sign({ empId: 124, empCode: 321, Name: 'ROOT JAS' }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: '7d' })
   next();
 }
 
@@ -64,7 +64,7 @@ exports.isRecept = catchAsyncErrors(async (req, res, next) => {
 });
 
 exports.isActive = catchAsyncErrors(async (req, res, next) => {
-
+ 
   const tokenjwt = req.headers.authorization.split(' ')[1];
 
   if (!tokenjwt) {
@@ -72,9 +72,9 @@ exports.isActive = catchAsyncErrors(async (req, res, next) => {
   }
 
   const decodedData = jwt.verify(tokenjwt, CONSTANT.JWT.SECRET);
-
   if (decodedData.isActive) {
     req.decodedEmpCode = decodedData.emp_code;
+    console.log(decodedData.emp_code);
     next();
   } else {
     return res.status(403).send({ error: "Wait While Admin Grant Access" });
