@@ -3,6 +3,8 @@ const COMMON = require("../../Common/common");
 const { createAccessToken } = require("../../Middleware/auth");
 const CONSTANT = require("../../constant/constant");
 const sendMail = require("../../Middleware/emaiService");
+const jwt = require('jsonwebtoken');
+
 const cloudinary = require('../../utils/cloudinary');
 const ErrorHandler = require("../../utils/errorhandler");
 const inputFieldsEmployee = [
@@ -121,14 +123,20 @@ module.exports.Registration = async (req, res) => {
           fields: inputFieldsEmployee,
         });
         if (employee) {
-
-          let sender = "rtpl@rtplgroup.com"
+          let sender = "rtpl@rtplgroup.com";
           let subject = "Registeration Successfully Done";
           let message = `UserID:${employee.emp_code}\nUrl:http://www.rptl.com `;
 
-          const result = await sendMail(req.body.email, sender, subject, message);
+          const result = await sendMail(
+            req.body.email,
+            sender,
+            subject,
+            message
+          );
           if (result.success) {
-            res.status(201).json({ message: "Employee registered successfully" });
+            res
+              .status(201)
+              .json({ message: "Employee registered successfully" });
           } else {
             res.status(400).json({ error: result.message });
           }
@@ -225,15 +233,23 @@ module.exports.forgotPassword = async (req, res) => {
       if (user) {
         const hashedPassword = await COMMON.ENCRYPT(req.body.newPassword);
         if (!hashedPassword) {
-          res.status(500).json({ error: CONSTANT.MESSAGE_CONSTANT.SOMETHING_WENT_WRONG });
+          res
+            .status(500)
+            .json({ error: CONSTANT.MESSAGE_CONSTANT.SOMETHING_WENT_WRONG });
         }
         user.password = hashedPassword;
         const updatedPassword = await user.save();
         if (!updatedPassword) {
-          res.status(400).json({ message: "Password Can not be Setted, Please Try Again Later.", });
+          res
+            .status(400)
+            .json({
+              message: "Password Can not be Setted, Please Try Again Later.",
+            });
         }
 
-        res.status(200).json({ message: "User Password Changed Successfully.", });
+        res
+          .status(200)
+          .json({ message: "User Password Changed Successfully." });
       } else {
         res.status(404).json({ message: "User Not Found." });
       }
@@ -251,7 +267,10 @@ module.exports.sendCode = async (req, res) => {
   try {
     const { Employee, VerifyCode } = req.app.locals.models;
     if (req.body) {
-      const decodedData = jwt.verify(req.headers.authorization.split(' ')[1], CONSTANT.JWT.SECRET);
+      const decodedData = jwt.verify(
+        req.headers.authorization.split(" ")[1],
+        CONSTANT.JWT.SECRET
+      );
       const user = await Employee.findOne({
         where: {
           empId: decodedData.empId,
@@ -288,10 +307,13 @@ module.exports.sendCode = async (req, res) => {
     </html>
 `;
 
-
-
-        let subject = "Verify Your Email"
-        const res = await sendMail(req.body.newEmail, "rtpl@rtplgroup.com", subject, htmlContent)
+        let subject = "Verify Your Email";
+        const res = await sendMail(
+          req.body.newEmail,
+          "rtpl@rtplgroup.com",
+          subject,
+          htmlContent
+        );
         console.log(res);
 
         const email = await VerifyCode.create({
@@ -357,4 +379,33 @@ module.exports.verifyCode = async (req, res) => {
     console.error("An error occurred:", error);
     res.status(500).json({ error: error.message });
   }
-}
+};
+
+module.exports.resetToken = async (req, res) => {
+  try {
+    if (req.body) {
+      const { token } = req.body;
+      jwt.verify(token, CONSTANT.JWT.SECRET, async (err, payload) => {
+          if (payload) {
+            const { iat, exp, ...newObject } = payload;
+            const token = createAccessToken(newObject);
+            res.setHeader("Authorization", `Bearer ${token}`);
+            return res.status(200).json({
+              message: "Token Reset Done Successfully."
+            });
+          } else {
+            return res.status(401).json({
+              msg: "Please Do Login Again",
+              jwtMsg: err.message,
+            });
+          }
+        });
+    } else {
+      console.log("Invalid perameter");
+      res.status(400).json({ error: "Invalid perameter" });
+    }
+  } catch (error) {
+    console.error("An error occurred:", error);
+    res.status(500).json({ error: error.message });
+  }
+};

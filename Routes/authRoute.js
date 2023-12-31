@@ -22,4 +22,6 @@ router.post('/sendCode', authController.sendCode);
 
 router.post('/verifyCode', authController.verifyCode);
 
+router.post('/resetToken', authController.resetToken);
+
 module.exports = router;
