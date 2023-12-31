@@ -1,7 +1,3 @@
-const validator = require("validator");
-const COMMON = require("../../Common/common");
-const { createAccessToken } = require("../../Middleware/auth");
-const CONSTANT = require("../../constant/constant");
 const { Op } = require("sequelize");
 
 const inputFieldsCompany = [

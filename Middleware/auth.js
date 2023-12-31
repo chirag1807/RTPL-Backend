@@ -1,8 +1,7 @@
 const jwt = require('jsonwebtoken');
-const config = require('./../config');
 const CONSTANT = require('../constant/constant');
-const { LABEL_CONSTANT } = require('../constant/constant');
 const catchAsyncErrors = require('./catchAsyncErrors');
+
 // Authentication middleware
 exports.authenticateToken = (req, res, next) => {
   const { Employee } = req.app.locals.models;
@@ -18,8 +17,9 @@ exports.authenticateToken = (req, res, next) => {
 };
 
 exports.createAccessToken = (user) => {
-  return jwt.sign(user, CONSTANT.JWT.SECRET, { expiresIn: '7d' })
+  return jwt.sign(user, CONSTANT.JWT.SECRET, { expiresIn: '7d' });
 }
+
 exports.createRefreshToken = (req, res, next) => {
   req.body.auth = jwt.sign({ empId: 124, empCode: 321, Name: 'ROOT JAS' }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: '7d' })
   next();
