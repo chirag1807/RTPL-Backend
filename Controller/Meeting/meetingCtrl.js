@@ -482,7 +482,7 @@ module.exports.endMeeting = async (req, res) => {
     const { meetingID, remark } = req.body;
     const updatedBy = req.decodedEmpCode;
 
-    const meetingDocUrl = uploadAndCreateDocument(req.file);
+    const meetingDocUrl = await uploadAndCreateDocument(req.file);
 
     if (!meetingID) {
       return res
