@@ -1,4 +1,7 @@
 const sendMail = require("../../Middleware/emaiService");
+const ErrorHandler = require("../../utils/errorhandler");
+const cloudinary = require('../../utils/cloudinary');
+
 
 const inputFieldsMeeting = [
   "empId",
@@ -29,6 +32,22 @@ const inputFieldOuterMeeting = [
 ];
 
 const inputFieldsInternalMembers = ["empId", "meetingID"];
+
+//global method to convert file into uri
+const uploadAndCreateDocument = async (file) => {
+  try {
+
+    const result = await cloudinary.uploader.upload(file[0].path, {
+      resource_type: 'auto',
+      folder: 'RTPL_DOCS',
+    });
+
+    return result.secure_url;
+  } catch (error) {
+    console.log(error);
+    throw new ErrorHandler("Unable to upload to Cloudinary", 400);
+  }
+};
 
 module.exports.createRequestMeeting = async (req, res) => {
   try {
@@ -463,6 +482,8 @@ module.exports.endMeeting = async (req, res) => {
     const { meetingID, remark } = req.body;
     const updatedBy = req.decodedEmpCode;
 
+    const meetingDocUrl = uploadAndCreateDocument(req.file);
+
     if (!meetingID) {
       return res
         .status(400)
@@ -481,7 +502,7 @@ module.exports.endMeeting = async (req, res) => {
     meeting.isActive = false;
     meeting.remark = remark;
 
-    //handle meeting.meetingDoc using s3 bucket here.
+    meeting.meetingDoc = meetingDocUrl;
 
     meeting.deletedBy = updatedBy;
 
@@ -548,14 +569,15 @@ module.exports.getListOfCreatedMeeting = async (req, res) => {
       { model: MeetingType, as: "meetingType" },
       { model: MeetingMode, as: "meetingMode" },
       { model: ConferenceRoom, as: "conferenceRoom" },
-      { model: InternalTeamSelect, as: 'internalTeamSelect',
-      include: [
-        {
-          model: Employee,
-          as: 'employee'
-        },
-      ],
-    }
+      {
+        model: InternalTeamSelect, as: 'internalTeamSelect',
+        include: [
+          {
+            model: Employee,
+            as: 'employee'
+          },
+        ],
+      }
     );
 
     queryOptions.where = {
