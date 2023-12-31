@@ -55,8 +55,6 @@ module.exports.visitorRequestMeeting = async (req, res) => {
   try {
     const { RequestMeeting, ReqMeetVisitorDetails } = req.app.locals.models;
     if (req.body) {
-
-
       if (!validator.isEmail(req.body.vCompanyEmail)) {
         return res.status(400).json({ error: "Invalid email." });
       }
@@ -71,13 +69,9 @@ module.exports.visitorRequestMeeting = async (req, res) => {
       });
 
       if (requestMeeting) {
-        
-        console.log(req.files);
 
-        const vIDocUrl = await uploadAndCreateDocument(req.files.vIDDoc);
-        const vImageUrl = await uploadAndCreateDocument(req.files.vImage);
-
-        console.log(vIDocUrl, " ", vImageUrl);
+        // const vIDocUrl = await uploadAndCreateDocument(req.files.vIDDoc);
+        // const vImageUrl = await uploadAndCreateDocument(req.files.vImage);
 
         const mailSubject = 'Meeting Request Created';
         const mailMessage = 'Your meeting request has been registered successfully.';
@@ -88,8 +82,8 @@ module.exports.visitorRequestMeeting = async (req, res) => {
         const updatedList = req.body.visitors.map((visitor,index) => ({
           ...visitor,
           reqMeetingID: requestMeeting.reqMeetingID,
-          vImage : vImageUrl[index],
-          vIDDoc : vIDocUrl[index]
+          // vImage : vImageUrl[index],
+          // vIDDoc : vIDocUrl[index]
         }));
 
         await Promise.all(

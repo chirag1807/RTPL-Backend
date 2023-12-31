@@ -3,8 +3,17 @@ const app = express();
 const chalk = require('ansi-colors');
 require('dotenv').config();
 const models = require('./models/models');
+const bodyParser = require('body-parser');
 
-app.use(express.json())
+// var multer = require("multer");
+// var upload = multer();
+// app.use(upload.any());
+// app.use(express.json());
+// app.use(express.urlencoded({extended:true}))
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended:true }));
+
+// app.use(express.json())
 app.locals.models = models;
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');

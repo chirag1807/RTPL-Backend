@@ -4,6 +4,7 @@ const { createAccessToken } = require("../../Middleware/auth");
 const CONSTANT = require("../../constant/constant");
 const sendMail = require("../../Middleware/emaiService");
 const jwt = require('jsonwebtoken');
+const fs = require('fs');
 
 const cloudinary = require('../../utils/cloudinary');
 const ErrorHandler = require("../../utils/errorhandler");
@@ -37,6 +38,8 @@ const uploadAndCreateDocument = async (file) => {
       resource_type: 'auto',
       folder: 'RTPL_DOCS',
     });
+
+    fs.unlinkSync(file[0].path);
 
     return result.secure_url;
   } catch (error) {
@@ -86,6 +89,7 @@ module.exports.login = async (req, res) => {
 // register
 module.exports.Registration = async (req, res) => {
   try {
+    console.log(req.body);
     const { Employee } = req.app.locals.models;
     if (req.body) {
 
