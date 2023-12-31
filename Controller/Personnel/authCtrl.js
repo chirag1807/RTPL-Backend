@@ -5,6 +5,8 @@ const CONSTANT = require("../../constant/constant");
 const sendMail = require("../../Middleware/emaiService");
 const jwt = require('jsonwebtoken');
 
+const cloudinary = require('../../utils/cloudinary');
+const ErrorHandler = require("../../utils/errorhandler");
 const inputFieldsEmployee = [
   "empProfileImg",
   "empIdCard",
@@ -26,6 +28,22 @@ const inputFieldsEmployee = [
   "departmentID",
   "designationID",
 ];
+
+//global method to convert file into uri
+const uploadAndCreateDocument = async (file) => {
+  try {
+
+    const result = await cloudinary.uploader.upload(file[0].path, {
+      resource_type: 'auto',
+      folder: 'RTPL_DOCS',
+    });
+
+    return result.secure_url;
+  } catch (error) {
+    console.log(error);
+    throw new ErrorHandler("Unable to upload to Cloudinary", 400);
+  }
+};
 
 // login
 module.exports.login = async (req, res) => {
@@ -70,8 +88,13 @@ module.exports.Registration = async (req, res) => {
   try {
     const { Employee } = req.app.locals.models;
     if (req.body) {
+
+      const aadharCard = await uploadAndCreateDocument(req.files.empAadharCard);
+      const idCard = await uploadAndCreateDocument(req.files.empIdCard);
+      const photo = await uploadAndCreateDocument(req.files.empProfileImg)
+
       // get value of CreatedBy
-      // COMMON.setModelCreatedByFieldValue(req);
+      COMMON.setModelCreatedByFieldValue(req);
       // Validate email
       if (!validator.isEmail(req.body.email)) {
         return res.status(400).json({ error: "Invalid email" });
@@ -93,6 +116,9 @@ module.exports.Registration = async (req, res) => {
         },
       });
       if (!isExistEmployee) {
+        req.body.empAadharCard = aadharCard;
+        req.body.empIdCard = idCard;
+        req.body.empProfileImg = photo;
         const employee = await Employee.create(req.body, {
           fields: inputFieldsEmployee,
         });
