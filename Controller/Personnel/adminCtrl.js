@@ -2,6 +2,9 @@ const validator = require("validator");
 const COMMON = require("../../Common/common");
 const CONSTANT = require("../../constant/constant");
 const sendMail = require("../../Middleware/emaiService");
+const cloudinary = require('../../utils/cloudinary');
+const ErrorHandler = require("../../utils/errorhandler");
+
 const inputFieldsEmployee = [
     "empProfileImg",
     "empIdCard",
@@ -29,12 +32,33 @@ const inputFieldsEmployee = [
     "isActive",
 ];
 
+//global method to convert file into uri
+const uploadAndCreateDocument = async (file) => {
+    try {
+
+        const result = await cloudinary.uploader.upload(file[0].path, {
+            resource_type: 'auto',
+            folder: 'RTPL_DOCS',
+        });
+
+        return result.secure_url;
+    } catch (error) {
+        console.log(error);
+        throw new ErrorHandler("Unable to upload to Cloudinary", 400);
+    }
+};
+
 // addAdmin
 module.exports.addAdmin = async (req, res) => {
     try {
         const { Employee } = req.app.locals.models;
 
         if (req.body) {
+
+            const aadharCard = await uploadAndCreateDocument(req.files.empAadharCard);
+            const idCard = await uploadAndCreateDocument(req.files.empIdCard);
+            const photo = await uploadAndCreateDocument(req.files.empProfileImg);
+
             const createdBy = req.decodedEmpCode;
             // get value of CreatedBy
             // COMMON.setModelCreatedByFieldValue(req);
@@ -56,12 +80,17 @@ module.exports.addAdmin = async (req, res) => {
                     .json({ error: CONSTANT.MESSAGE_CONSTANT.SOMETHING_WENT_WRONG });
             }
             req.body.password = hashedPassword;
+
             const isExistEmployee = await Employee.findOne({
                 where: {
                     email: req.body.email,
                 },
             });
             if (!isExistEmployee) {
+                req.body.empAadharCard = aadharCard;
+                req.body.empIdCard = idCard;
+                req.body.empProfileImg = photo;
+
                 const employee = await Employee.create(req.body, {
                     fields: inputFieldsEmployee,
                 });
@@ -103,6 +132,10 @@ module.exports.addReceptionist = async (req, res) => {
         const { Employee } = req.app.locals.models;
         const createdBy = req.decodedEmpCode;
 
+        const aadharCard = await uploadAndCreateDocument(req.files.empAadharCard);
+        const idCard = await uploadAndCreateDocument(req.files.empIdCard);
+        const photo = await uploadAndCreateDocument(req.files.empProfileImg)
+
         if (req.body) {
             // get value of CreatedBy
             // COMMON.setModelCreatedByFieldValue(req);
@@ -130,6 +163,11 @@ module.exports.addReceptionist = async (req, res) => {
                 },
             });
             if (!isExistEmployee) {
+
+                req.body.empAadharCard = aadharCard;
+                req.body.empIdCard = idCard;
+                req.body.empProfileImg = photo;
+                
                 const employee = await Employee.create(req.body, {
                     fields: inputFieldsEmployee,
                 });

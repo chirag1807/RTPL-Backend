@@ -1,5 +1,6 @@
 const validator = require("validator");
 const sendMail = require("../../Middleware/emaiService");
+const cloudinary = require('../../utils/cloudinary');
 
 const inputFieldsRequestmeeting = [
   "vCompanyName",
@@ -34,10 +35,28 @@ const inputFieldsRequestmeetingDetailsbyRecp = [
   "TokenNumber",
 ];
 
+//global method to convert file into uri
+const uploadAndCreateDocument = async (file) => {
+  try {
+
+    const result = await cloudinary.uploader.upload(file[0].path, {
+      resource_type: 'auto',
+      folder: 'RTPL_DOCS',
+    });
+
+    return result.secure_url;
+  } catch (error) {
+    console.log(error);
+    throw new ErrorHandler("Unable to upload to Cloudinary", 400);
+  }
+};
+
 module.exports.visitorRequestMeeting = async (req, res) => {
   try {
     const { RequestMeeting, ReqMeetVisitorDetails } = req.app.locals.models;
     if (req.body) {
+
+
       if (!validator.isEmail(req.body.vCompanyEmail)) {
         return res.status(400).json({ error: "Invalid email." });
       }
@@ -52,17 +71,25 @@ module.exports.visitorRequestMeeting = async (req, res) => {
       });
 
       if (requestMeeting) {
+        
+        console.log(req.files);
+
+        const vIDocUrl = await uploadAndCreateDocument(req.files.vIDDoc);
+        const vImageUrl = await uploadAndCreateDocument(req.files.vImage);
+
+        console.log(vIDocUrl, " ", vImageUrl);
 
         const mailSubject = 'Meeting Request Created';
         const mailMessage = 'Your meeting request has been registered successfully.';
 
         await sendMail(req.body.vCompanyEmail, "rtpl@rtplgroup.com", mailSubject, mailMessage);
 
-        //save images to s3 bucket then replace url with request body data.
 
-        const updatedList = req.body.visitors.map((visitor) => ({
+        const updatedList = req.body.visitors.map((visitor,index) => ({
           ...visitor,
           reqMeetingID: requestMeeting.reqMeetingID,
+          vImage : vImageUrl[index],
+          vIDDoc : vIDocUrl[index]
         }));
 
         await Promise.all(
@@ -72,7 +99,7 @@ module.exports.visitorRequestMeeting = async (req, res) => {
             });
           })
         );
-  
+
         res.status(200).json({
           message: "Your meeting request has been registered successfully.",
         });
