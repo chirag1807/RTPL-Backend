@@ -531,7 +531,7 @@ module.exports.rescheduleMeeting = async (req, res) => {
 
 module.exports.endMeeting = async (req, res) => {
   try {
-    const { Meeting } = req.app.locals.models;
+    const { Meeting, TimeSlot } = req.app.locals.models;
     const { meetingID, remark } = req.body;
     const updatedBy = req.decodedEmpCode;
 
@@ -560,6 +560,12 @@ module.exports.endMeeting = async (req, res) => {
     meeting.deletedBy = updatedBy;
 
     await meeting.save();
+
+    await TimeSlot.destroy({
+      where: {
+        meetingID: meeting.meetingID,
+      },
+    });
 
     res.status(200).json({ message: "Meeting has ended successfully." });
   } catch (error) {
