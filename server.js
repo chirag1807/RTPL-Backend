@@ -4,16 +4,26 @@ const chalk = require('ansi-colors');
 require('dotenv').config();
 const models = require('./models/models');
 const bodyParser = require('body-parser');
+const cors = require("cors");
+var multer = require("multer");
+const upload = multer({ dest: "uploads/" });
 
-// var multer = require("multer");
+app.use(
+  cors({
+    origin: "*",
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE","PATCH"],
+  })
+);
+
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(express.json());
+app.use(bodyParser.json({ limit: '50mb' }));
+app.use("/uploads", express.static("uploads"));
 // var upload = multer();
 // app.use(upload.any());
-// app.use(express.json());
-// app.use(express.urlencoded({extended:true}))
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended:true }));
 
-// app.use(express.json())
+
 app.locals.models = models;
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');

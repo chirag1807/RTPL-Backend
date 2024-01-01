@@ -1,6 +1,6 @@
 const express = require('express');
 const meetingController = require('../Controller/Meeting/meetingCtrl');
-const { isRecept, isActive } = require('../Middleware/auth');
+const { isRecept, isActive, authenticateToken } = require('../Middleware/auth');
 const { upload } = require('../utils/multer');
 const router = express.Router();
 
@@ -12,8 +12,10 @@ router.put('/update_appointment_meeting_status/:appointmentMeetingID', isActive,
 router.post('/start-meeting', isActive, meetingController.startMeeting);
 router.post('/end-meeting', isActive, upload.single('meetingDoc'), meetingController.endMeeting);
 router.post('/reschedule-meeting', isActive, meetingController.rescheduleMeeting);
+router.post('/cancel-meeting', isActive, meetingController.cancelMeeting);
 router.get('/get_meeting_ByCnfRoom/:conferenceRoomID', isActive, meetingController.getMeetingTimesByConferenceRoom);
-router.get('/get_meeting_list', isActive, meetingController.getListOfCreatedMeeting);
+router.get('/get_meeting_list', authenticateToken, meetingController.getListOfCreatedMeeting);
+router.get('/get_appointment_meeting', authenticateToken, meetingController.getAppointmentMeetings);
 router.get('/get_meeting_ById/:meetingID', isActive, meetingController.getCreatedMeetingByID);
 
 module.exports = router;
