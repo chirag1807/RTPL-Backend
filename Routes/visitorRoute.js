@@ -4,7 +4,7 @@ const { isRecept, isActive } = require('../Middleware/auth');
 const router = express.Router();
 const { upload } = require('../utils/multer');
 
-// router.post('/visitor_request_meeting1',
+// router.post('/visitor_request_meeting',
 //     (req, res, next) => {
 //         console.log(req.body);
 //         const maxVisitors = Math.min(req.body.visitors.length, 5); 
@@ -33,7 +33,9 @@ const { upload } = require('../utils/multer');
 //     visitorController.visitorRequestMeeting
 // );
 
-router.post('/visitor_request_meeting', visitorController.visitorRequestMeeting);
+router.post('/visitor_request_meeting',
+// upload.single('vIDDoc'),
+visitorController.visitorRequestMeeting);
 
 // router.post('/visitor_request_meeting',
 // upload.fields([{ name: "visitors[0][vIDDoc]" }, { name: 'visitors[0][vImage]' }]), 
@@ -45,5 +47,6 @@ router.get('/get_visitor_list_bytoken/:TokenNumber', visitorController.getVisito
 router.put('/update_visitor_meeting_status/:reqMeetingID', isActive, visitorController.updateVisitorMeetingStatus);
 router.get('/get_visitor_list_by_empId/:empId', visitorController.getVisitorMeetingByempId);
 router.get('/get_visitor_list_by_reqmeetid/:reqMeetingID', visitorController.getVisitorMeetingByReqMeetingID);
+router.get('/get_visitor_by_company_contact', visitorController.getVisitorsByCompanyContact);
 
 module.exports = router;

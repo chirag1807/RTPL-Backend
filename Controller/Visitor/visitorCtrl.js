@@ -1,6 +1,7 @@
 const validator = require("validator");
 const sendMail = require("../../Middleware/emaiService");
 const cloudinary = require('../../utils/cloudinary');
+const { Op } = require('sequelize');
 
 const inputFieldsRequestmeeting = [
   "vCompanyName",
@@ -55,6 +56,7 @@ module.exports.visitorRequestMeeting = async (req, res) => {
   try {
     const { RequestMeeting, ReqMeetVisitorDetails } = req.app.locals.models;
     if (req.body) {
+      console.log(req.body);
       if (!validator.isEmail(req.body.vCompanyEmail)) {
         return res.status(400).json({ error: "Invalid email." });
       }
@@ -191,6 +193,7 @@ module.exports.saveTokenByReceptionist = async (req, res) => {
       // get value of updatedBy
       // COMMON.setModelUpdatedByFieldValue(req);
 
+      console.log(req.body);
       const reqMeetDetailsByRecp = await ReqMeetDetailsByRecp.create(req.body, {
         fields: inputFieldsRequestmeetingDetailsbyRecp,
       });
@@ -490,3 +493,47 @@ module.exports.getVisitorMeetingByReqMeetingID = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+module.exports.getVisitorsByCompanyContact = async (req, res) => {
+  try {
+    const {
+      RequestMeeting,
+      ReqMeetVisitorDetails,
+    } = req.app.locals.models;
+
+    const { companyDetail } = req.body;
+
+    if(companyDetail){
+      const reqMeeting = await RequestMeeting.findOne({
+        where: {
+          [Op.or]: [
+            { vCompanyContact: companyDetail },
+            { vCompanyEmail: companyDetail },
+          ],
+        },
+      });
+
+      if (reqMeeting) {
+        const details = await ReqMeetVisitorDetails.findAll({
+          where: { reqMeetingID: reqMeeting.reqMeetingID },
+        });
+
+        res.status(200).json({
+          message: "Visitor Details Fetched Successfully.",
+          details: details,
+        })
+      } else {
+        res.status(400).json({
+          message: "Previous Meetings Can't be Fetched for Given Company Detail.",
+        });
+      }
+    }
+    else{
+      console.log("Invalid perameter");
+      res.status(400).json({ error: "Invalid perameter" });
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: error.message });
+  }
+}

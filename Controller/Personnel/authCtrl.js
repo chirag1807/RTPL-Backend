@@ -48,7 +48,6 @@ const uploadAndCreateDocument = async (file) => {
   }
 };
 
-// login
 module.exports.login = async (req, res) => {
   try {
     const { Employee } = req.app.locals.models;
@@ -59,7 +58,6 @@ module.exports.login = async (req, res) => {
         },
       });
       if (employeeDetails) {
-        // Compare the password
         const passwordMatch = await COMMON.DECRYPT(
           req.body.password,
           employeeDetails.password
@@ -68,17 +66,14 @@ module.exports.login = async (req, res) => {
           return res.status(401).json({ error: "Invalid credentials" });
         }
         const token = createAccessToken(employeeDetails.dataValues);
-        // Send the token in the response header
         res.setHeader("Authorization", `Bearer ${token}`);
         res.status(200).json({ message: "Login successfully" });
       } else {
         console.log("Invalid credentials");
-        // Return an error response indicating missing data
         res.status(400).json({ error: "Invalid credentials" });
       }
     } else {
       console.log("Invalid perameter");
-      // Return an error response indicating missing data
       res.status(400).json({ error: "Invalid perameter" });
     }
   } catch (error) {
@@ -86,7 +81,7 @@ module.exports.login = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-// register
+
 module.exports.Registration = async (req, res) => {
   try {
     console.log(req.body);
