@@ -2,7 +2,7 @@ const { DataTypes } = require('sequelize');
 const sequelize = require('../utils/config');
 const Meeting = require('../models/meeting');
 
-const TimeSlot = sequelize.define('TImeSlot', {
+const TimeSlot = sequelize.define('TimeSlot', {
     timeSlotID: {
         type: DataTypes.INTEGER,
         primaryKey: true,
@@ -25,8 +25,7 @@ const TimeSlot = sequelize.define('TImeSlot', {
         allowNull: true,
     },
 }, {
-    timestamps: true,
-    paranoid: true
+    timestamps: true
 });
 
 Meeting.hasMany(TimeSlot, { foreignKey: 'meetingID', as: 'timeSlot' });
