@@ -1,6 +1,7 @@
 const sendMail = require("../../Middleware/emaiService");
 const ErrorHandler = require("../../utils/errorhandler");
 const cloudinary = require("../../utils/cloudinary");
+const fs = require('fs');
 
 const inputFieldsMeeting = [
   "empId",
@@ -41,6 +42,8 @@ const uploadAndCreateDocument = async (file) => {
       resource_type: "auto",
       folder: "RTPL_DOCS",
     });
+
+    fs.unlinkSync(file[0].path);
 
     return result.secure_url;
   } catch (error) {
