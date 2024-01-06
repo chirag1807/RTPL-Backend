@@ -44,6 +44,7 @@ const uploadAndCreateDocument = async (file) => {
     return result.secure_url;
   } catch (error) {
     console.log(error);
+    fs.unlinkSync(file[0].path);
     throw new ErrorHandler("Unable to upload to Cloudinary", 400);
   }
 };
