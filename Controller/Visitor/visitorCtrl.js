@@ -1,9 +1,9 @@
 const validator = require("validator");
 const sendMail = require("../../Middleware/emaiService");
-const cloudinary = require('../../utils/cloudinary');
-const fs = require('fs');
+const cloudinary = require("../../utils/cloudinary");
+const fs = require("fs");
 const ErrorHandler = require("../../utils/errorhandler");
-const { Op } = require('sequelize');
+const { Op } = require("sequelize");
 
 const inputFieldsRequestmeeting = [
   "vCompanyName",
@@ -41,10 +41,9 @@ const inputFieldsRequestmeetingDetailsbyRecp = [
 //global method to convert file into uri
 const uploadAndCreateDocument = async (file) => {
   try {
-
     const result = await cloudinary.uploader.upload(file.path, {
-      resource_type: 'auto',
-      folder: 'RTPL_DOCS',
+      resource_type: "auto",
+      folder: "RTPL_DOCS",
     });
 
     fs.unlinkSync(file.path);
@@ -52,6 +51,7 @@ const uploadAndCreateDocument = async (file) => {
     return result.secure_url;
   } catch (error) {
     console.log(error);
+    fs.unlinkSync(file.path);
     throw new ErrorHandler("Unable to upload to Cloudinary", 400);
   }
 };
@@ -77,32 +77,34 @@ module.exports.visitorRequestMeeting = async (req, res) => {
       });
 
       if (requestMeeting) {
+        let updatedList = []
+        if (req.files.length > 0) {
+          let uploadedIDDocs = [];
+          let uploadedImages = [];
 
-        let uploadedIDDocs = [];
-        let uploadedImages = [];
-        
-        for (const fileData of req.files.vIDDoc) {
-          const vIDDocUrl = await uploadAndCreateDocument(fileData);
-          uploadedIDDocs.push(vIDDocUrl)
+          for (const fileData of req.files.vIDDoc) {
+            const vIDDocUrl = await uploadAndCreateDocument(fileData);
+            uploadedIDDocs.push(vIDDocUrl);
+          }
+
+          for (const fileData of req.files.vImage) {
+            const vImageUrl = await uploadAndCreateDocument(fileData);
+            uploadedImages.push(vImageUrl);
+          }
+
+          updatedList = req.body.visitors.map((visitor, index) => ({
+            ...visitor,
+            reqMeetingID: requestMeeting.reqMeetingID,
+            vImage: uploadedImages[index],
+            vIDDoc: uploadedIDDocs[index],
+          }));
         }
-        
-        for (const fileData of req.files.vImage) {
-          const vImageUrl = await uploadAndCreateDocument(fileData);
-          uploadedImages.push(vImageUrl)
+        else{
+          updatedList = req.body.visitors.map((visitor, _index) => ({
+            ...visitor,
+            reqMeetingID: requestMeeting.reqMeetingID,
+          }));
         }
-
-        const mailSubject = 'Meeting Request Created';
-        const mailMessage = 'Your meeting request has been registered successfully.';
-
-        await sendMail(req.body.vCompanyEmail, "rtpl@rtplgroup.com", mailSubject, mailMessage);
-
-
-        const updatedList = req.body.visitors.map((visitor,index) => ({
-          ...visitor,
-          reqMeetingID: requestMeeting.reqMeetingID,
-          vImage : uploadedImages[index],
-          vIDDoc : uploadedIDDocs[index]
-        }));
 
         await Promise.all(
           updatedList.map(async (visitor) => {
@@ -110,6 +112,17 @@ module.exports.visitorRequestMeeting = async (req, res) => {
               fields: inputFieldsVisitorDetails,
             });
           })
+        );
+
+        const mailSubject = "Meeting Request Created";
+        const mailMessage =
+          "Your meeting request has been registered successfully.";
+
+        await sendMail(
+          req.body.vCompanyEmail,
+          "rtpl@rtplgroup.com",
+          mailSubject,
+          mailMessage
         );
 
         res.status(200).json({
@@ -204,7 +217,6 @@ module.exports.saveTokenByReceptionist = async (req, res) => {
   try {
     const { RequestMeeting, ReqMeetDetailsByRecp } = req.app.locals.models;
     if (req.params && req.body) {
-
       const { reqMeetingID } = req.params;
       // get value of updatedBy
       // COMMON.setModelUpdatedByFieldValue(req);
@@ -372,7 +384,7 @@ module.exports.updateVisitorMeetingStatus = async (req, res) => {
         ReqStatus,
         DeclineReason:
           ReqStatus === "ReceptionistRejected" ||
-            ReqStatus === "EmployeeRejected"
+          ReqStatus === "EmployeeRejected"
             ? DeclineReason
             : null,
       });
@@ -447,7 +459,7 @@ module.exports.getVisitorMeetingByempId = async (req, res) => {
         { model: ReqMeetVisitorDetails, required: false, as: "visitorDetails" }
       );
 
-      queryOptions.where = { ...queryOptions.where, empId: empId, };
+      queryOptions.where = { ...queryOptions.where, empId: empId };
 
       const requestMeetings = await RequestMeeting.findAll(queryOptions);
 
@@ -512,14 +524,11 @@ module.exports.getVisitorMeetingByReqMeetingID = async (req, res) => {
 
 module.exports.getVisitorsByCompanyContact = async (req, res) => {
   try {
-    const {
-      RequestMeeting,
-      ReqMeetVisitorDetails,
-    } = req.app.locals.models;
+    const { RequestMeeting, ReqMeetVisitorDetails } = req.app.locals.models;
 
     const { companyDetail } = req.body;
 
-    if(companyDetail){
+    if (companyDetail) {
       const reqMeeting = await RequestMeeting.findOne({
         where: {
           [Op.or]: [
@@ -537,14 +546,14 @@ module.exports.getVisitorsByCompanyContact = async (req, res) => {
         res.status(200).json({
           message: "Visitor Details Fetched Successfully.",
           details: details,
-        })
+        });
       } else {
         res.status(400).json({
-          message: "Previous Meetings Can't be Fetched for Given Company Detail.",
+          message:
+            "Previous Meetings Can't be Fetched for Given Company Detail.",
         });
       }
-    }
-    else{
+    } else {
       console.log("Invalid perameter");
       res.status(400).json({ error: "Invalid perameter" });
     }
@@ -552,4 +561,4 @@ module.exports.getVisitorsByCompanyContact = async (req, res) => {
     console.log(error);
     res.status(500).json({ error: error.message });
   }
-}
+};
