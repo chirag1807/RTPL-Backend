@@ -1,7 +1,6 @@
 const sendMail = require("../../Middleware/emaiService");
 const ErrorHandler = require("../../utils/errorhandler");
-const cloudinary = require('../../utils/cloudinary');
-
+const cloudinary = require("../../utils/cloudinary");
 
 const inputFieldsMeeting = [
   "empId",
@@ -33,13 +32,14 @@ const inputFieldOuterMeeting = [
 
 const inputFieldsInternalMembers = ["empId", "meetingID"];
 
+const inputFieldTimeSlot = ["meetingStartTime", "meetingEndTime"];
+
 //global method to convert file into uri
 const uploadAndCreateDocument = async (file) => {
   try {
-
     const result = await cloudinary.uploader.upload(file[0].path, {
-      resource_type: 'auto',
-      folder: 'RTPL_DOCS',
+      resource_type: "auto",
+      folder: "RTPL_DOCS",
     });
 
     return result.secure_url;
@@ -81,7 +81,7 @@ module.exports.createRequestMeeting = async (req, res) => {
         const internalMemberIds = internalMembers.map((member) => member.empId);
 
         const internalTeamEmails = await Employee.findAll({
-          attributes: ['email'],
+          attributes: ["email"],
           where: {
             empId: internalMemberIds,
           },
@@ -89,10 +89,15 @@ module.exports.createRequestMeeting = async (req, res) => {
         });
 
         const emailPromises = internalTeamEmails.map(async (member) => {
-          const mailSubject = 'Meeting Created';
-          const mailMessage = 'A new meeting has been created.';
+          const mailSubject = "Meeting Created";
+          const mailMessage = "A new meeting has been created.";
 
-          await sendMail(member.email, "rtpl@rtplgroup.com", mailSubject, mailMessage);
+          await sendMail(
+            member.email,
+            "rtpl@rtplgroup.com",
+            mailSubject,
+            mailMessage
+          );
         });
 
         await Promise.all(emailPromises);
@@ -118,7 +123,8 @@ module.exports.createRequestMeeting = async (req, res) => {
 
 module.exports.createOuterMeeting = async (req, res) => {
   try {
-    const { Meeting, InternalTeamSelect, OuterMeeting, Employee } = req.app.locals.models;
+    const { Meeting, InternalTeamSelect, OuterMeeting, Employee } =
+      req.app.locals.models;
     const updatedBy = req.decodedEmpCode;
     if (req.body) {
       // COMMON.setModelCreatedByFieldValue(req);
@@ -142,10 +148,12 @@ module.exports.createOuterMeeting = async (req, res) => {
           await createdMeeting.save();
 
           if (req.body.internalMembers) {
-            const updatedList = req.body.internalMembers.map((internalMember) => ({
-              ...internalMember,
-              meetingID: createdMeeting.meetingID,
-            }));
+            const updatedList = req.body.internalMembers.map(
+              (internalMember) => ({
+                ...internalMember,
+                meetingID: createdMeeting.meetingID,
+              })
+            );
 
             await Promise.all(
               updatedList.map(async (internalMember) => {
@@ -157,10 +165,12 @@ module.exports.createOuterMeeting = async (req, res) => {
 
             const internalMembers = req.body.internalMembers;
 
-            const internalMemberIds = internalMembers.map((member) => member.empId);
+            const internalMemberIds = internalMembers.map(
+              (member) => member.empId
+            );
 
             const internalTeamEmails = await Employee.findAll({
-              attributes: ['email'],
+              attributes: ["email"],
               where: {
                 empId: internalMemberIds,
               },
@@ -168,10 +178,15 @@ module.exports.createOuterMeeting = async (req, res) => {
             });
 
             const emailPromises = internalTeamEmails.map(async (member) => {
-              const mailSubject = 'Meeting Created';
-              const mailMessage = 'A new meeting has been created.';
+              const mailSubject = "Meeting Created";
+              const mailMessage = "A new meeting has been created.";
 
-              await sendMail(member.email, "rtpl@rtplgroup.com", mailSubject, mailMessage);
+              await sendMail(
+                member.email,
+                "rtpl@rtplgroup.com",
+                mailSubject,
+                mailMessage
+              );
             });
 
             await Promise.all(emailPromises);
@@ -186,15 +201,13 @@ module.exports.createOuterMeeting = async (req, res) => {
               "Sorry, Your outer meeting has not been created. Please try again later.",
           });
         }
-      }
-      else {
+      } else {
         res.status(400).json({
           message:
             "Sorry, Your outer meeting has not been created. Please try again later.",
         });
       }
-    }
-    else {
+    } else {
       console.log("Invalid parameter");
       res.status(400).json({ error: "Invalid parameter" });
     }
@@ -229,12 +242,10 @@ module.exports.updateOuterMeetingStatus = async (req, res) => {
       });
 
       if (updatedOuterMeeting) {
-        res
-          .status(200)
-          .json({
-            message: "Status Updated successfully",
-            updatedOuterMeeting,
-          });
+        res.status(200).json({
+          message: "Status Updated successfully",
+          updatedOuterMeeting,
+        });
       } else {
         res.status(400).json({
           message: "Status Can't be Updated, Please Try Again Later.",
@@ -250,7 +261,13 @@ module.exports.updateOuterMeetingStatus = async (req, res) => {
 
 module.exports.createAppointmentMeeting = async (req, res) => {
   try {
-    const { Meeting, InternalTeamSelect, AppointmentMeeting, Employee } = req.app.locals.models;
+    const {
+      Meeting,
+      InternalTeamSelect,
+      AppointmentMeeting,
+      Employee,
+      TimeSlot,
+    } = req.app.locals.models;
     const updatedBy = req.decodedEmpCode;
     if (req.body) {
       // COMMON.setModelCreatedByFieldValue(req);
@@ -271,11 +288,26 @@ module.exports.createAppointmentMeeting = async (req, res) => {
             createAppointmentMeeting.appointmentMeetingID;
           await createdMeeting.save();
 
+          const updatedTimeSlots = req.body.timeSlots.map((timeSlot) => ({
+            ...timeSlot,
+            meetingID: createdMeeting.meetingID,
+          }));
+
+          await Promise.all(
+            updatedTimeSlots.map(async (timeSlot) => {
+              await TimeSlot.create(timeSlot, {
+                fields: inputFieldTimeSlot,
+              });
+            })
+          );
+
           if (req.body.internalMembers) {
-            const updatedList = req.body.internalMembers.map((internalMember) => ({
-              ...internalMember,
-              meetingID: createdMeeting.meetingID,
-            }));
+            const updatedList = req.body.internalMembers.map(
+              (internalMember) => ({
+                ...internalMember,
+                meetingID: createdMeeting.meetingID,
+              })
+            );
 
             await Promise.all(
               updatedList.map(async (internalMember) => {
@@ -287,10 +319,12 @@ module.exports.createAppointmentMeeting = async (req, res) => {
 
             const internalMembers = req.body.internalMembers;
 
-            const internalMemberIds = internalMembers.map((member) => member.empId);
+            const internalMemberIds = internalMembers.map(
+              (member) => member.empId
+            );
 
             const internalTeamEmails = await Employee.findAll({
-              attributes: ['email'],
+              attributes: ["email"],
               where: {
                 empId: internalMemberIds,
               },
@@ -298,10 +332,15 @@ module.exports.createAppointmentMeeting = async (req, res) => {
             });
 
             const emailPromises = internalTeamEmails.map(async (member) => {
-              const mailSubject = 'Meeting Created';
-              const mailMessage = 'A new meeting has been created.';
+              const mailSubject = "Meeting Created";
+              const mailMessage = "A new meeting has been created.";
 
-              await sendMail(member.email, "rtpl@rtplgroup.com", mailSubject, mailMessage);
+              await sendMail(
+                member.email,
+                "rtpl@rtplgroup.com",
+                mailSubject,
+                mailMessage
+              );
             });
 
             await Promise.all(emailPromises);
@@ -316,15 +355,13 @@ module.exports.createAppointmentMeeting = async (req, res) => {
               "Sorry, Your appointment meeting has not been created. Please try again later.",
           });
         }
-      }
-      else {
+      } else {
         res.status(400).json({
           message:
             "Sorry, Your appointment meeting has not been created. Please try again later.",
         });
       }
-    }
-    else {
+    } else {
       console.log("Invalid parameter");
       res.status(400).json({ error: "Invalid parameter" });
     }
@@ -336,10 +373,11 @@ module.exports.createAppointmentMeeting = async (req, res) => {
 
 module.exports.updateAppointmentMeetingStatus = async (req, res) => {
   try {
-    const { AppointmentMeeting } = req.app.locals.models;
+    const { AppointmentMeeting, Meeting } = req.app.locals.models;
     if (req.params && req.body) {
       const { appointmentMeetingID } = req.params;
-      const { status, DeclineReason } = req.body;
+      const { status, DeclineReason, meetingStartTime, meetingEndTime } =
+        req.body;
       // get value of updatedBy
       // COMMON.setModelUpdatedByFieldValue(req);
 
@@ -360,12 +398,27 @@ module.exports.updateAppointmentMeetingStatus = async (req, res) => {
       });
 
       if (updatedAppointmentMeeting) {
-        res
-          .status(200)
-          .json({
-            message: "Status Updated successfully",
+        const meeting = await Meeting.findOne({
+          where: { appointmentMeetingID },
+        });
+
+        const updateTimeOfMeeting = await meeting.update({
+          meetingStartTime,
+          meetingEndTime,
+        });
+
+        if (updateTimeOfMeeting) {
+          res.status(200).json({
+            message: "Time of Meeting Updated successfully",
             updatedAppointmentMeeting,
           });
+        } else {
+          res.status(400).json({
+            message:
+              "Time of Meeting Can't be Updated, Please Try Again Later.",
+            updatedAppointmentMeeting,
+          });
+        }
       } else {
         res.status(400).json({
           message: "Status Can't be Updated, Please Try Again Later.",
@@ -478,7 +531,7 @@ module.exports.rescheduleMeeting = async (req, res) => {
 
 module.exports.endMeeting = async (req, res) => {
   try {
-    const { Meeting } = req.app.locals.models;
+    const { Meeting, TimeSlot } = req.app.locals.models;
     const { meetingID, remark } = req.body;
     const updatedBy = req.decodedEmpCode;
 
@@ -508,6 +561,12 @@ module.exports.endMeeting = async (req, res) => {
 
     await meeting.save();
 
+    await TimeSlot.destroy({
+      where: {
+        meetingID: meeting.meetingID,
+      },
+    });
+
     res.status(200).json({ message: "Meeting has ended successfully." });
   } catch (error) {
     console.error(error);
@@ -515,7 +574,39 @@ module.exports.endMeeting = async (req, res) => {
   }
 };
 
-//notification of all created Meetings
+module.exports.cancelMeeting = async (req, res) => {
+  try {
+    const { Meeting } = req.app.locals.models;
+    const { meetingID } = req.body;
+    const updatedBy = req.decodedEmpCode;
+
+    if (!meetingID) {
+      return res
+        .status(400)
+        .json({ error: "Meeting ID is required in the request body" });
+    }
+
+    const meeting = await Meeting.findByPk(meetingID);
+
+    if (!meeting) {
+      return res
+        .status(404)
+        .json({ error: "Meeting not found for the given ID" });
+    }
+
+    meeting.isActive = false;
+    meeting.isDeleted = true;
+    meeting.deletedBy = updatedBy;
+
+    await meeting.save();
+
+    res.status(200).json({ message: "Meeting has ended successfully." });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports.getListOfCreatedMeeting = async (req, res) => {
   try {
     const {
@@ -528,10 +619,10 @@ module.exports.getListOfCreatedMeeting = async (req, res) => {
       MeetingType,
       MeetingMode,
       ConferenceRoom,
-      InternalTeamSelect
+      InternalTeamSelect,
     } = req.app.locals.models;
 
-    let { page, pageSize, sort, sortBy, searchField, isActive } = req.query;
+    let { page, pageSize, sort, sortBy, searchField, isActive, empId, cancelledMeeting, type } = req.query;
 
     page = Math.max(1, parseInt(page, 10)) || 1;
     pageSize = Math.max(1, parseInt(pageSize, 10)) || 10;
@@ -570,31 +661,68 @@ module.exports.getListOfCreatedMeeting = async (req, res) => {
       { model: MeetingMode, as: "meetingMode" },
       { model: ConferenceRoom, as: "conferenceRoom" },
       {
-        model: InternalTeamSelect, as: 'internalTeamSelect',
+        model: InternalTeamSelect,
+        as: "internalTeamSelect",
         include: [
           {
             model: Employee,
-            as: 'employee'
+            as: "employee",
           },
         ],
       }
     );
 
-    queryOptions.where = {
-      ...queryOptions.where,
-      isActive: isActive ? isActive : false,
-    };
+    if(empId === true){
+      queryOptions.where = {
+        ...queryOptions.where,
+        isActive: isActive ? isActive : false,
+        isDeleted: cancelledMeeting ? true : false,
+        empId: req.user.empId,
+      };
+    }
+    else{
+      queryOptions.where = {
+        ...queryOptions.where,
+        isActive: isActive ? isActive : false,
+        isDeleted: cancelledMeeting ? true : false,
+      };
+    }
+
+    if(type){
+      if(type == "Request"){
+        queryOptions.where = {
+          ...queryOptions.where,
+          requestID: { [Op.not]: null }
+        }
+      }
+      else if(type == "Outer"){
+        queryOptions.where = {
+          ...queryOptions.where,
+          outerMeetingID: { [Op.not]: null }
+        }
+      }
+      else{
+        queryOptions.where = {
+          ...queryOptions.where,
+          appointmentMeetingID: { [Op.not]: null }
+        }
+      }
+    }
 
     const createdMeetings = await Meeting.findAll(queryOptions);
 
     if (createdMeetings) {
       res.status(200).json({
-        message: "Created Meetings Fetched Successfully.",
+        message: cancelledMeeting ?
+        "Cancelled Meetings Fetched Successfully." :
+        "Created Meetings Fetched Successfully.",
         meetings: createdMeetings,
       });
     } else {
       res.status(400).json({
-        message: "Created Meetings Can't be Fetched.",
+        message: cancelledMeeting ?
+        "Cancelled Meetings Can't be Fetched." :
+        "Created Meetings Can't be Fetched.",
       });
     }
   } catch (error) {
@@ -602,6 +730,71 @@ module.exports.getListOfCreatedMeeting = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+module.exports.getAppointmentMeetings = async (req, res) => {
+  try {
+    const { AppointmentMeeting } = req.app.locals.models;
+
+    let { page, pageSize, sort, sortBy, searchField, cancelledMeeting } = req.query;
+
+    page = Math.max(1, parseInt(page, 10)) || 1;
+    pageSize = Math.max(1, parseInt(pageSize, 10)) || 10;
+
+    const offset = (page - 1) * pageSize;
+
+    sort = sort ? sort.toUpperCase() : "ASC";
+
+    const queryOptions = {
+      limit: pageSize,
+      offset: offset,
+      include: [],
+    };
+
+    if (sortBy) {
+      queryOptions.order = [[sortBy, sort]];
+    }
+
+    if (
+      searchField &&
+      typeof searchField === "string" &&
+      searchField.trim() !== ""
+    ) {
+      queryOptions.where = {
+        [Op.or]: [
+          { status: { [Op.like]: `%${searchField}%` } },
+          { DeclineReason: { [Op.like]: `%${searchField}%` } }
+        ],
+      };
+    }
+
+    queryOptions.where = {
+      ...queryOptions.where,
+      status: cancelledMeeting ? "Rejected" : "Accepted",
+      empId: req.user.empId
+    };
+
+    const appointmentMeetings = await AppointmentMeeting.findAll(queryOptions);
+
+    if (appointmentMeetings) {
+      res.status(200).json({
+        message: cancelledMeeting ?
+        "Cancelled Appointment Meetings Fetched Successfully." :
+        "Created Appointment Meetings Fetched Successfully.",
+        meetings: appointmentMeetings,
+      });
+    } else {
+      res.status(400).json({
+        message: cancelledMeeting ?
+        "Cancelled Appointment Meetings Can't be Fetched." :
+        "Created Appointment Meetings Can't be Fetched.",
+      });
+    }
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: error.message });
+  }
+}
 
 module.exports.getCreatedMeetingByID = async (req, res) => {
   try {
@@ -632,7 +825,7 @@ module.exports.getCreatedMeetingByID = async (req, res) => {
           { model: MeetingType, as: "meetingType" },
           { model: MeetingMode, as: "meetingMode" },
           { model: ConferenceRoom, as: "conferenceRoom" },
-          { model: InternalTeamSelect, as: 'internalTeamSelect' }
+          { model: InternalTeamSelect, as: "internalTeamSelect" },
         ],
       });
 

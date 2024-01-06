@@ -4,6 +4,7 @@ const Meeting = require("../models/meeting");
 const Designation = require("../models/designation");
 const InternalTeamSelect = require('../models/internalTeamSelect');
 const ReqMeetVisitorDetails = require('../models/reqMeetVisitorDetails');
+const TimeSlot = require('../models/timeSlot');
     
 (async () => {
   try {
