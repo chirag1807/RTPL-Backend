@@ -1,6 +1,8 @@
 const validator = require("validator");
 const sendMail = require("../../Middleware/emaiService");
 const cloudinary = require('../../utils/cloudinary');
+const fs = require('fs');
+const ErrorHandler = require("../../utils/errorhandler");
 const { Op } = require('sequelize');
 
 const inputFieldsRequestmeeting = [
@@ -40,10 +42,12 @@ const inputFieldsRequestmeetingDetailsbyRecp = [
 const uploadAndCreateDocument = async (file) => {
   try {
 
-    const result = await cloudinary.uploader.upload(file[0].path, {
+    const result = await cloudinary.uploader.upload(file.path, {
       resource_type: 'auto',
       folder: 'RTPL_DOCS',
     });
+
+    fs.unlinkSync(file.path);
 
     return result.secure_url;
   } catch (error) {
@@ -54,6 +58,8 @@ const uploadAndCreateDocument = async (file) => {
 
 module.exports.visitorRequestMeeting = async (req, res) => {
   try {
+    console.log(req.files);
+    console.log(req.body);
     const { RequestMeeting, ReqMeetVisitorDetails } = req.app.locals.models;
     if (req.body) {
       console.log(req.body);
@@ -72,8 +78,18 @@ module.exports.visitorRequestMeeting = async (req, res) => {
 
       if (requestMeeting) {
 
-        // const vIDocUrl = await uploadAndCreateDocument(req.files.vIDDoc);
-        // const vImageUrl = await uploadAndCreateDocument(req.files.vImage);
+        let uploadedIDDocs = [];
+        let uploadedImages = [];
+        
+        for (const fileData of req.files.vIDDoc) {
+          const vIDDocUrl = await uploadAndCreateDocument(fileData);
+          uploadedIDDocs.push(vIDDocUrl)
+        }
+        
+        for (const fileData of req.files.vImage) {
+          const vImageUrl = await uploadAndCreateDocument(fileData);
+          uploadedImages.push(vImageUrl)
+        }
 
         const mailSubject = 'Meeting Request Created';
         const mailMessage = 'Your meeting request has been registered successfully.';
@@ -84,8 +100,8 @@ module.exports.visitorRequestMeeting = async (req, res) => {
         const updatedList = req.body.visitors.map((visitor,index) => ({
           ...visitor,
           reqMeetingID: requestMeeting.reqMeetingID,
-          // vImage : vImageUrl[index],
-          // vIDDoc : vIDocUrl[index]
+          vImage : uploadedImages[index],
+          vIDDoc : uploadedIDDocs[index]
         }));
 
         await Promise.all(
