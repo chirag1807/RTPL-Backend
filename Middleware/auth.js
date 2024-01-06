@@ -27,11 +27,32 @@ exports.createAccessToken = (user) => {
   return jwt.sign(tokenPayload, CONSTANT.JWT.SECRET, { expiresIn: '7d' });
 };
 
-
 exports.createRefreshToken = (req, res, next) => {
   req.body.auth = jwt.sign({ empId: 124, empCode: 321, Name: 'ROOT JAS' }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: '7d' })
   next();
 }
+
+exports.isSuper = catchAsyncErrors(async (req, res, next) => {
+  const tokenjwt = req.headers.authorization.split(' ')[1];
+
+  if (!tokenjwt) {
+    return res.status(401).send({ error: "Please login to access the resources" });
+  }
+
+  const decodedData = jwt.verify(tokenjwt, CONSTANT.JWT.SECRET);
+
+  if (decodedData.isAdmin) {
+    req.decodedEmpCode = decodedData.emp_code;
+
+    if (decodedData.emp_code === process.env.superadmin) {
+      next();
+    } else {
+      return res.status(403).send({ error: "Access Denied!" });
+    }
+  } else {
+    return res.status(403).send({ error: "Access Denied!" });
+  }
+});
 
 exports.isAdmin = (id) => catchAsyncErrors(async (req, res, next) => {
 

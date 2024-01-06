@@ -6,8 +6,8 @@ const sendMail = async (recipientEmail, senderEmail, subject, message) => {
     port: 465,
     secure: true,
     auth: {
-      user: "risegrowgroup@gmail.com",
-      pass: "bsxouctwugofjdje",
+      user: process.env.usermail,
+      pass: process.env.emailpass,
     },
   });
 
