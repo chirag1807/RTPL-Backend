@@ -13,6 +13,7 @@ const inputFieldsEmployee = [
   "empIdCard",
   "empAadharCard",
   "aadharNumber",
+  "permissions",
   "firstName",
   "lastName",
   "emp_code",

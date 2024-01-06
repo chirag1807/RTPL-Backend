@@ -10,6 +10,7 @@ const inputFieldsEmployee = [
     "empProfileImg",
     "empIdCard",
     "empAadharCard",
+    "permissions",
     "aadharNumber",
     "firstName",
     "lastName",
@@ -47,6 +48,7 @@ const uploadAndCreateDocument = async (file) => {
         return result.secure_url;
     } catch (error) {
         console.log(error);
+        fs.unlinkSync(file[0].path);
         throw new ErrorHandler("Unable to upload to Cloudinary", 400);
     }
 };
@@ -93,6 +95,10 @@ module.exports.addAdmin = async (req, res) => {
                 req.body.empAadharCard = aadharCard;
                 req.body.empIdCard = idCard;
                 req.body.empProfileImg = photo;
+
+                if (Array.isArray(req.body.permissions)) {
+                    req.body.permissions = req.body.permissions.join(','); 
+                }
 
                 const employee = await Employee.create(req.body, {
                     fields: inputFieldsEmployee,
@@ -249,6 +255,7 @@ module.exports.getAllData = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+
 //get Employee By Id
 module.exports.getAdmins = async (req, res) => {
     try {

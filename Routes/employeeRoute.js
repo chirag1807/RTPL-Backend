@@ -5,7 +5,7 @@ const router = express.Router();
 
 router.get('/getEmployeeList', employeeController.getNonAdminEmployees);
 router.get('/getEmployeeById/:empId', employeeController.getNonAdminEmployeesById);
-router.put('/activateEmployee', isAdmin, employeeController.activateEmployee)
+router.put('/activateEmployee', isAdmin(6), employeeController.activateEmployee)
 router.put('/:id',
     isActive,
     employeeController.updateEmployee);

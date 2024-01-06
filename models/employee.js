@@ -24,6 +24,18 @@ const Employee = sequelize.define('Employees', {
     type: DataTypes.STRING,
     allowNull: true
   },
+  permissions: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    get() {
+      const permissionsString = this.getDataValue('permissions');
+      return permissionsString ? permissionsString.split(',').map(id => parseInt(id, 10)) : [];
+    },
+    set(value) {
+      console.log(value)
+      this.setDataValue('permissions', value);
+    },
+  },
   aadharNumber: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -107,15 +119,15 @@ const Employee = sequelize.define('Employees', {
   timestamps: true,
 });
 
-Employee.belongsTo(EmployeeRole, {
-  as: 'role',
-  foreignKey: {
-    name: 'roleID', allowNull: false
-  }
-})
-Employee.belongsTo(Company, { foreignKey: 'companyID', as: 'companyDetails' });
-Employee.belongsTo(Office, { foreignKey: 'officeID', as: 'officeDetails' });
-Employee.belongsTo(Department, { foreignKey: 'departmentID', as: 'employeeDepartment' });
-Employee.belongsTo(Designation, { foreignKey: 'designationID', as: 'employeeDesignation' });
+// Employee.belongsTo(EmployeeRole, {
+//   as: 'role',
+//   foreignKey: {
+//     name: 'roleID', allowNull: false
+//   }
+// })
+// Employee.belongsTo(Company, { foreignKey: 'companyID', as: 'companyDetails' });
+// Employee.belongsTo(Office, { foreignKey: 'officeID', as: 'officeDetails' });
+// Employee.belongsTo(Department, { foreignKey: 'departmentID', as: 'employeeDepartment' });
+// Employee.belongsTo(Designation, { foreignKey: 'designationID', as: 'employeeDesignation' });
 
 module.exports = Employee;
