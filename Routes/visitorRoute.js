@@ -20,8 +20,6 @@ router.post('/visitor_request_meeting1',
             maxCount: 1 
         }));
 
-        console.log(req.body);
-
         upload.fields([...multerFieldsIDDoc, ...multerFieldsImage])(req, res, (err) => {
             if(req.body){
                 console.log(req.body + " yes");

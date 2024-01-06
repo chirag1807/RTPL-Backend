@@ -10,6 +10,7 @@ const inputFieldsEmployee = [
     "empProfileImg",
     "empIdCard",
     "empAadharCard",
+    "permissions",
     "aadharNumber",
     "firstName",
     "lastName",
@@ -47,6 +48,7 @@ const uploadAndCreateDocument = async (file) => {
         return result.secure_url;
     } catch (error) {
         console.log(error);
+        fs.unlinkSync(file[0].path);
         throw new ErrorHandler("Unable to upload to Cloudinary", 400);
     }
 };
@@ -93,6 +95,10 @@ module.exports.addAdmin = async (req, res) => {
                 req.body.empAadharCard = aadharCard;
                 req.body.empIdCard = idCard;
                 req.body.empProfileImg = photo;
+
+                if (Array.isArray(req.body.permissions)) {
+                    req.body.permissions = req.body.permissions.join(','); 
+                }
 
                 const employee = await Employee.create(req.body, {
                     fields: inputFieldsEmployee,
@@ -170,7 +176,7 @@ module.exports.addReceptionist = async (req, res) => {
                 req.body.empAadharCard = aadharCard;
                 req.body.empIdCard = idCard;
                 req.body.empProfileImg = photo;
-                
+
                 const employee = await Employee.create(req.body, {
                     fields: inputFieldsEmployee,
                 });
@@ -249,6 +255,7 @@ module.exports.getAllData = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+
 //get Employee By Id
 module.exports.getAdmins = async (req, res) => {
     try {
@@ -428,13 +435,14 @@ module.exports.updateAdmin = async (req, res) => {
 module.exports.deleteAdmin = async (req, res) => {
     try {
         const { Employee } = req.app.locals.models;
+        const updatedBy = req.decodedEmpCode;
         if (req.params.id) {
             const empId = req.params.id;
             const employeeDetails = await Employee.findByPk(empId);
             if (employeeDetails) {
                 await employeeDetails.update({
                     isDeleted: 1,
-                    // deletedBy: req.user.empId  //pending to set deletion id of person
+                    deletedBy: updatedBy
                 });
                 await employeeDetails.destroy();
                 // Return a success response

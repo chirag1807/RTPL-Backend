@@ -5,7 +5,7 @@ const { upload } = require('../utils/multer');
 const router = express.Router();
 
 router.post('/addAdmin',
-    isAdmin,
+    // isAdmin,
     upload.fields([
         { name: 'empAadharCard', maxCount: 1 },
         { name: 'empIdCard', maxCount: 1 },

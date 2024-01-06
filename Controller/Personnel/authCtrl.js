@@ -13,6 +13,7 @@ const inputFieldsEmployee = [
   "empIdCard",
   "empAadharCard",
   "aadharNumber",
+  "permissions",
   "firstName",
   "lastName",
   "emp_code",
@@ -33,7 +34,6 @@ const inputFieldsEmployee = [
 //global method to convert file into uri
 const uploadAndCreateDocument = async (file) => {
   try {
-
     const result = await cloudinary.uploader.upload(file[0].path, {
       resource_type: 'auto',
       folder: 'RTPL_DOCS',
@@ -84,10 +84,8 @@ module.exports.login = async (req, res) => {
 
 module.exports.Registration = async (req, res) => {
   try {
-    console.log(req.body);
     const { Employee } = req.app.locals.models;
     if (req.body) {
-
       const aadharCard = await uploadAndCreateDocument(req.files.empAadharCard);
       const idCard = await uploadAndCreateDocument(req.files.empIdCard);
       const photo = await uploadAndCreateDocument(req.files.empProfileImg)
@@ -385,20 +383,20 @@ module.exports.resetToken = async (req, res) => {
     if (req.body) {
       const { token } = req.body;
       jwt.verify(token, CONSTANT.JWT.SECRET, async (err, payload) => {
-          if (payload) {
-            const { iat, exp, ...newObject } = payload;
-            const token = createAccessToken(newObject);
-            res.setHeader("Authorization", `Bearer ${token}`);
-            return res.status(200).json({
-              message: "Token Reset Done Successfully."
-            });
-          } else {
-            return res.status(401).json({
-              msg: "Please Do Login Again",
-              jwtMsg: err.message,
-            });
-          }
-        });
+        if (payload) {
+          const { iat, exp, ...newObject } = payload;
+          const token = createAccessToken(newObject);
+          res.setHeader("Authorization", `Bearer ${token}`);
+          return res.status(200).json({
+            message: "Token Reset Done Successfully."
+          });
+        } else {
+          return res.status(401).json({
+            msg: "Please Do Login Again",
+            jwtMsg: err.message,
+          });
+        }
+      });
     } else {
       console.log("Invalid perameter");
       res.status(400).json({ error: "Invalid perameter" });

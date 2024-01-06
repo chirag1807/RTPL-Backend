@@ -17,15 +17,23 @@ exports.authenticateToken = (req, res, next) => {
 };
 
 exports.createAccessToken = (user) => {
-  return jwt.sign(user, CONSTANT.JWT.SECRET, { expiresIn: '7d' });
-}
+  const permissionsArray = user.permissions.split(',').map(Number);
+
+  const tokenPayload = {
+    ...user,
+    permissions: permissionsArray,
+  };
+
+  return jwt.sign(tokenPayload, CONSTANT.JWT.SECRET, { expiresIn: '7d' });
+};
+
 
 exports.createRefreshToken = (req, res, next) => {
   req.body.auth = jwt.sign({ empId: 124, empCode: 321, Name: 'ROOT JAS' }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: '7d' })
   next();
 }
 
-exports.isAdmin = catchAsyncErrors(async (req, res, next) => {
+exports.isAdmin = (id) => catchAsyncErrors(async (req, res, next) => {
 
   const tokenjwt = req.headers.authorization.split(' ')[1];
 
@@ -34,12 +42,13 @@ exports.isAdmin = catchAsyncErrors(async (req, res, next) => {
   }
 
   const decodedData = jwt.verify(tokenjwt, CONSTANT.JWT.SECRET);
+  console.log(decodedData.permissions);
 
-  if (decodedData.isAdmin) {
+  if (decodedData.isAdmin && decodedData.permissions.includes(id)) {
     req.decodedEmpCode = decodedData.emp_code;
     next();
   } else {
-    return res.status(403).send({ error: "Only Admin can access this resource" });
+    return res.status(403).send({ error: "Access Denied!" });
   }
 
 });
@@ -64,7 +73,7 @@ exports.isRecept = catchAsyncErrors(async (req, res, next) => {
 });
 
 exports.isActive = catchAsyncErrors(async (req, res, next) => {
- 
+
   const tokenjwt = req.headers.authorization.split(' ')[1];
 
   if (!tokenjwt) {
