@@ -4,6 +4,7 @@ const CONSTANT = require("../../constant/constant");
 const sendMail = require("../../Middleware/emaiService");
 const cloudinary = require('../../utils/cloudinary');
 const ErrorHandler = require("../../utils/errorhandler");
+const fs = require('fs');
 
 const inputFieldsEmployee = [
     "empProfileImg",
@@ -40,6 +41,8 @@ const uploadAndCreateDocument = async (file) => {
             resource_type: 'auto',
             folder: 'RTPL_DOCS',
         });
+
+        fs.unlinkSync(file[0].path);
 
         return result.secure_url;
     } catch (error) {
