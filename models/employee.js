@@ -119,15 +119,16 @@ const Employee = sequelize.define('Employees', {
   timestamps: true,
 });
 
-// Employee.belongsTo(EmployeeRole, {
-//   as: 'role',
-//   foreignKey: {
-//     name: 'roleID', allowNull: false
-//   }
-// })
-// Employee.belongsTo(Company, { foreignKey: 'companyID', as: 'companyDetails' });
-// Employee.belongsTo(Office, { foreignKey: 'officeID', as: 'officeDetails' });
-// Employee.belongsTo(Department, { foreignKey: 'departmentID', as: 'employeeDepartment' });
-// Employee.belongsTo(Designation, { foreignKey: 'designationID', as: 'employeeDesignation' });
+Employee.belongsTo(EmployeeRole, {
+  as: 'role',
+  foreignKey: {
+    name: 'roleID',
+    // allowNull: false
+  }
+})
+Employee.belongsTo(Company, { foreignKey: 'companyID', as: 'companyDetails' });
+Employee.belongsTo(Office, { foreignKey: 'officeID', as: 'officeDetails' });
+Employee.belongsTo(Department, { foreignKey: 'departmentID', as: 'employeeDepartment' });
+Employee.belongsTo(Designation, { foreignKey: 'designationID', as: 'employeeDesignation' });
 
 module.exports = Employee;

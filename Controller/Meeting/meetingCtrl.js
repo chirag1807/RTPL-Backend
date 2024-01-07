@@ -62,6 +62,7 @@ module.exports.createRequestMeeting = async (req, res) => {
       // COMMON.setModelCreatedByFieldValue(req);
       // Set other necessary fields
       req.body.createdBy = updatedBy;
+      req.body.empId = req.decodedEmpId;
       const createdMeeting = await Meeting.create(req.body, {
         fields: inputFieldsMeeting,
       });
@@ -143,6 +144,7 @@ module.exports.createOuterMeeting = async (req, res) => {
 
       if (createOuterMeeting) {
         req.body.createdBy = updatedBy;
+        req.body.empId = req.decodedEmpId;
         const createdMeeting = await Meeting.create(req.body, {
           fields: inputFieldsMeeting,
         });
@@ -283,6 +285,7 @@ module.exports.createAppointmentMeeting = async (req, res) => {
 
       if (createAppointmentMeeting) {
         req.body.createdBy = updatedBy;
+        req.body.empId = req.decodedEmpId;
         const createdMeeting = await Meeting.create(req.body, {
           fields: inputFieldsMeeting,
         });
@@ -683,7 +686,7 @@ module.exports.getListOfCreatedMeeting = async (req, res) => {
         isDeleted: cancelledMeeting ? true : false,
         empId: req.user.empId,
       };
-    }
+    } 
     else{
       queryOptions.where = {
         ...queryOptions.where,
