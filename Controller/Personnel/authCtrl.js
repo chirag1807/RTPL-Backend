@@ -132,6 +132,8 @@ module.exports.Registration = async (req, res) => {
             message
           );
           if (result.success) {
+            const token = createAccessToken(employee.dataValues);
+            res.setHeader("Authorization", `Bearer ${token}`);
             res
               .status(201)
               .json({ message: "Employee registered successfully" });

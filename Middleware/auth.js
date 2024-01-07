@@ -17,7 +17,10 @@ exports.authenticateToken = (req, res, next) => {
 };
 
 exports.createAccessToken = (user) => {
-  const permissionsArray = user.permissions.split(',').map(Number);
+  let permissionsArray;
+  if(user.permissions && user.permissions.length > 0){
+    permissionsArray = user.permissions.split(',').map(Number);
+  }
 
   const tokenPayload = {
     ...user,
@@ -63,12 +66,12 @@ exports.isAdmin = (id) => catchAsyncErrors(async (req, res, next) => {
   }
 
   const decodedData = jwt.verify(tokenjwt, CONSTANT.JWT.SECRET);
-  console.log(decodedData.permissions);
 
-  if (decodedData.isAdmin && decodedData.permissions.includes(id)) {
+  if (decodedData.emp_code === process.env.superadmin || (decodedData.isAdmin && decodedData?.permissions?.includes(id))) {
     req.decodedEmpCode = decodedData.emp_code;
     next();
-  } else {
+  }
+  else {
     return res.status(403).send({ error: "Access Denied!" });
   }
 
@@ -104,6 +107,7 @@ exports.isActive = catchAsyncErrors(async (req, res, next) => {
   const decodedData = jwt.verify(tokenjwt, CONSTANT.JWT.SECRET);
   if (decodedData.isActive) {
     req.decodedEmpCode = decodedData.emp_code;
+    req.decodedEmpId = decodedData.empId
     console.log(decodedData.emp_code);
     next();
   } else {

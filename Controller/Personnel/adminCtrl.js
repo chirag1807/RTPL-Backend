@@ -5,6 +5,7 @@ const sendMail = require("../../Middleware/emaiService");
 const cloudinary = require('../../utils/cloudinary');
 const ErrorHandler = require("../../utils/errorhandler");
 const fs = require('fs');
+const { createAccessToken } = require("../../Middleware/auth");
 
 const inputFieldsEmployee = [
     "empProfileImg",
@@ -115,6 +116,8 @@ module.exports.addAdmin = async (req, res) => {
                         message
                     );
                     if (result.success) {
+                        const token = createAccessToken(employee.dataValues);
+                        res.setHeader("Authorization", `Bearer ${token}`);
                         res.status(201).json({ message: "Admin registered successfully" });
                     } else {
                         res.status(400).json({ error: result.message });
@@ -187,6 +190,8 @@ module.exports.addReceptionist = async (req, res) => {
 
                     const result = await sendMail(req.body.email, sender, subject, message);
                     if (result.success) {
+                        const token = createAccessToken(employee.dataValues);
+                        res.setHeader("Authorization", `Bearer ${token}`);
                         res.status(201).json({ message: "Receptionist registered successfully" });
                     } else {
                         res.status(400).json({ error: result.message });
