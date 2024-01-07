@@ -77,8 +77,8 @@ module.exports.visitorRequestMeeting = async (req, res) => {
       });
 
       if (requestMeeting) {
-        let updatedList = []
-        if (req.files.length > 0) {
+        let updatedList = [];
+        if (req.files.vIDDoc.length > 0) {
           let uploadedIDDocs = [];
           let uploadedImages = [];
 
