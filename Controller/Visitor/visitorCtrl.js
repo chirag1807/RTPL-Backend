@@ -11,7 +11,7 @@ const inputFieldsRequestmeeting = [
   "vCompanyContact",
   "vCompanyEmail",
   "purposeOfMeeting",
-  "empId",
+  "contactPersonName",
   "reqMeetDetailsID",
   "ReqStatus",
   "DeclineReason",
@@ -149,7 +149,7 @@ module.exports.getVisitorRequestMeeting = async (req, res) => {
   try {
     const {
       RequestMeeting,
-      Employee,
+      // Employee,
       ReqMeetDetailsByRecp,
       ReqMeetVisitorDetails,
     } = req.app.locals.models;
@@ -190,7 +190,7 @@ module.exports.getVisitorRequestMeeting = async (req, res) => {
     }
 
     queryOptions.include.push(
-      { model: Employee, as: "employee" },
+      // { model: Employee, as: "employee" },
       { model: ReqMeetDetailsByRecp, as: "reqMeetDetailsByRecp" },
       { model: ReqMeetVisitorDetails, required: false, as: "visitorDetails" }
     );
@@ -260,7 +260,7 @@ module.exports.getVisitorListByToken = async (req, res) => {
     const {
       RequestMeeting,
       ReqMeetDetailsByRecp,
-      Employee,
+      // Employee,
       ReqMeetVisitorDetails,
     } = req.app.locals.models;
     if (req.params) {
@@ -277,7 +277,7 @@ module.exports.getVisitorListByToken = async (req, res) => {
       const reqMeeting = await RequestMeeting.findOne({
         where: { reqMeetDetailsID: reqMeetingDetails.reqMeetDetailsID },
         include: [
-          { model: Employee, as: "employee" },
+          // { model: Employee, as: "employee" },
           { model: ReqMeetDetailsByRecp, as: "reqMeetDetailsByRecp" },
           {
             model: ReqMeetVisitorDetails,
@@ -313,7 +313,7 @@ module.exports.getVisitorListByCode = async (req, res) => {
     const {
       RequestMeeting,
       ReqMeetDetailsByRecp,
-      Employee,
+      // Employee,
       ReqMeetVisitorDetails,
     } = req.app.locals.models;
     if (req.params) {
@@ -330,7 +330,7 @@ module.exports.getVisitorListByCode = async (req, res) => {
       const reqMeeting = await RequestMeeting.findOne({
         where: { reqMeetDetailsID: reqMeetingDetails.reqMeetDetailsID },
         include: [
-          { model: Employee, as: "employee" },
+          // { model: Employee, as: "employee" },
           { model: ReqMeetDetailsByRecp, as: "reqMeetDetailsByRecp" },
           {
             model: ReqMeetVisitorDetails,
@@ -410,7 +410,7 @@ module.exports.getVisitorMeetingByempId = async (req, res) => {
   try {
     const {
       RequestMeeting,
-      Employee,
+      // Employee,
       ReqMeetDetailsByRecp,
       ReqMeetVisitorDetails,
     } = req.app.locals.models;
@@ -454,7 +454,7 @@ module.exports.getVisitorMeetingByempId = async (req, res) => {
       }
 
       queryOptions.include.push(
-        { model: Employee, as: "employee" },
+        // { model: Employee, as: "employee" },
         { model: ReqMeetDetailsByRecp, as: "reqMeetDetailsByRecp" },
         { model: ReqMeetVisitorDetails, required: false, as: "visitorDetails" }
       );
@@ -484,7 +484,7 @@ module.exports.getVisitorMeetingByReqMeetingID = async (req, res) => {
   try {
     const {
       RequestMeeting,
-      Employee,
+      // Employee,
       ReqMeetDetailsByRecp,
       ReqMeetVisitorDetails,
     } = req.app.locals.models;
@@ -495,7 +495,7 @@ module.exports.getVisitorMeetingByReqMeetingID = async (req, res) => {
       const requestMeetings = await RequestMeeting.findAll({
         where: { reqMeetingID: reqMeetingID },
         include: [
-          { model: Employee, as: "employee" },
+          // { model: Employee, as: "employee" },
           { model: ReqMeetDetailsByRecp, as: "reqMeetDetailsByRecp" },
           {
             model: ReqMeetVisitorDetails,

@@ -1,6 +1,6 @@
 module.exports.getNotification = async (req, res) => {
   try {
-    const { Employee, RequestMeeting, OuterMeeting, Meeting, AppointmentMeeting } =
+    const { Employee, RequestMeeting, OuterMeeting, Meeting, AppointmentMeeting, ReqMeetDetailsByRecp } =
       req.app.locals.models;
 
     console.log(req.user.empId);
@@ -80,13 +80,30 @@ module.exports.getNotification = async (req, res) => {
       }
     } else {
 
+      // const receptionistAcceptedReqMeetings = await RequestMeeting.findAll({
+      //   attributes: [
+      //     "reqMeetingID",
+      //     "createdAt"
+      //   ],
+      //   where: { ReqStatus: "ReceptionistAccepted", empId: req.user.empId },
+      // });
+
       const receptionistAcceptedReqMeetings = await RequestMeeting.findAll({
-        attributes: [
-          "reqMeetingID",
-          "createdAt"
+        attributes: ['reqMeetingID', 'createdAt'],
+        where: {
+          ReqStatus: "ReceptionistAccepted",
+        },
+        include: [
+          {
+            model: ReqMeetDetailsByRecp,
+            as: 'reqMeetDetailsByRecp',
+            where: {
+              emp_code: emp_code,
+            },
+            attributes: [],
+          },
         ],
-        where: { ReqStatus: "ReceptionistAccepted", empId: req.user.empId },
-      });
+      })
 
       const receptionistAcceptedOuterMeetings = await OuterMeeting.findAll({
         where: { status: "Accepted" },
@@ -117,6 +134,11 @@ module.exports.getNotification = async (req, res) => {
       });
 
       const employeeNotifications = [
+        // ...createNotificationsForEmployee(
+        //   receptionistAcceptedReqMeetings,
+        //   "Request Meeting",
+        //   "reqMeetingID"
+        // ),
         ...createNotificationsForEmployee(
           receptionistAcceptedReqMeetings,
           "Request Meeting",
