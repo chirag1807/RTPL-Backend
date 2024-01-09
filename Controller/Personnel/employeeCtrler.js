@@ -94,7 +94,7 @@ module.exports.getNonAdminEmployees = async (req, res) => {
     const { Employee, Company, Office, Department, Designation, EmployeeRole } =
       req.app.locals.models;
 
-    let { page, pageSize, sort, sortBy, searchField, isActive } = req.query;
+    let { page, pageSize, sort, sortBy, searchField, isActive, isDeleted } = req.query;
 
     page = Math.max(1, parseInt(page, 10)) || 1;
     pageSize = Math.max(1, parseInt(pageSize, 10)) || 10;
@@ -163,6 +163,7 @@ module.exports.getNonAdminEmployees = async (req, res) => {
     queryOptions.where = {
       ...queryOptions.where,
       isActive: isActive ? isActive : true,
+      isDeleted: isDeleted ? isDeleted : false,
       isAdmin: false,
     };
 
