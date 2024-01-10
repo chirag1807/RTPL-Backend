@@ -1,5 +1,6 @@
 const COMMON = require("../../Common/common");
 const CONSTANT = require("../../constant/constant");
+const { Op } = require("sequelize");
 const inputFieldsEmployee = [
   "firstName",
   "lastName",
@@ -62,28 +63,27 @@ module.exports.deleteEmployee = async (req, res) => {
   try {
     const { Employee } = req.app.locals.models;
     const updatedBy = req.decodedEmpCode;
+    let { isDeleted } = req.query;
     if (req.params.id) {
       const empId = req.params.id;
       const employeeDetails = await Employee.findByPk(empId);
       if (employeeDetails) {
         await employeeDetails.update({
-          isDeleted: 1,
+          isDeleted: isDeleted,
           deletedBy: updatedBy
         });
-        await employeeDetails.destroy();
-        // Return a success response
+        // await employeeDetails.destroy();
+
         res.json({ message: "Employee deleted successfully." });
       } else {
         res.status(404).json({ error: `Employee with id ${empId} not found.` });
       }
     } else {
       console.log("Invalid perameter");
-      // Return an error response indicating missing data
       res.status(400).json({ error: "Invalid perameter" });
     }
   } catch (error) {
     console.error("An error occurred:", error);
-    // Return an error response
     res.status(500).json({ error: error.message });
   }
 };
@@ -94,7 +94,7 @@ module.exports.getNonAdminEmployees = async (req, res) => {
     const { Employee, Company, Office, Department, Designation, EmployeeRole } =
       req.app.locals.models;
 
-    let { page, pageSize, sort, sortBy, searchField, isActive, isDeleted } = req.query;
+    let { page, pageSize, sort, sortBy, searchField, isActive, isDeleted, history } = req.query;
 
     page = Math.max(1, parseInt(page, 10)) || 1;
     pageSize = Math.max(1, parseInt(pageSize, 10)) || 10;
@@ -160,12 +160,24 @@ module.exports.getNonAdminEmployees = async (req, res) => {
       }
     );
 
-    queryOptions.where = {
-      ...queryOptions.where,
-      isActive: isActive ? isActive : true,
-      isDeleted: isDeleted ? isDeleted : false,
-      isAdmin: false,
-    };
+    if(history && history == 1){
+      queryOptions.where = {
+        ...queryOptions.where,
+        [Op.or]: [
+          { isActive: 1 },
+          { isDeleted: 1 },
+        ],
+        isAdmin: 0,
+      };
+    }
+    else{
+      queryOptions.where = {
+        ...queryOptions.where,
+        isActive: isActive ? isActive : 1,
+        isDeleted: isDeleted ? isDeleted : 0,
+        isAdmin: 0,
+      };
+    }
 
     const nonAdminEmployees = await Employee.findAll(queryOptions);
 
@@ -182,6 +194,8 @@ module.exports.getNonAdminEmployees = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+//true or
 
 //get Employee By Id
 module.exports.getNonAdminEmployeesById = async (req, res) => {

@@ -68,7 +68,10 @@ module.exports.login = async (req, res) => {
         }
         const token = createAccessToken(employeeDetails.dataValues);
         res.setHeader("Authorization", `Bearer ${token}`);
-        res.status(200).json({ message: "Login successfully" });
+        res.status(200).json({
+          message: "Login successfully",
+          token: token
+        });
       } else {
         console.log("Invalid credentials");
         res.status(400).json({ error: "Invalid credentials" });
