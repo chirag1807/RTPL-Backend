@@ -129,10 +129,12 @@ module.exports.getMeetingTypeByID = async (req, res) => {
 module.exports.updateMeetingType = async (req, res) => {
     try {
         const { MeetingType } = req.app.locals.models;
+        const updatedBy = req.decodedEmpCode;
         // get value of updatedBy
         // COMMON.setModelUpdatedByFieldValue(req);
         if (req.params && req.body) {
             const { meetingTypeID } = req.params;
+            req.body.updatedBy = updatedBy;
 
             const meetingType = await MeetingType.findByPk(meetingTypeID);
 
@@ -142,7 +144,7 @@ module.exports.updateMeetingType = async (req, res) => {
                     .json({ error: "MeetingType not found for the given ID" });
             }
 
-            const updatedMeetingType = await meetingType.update(req.body, {
+            const updatedMeetingType = await meetingType.update( req.body, {
                 fields: inputFieldsMeetingType,
             });
 
@@ -166,6 +168,7 @@ module.exports.updateMeetingType = async (req, res) => {
 module.exports.deleteMeetingType = async (req, res) => {
     try {
         const { MeetingType } = req.app.locals.models;
+        const updatedBy = req.decodedEmpCode;
         // get value of deletedBy
         // COMMON.setModelDeletedByFieldValue(req);
         if (req.params) {
