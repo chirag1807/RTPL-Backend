@@ -206,8 +206,8 @@ module.exports.getNonAdminEmployeesById = async (req, res) => {
 
     const nonAdminEmployees = await Employee.findAll({
       where: {
-        isAdmin: false,
-        // isActive: true,
+        isAdmin: 0,
+        // isActive: 1,
         empId: empId,
       },
       include: [
@@ -279,3 +279,57 @@ module.exports.activateEmployee = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+module.exports.getEmployeeByEmpCode = async (req, res) => {
+  try {
+    const { Employee, Company, Office, Department, Designation, EmployeeRole } =
+      req.app.locals.models;
+    const { emp_code } = req.params;
+
+    const employees = await Employee.findAll({
+      where: {
+        // isActive: 1,
+        emp_code: emp_code,
+      },
+      include: [
+        {
+          model: Company,
+          as: "companyDetails",
+          attributes: ["companyID", "Name", "contact", "email", "isDeleted"],
+        },
+        {
+          model: Office,
+          as: "officeDetails",
+          attributes: ["officeID", "Address", "companyID", "isDeleted"],
+        },
+        {
+          model: Department,
+          as: "employeeDepartment",
+          attributes: ["departmentID", "department", "isDeleted"],
+        },
+        {
+          model: Designation,
+          as: "employeeDesignation",
+          attributes: ["designationID", "designation", "isDeleted"],
+        },
+        {
+          model: EmployeeRole,
+          as: "role",
+          attributes: ["roleID", "role", "isDeleted"],
+        },
+      ],
+    });
+
+    if (employees.length === 0) {
+      return res.status(404).json({ message: "No employees found" });
+    }
+
+    res.status(200).json({
+      message: "Employees Fetched Successfully.",
+      employees: employees,
+    });
+  } catch (error) {
+    console.error("An error occurred:", error);
+    res.status(500).json({ error: error.message });
+  }
+}

@@ -12,5 +12,6 @@ router.put('/:id',
 router.delete('/:id',
     isActive,
     employeeController.deleteEmployee);
+router.get('/getEmployeeByEmpCode/:emp_code', employeeController.getEmployeeByEmpCode);
 
 module.exports = router;
