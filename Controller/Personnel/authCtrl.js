@@ -70,7 +70,8 @@ module.exports.login = async (req, res) => {
         res.setHeader("Authorization", `Bearer ${token}`);
         res.status(200).json({
           message: "Login successfully",
-          token: token
+          token: token,
+          employeeDetails: employeeDetails.dataValues
         });
       } else {
         console.log("Invalid credentials");
