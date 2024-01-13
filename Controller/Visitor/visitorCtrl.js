@@ -3,13 +3,16 @@ const sendMail = require("../../Middleware/emaiService");
 const cloudinary = require("../../utils/cloudinary");
 const fs = require("fs");
 const ErrorHandler = require("../../utils/errorhandler");
-const { Op } = require("sequelize");
+const { Sequelize, Op } = require("sequelize");
 
 const inputFieldsRequestmeeting = [
+  "typeOfVisitor",
   "vCompanyName",
+  "vCompanyIndustry",
   "vCompanyAddress",
   "vCompanyContact",
   "vCompanyEmail",
+  "vCompanyGST",
   "purposeOfMeeting",
   "contactPersonName",
   "reqMeetDetailsID",
@@ -24,8 +27,14 @@ const inputFieldsVisitorDetails = [
   "vDateOfBirth",
   "vAnniversaryDate",
   "vDesignation",
-  "vImage",
-  "vIDDoc",
+  "vDepartment",
+  "vPANCard",
+  "vAddress",
+  "vContact",
+  "vMailID",
+  "vLiveImage",
+  "vPhotoID",
+  "vVisitorID",
 ];
 
 const inputFieldsRequestmeetingDetailsbyRecp = [
@@ -33,6 +42,7 @@ const inputFieldsRequestmeetingDetailsbyRecp = [
   "officeID",
   "departmentID",
   "designationID",
+  "empId",
   "emp_name",
   "emp_code",
   "TokenNumber",
@@ -58,17 +68,12 @@ const uploadAndCreateDocument = async (file) => {
 
 module.exports.visitorRequestMeeting = async (req, res) => {
   try {
-    console.log(req.files);
-    console.log(req.body);
     const { RequestMeeting, ReqMeetVisitorDetails } = req.app.locals.models;
     if (req.body) {
-      console.log(req.body);
-      if (!validator.isEmail(req.body.vCompanyEmail)) {
+      if (req.body.vCompanyEmail && !validator.isEmail(req.body.vCompanyEmail)) {
         return res.status(400).json({ error: "Invalid email." });
       }
-      if (
-        !validator.isMobilePhone(req.body.vCompanyContact.toString(), "any")
-      ) {
+      if (req.body.vCompanyContact && !validator.isMobilePhone(req.body.vCompanyContact.toString(), "any")) {
         return res.status(400).json({ error: "Invalid phone number." });
       }
 
@@ -78,25 +83,32 @@ module.exports.visitorRequestMeeting = async (req, res) => {
 
       if (requestMeeting) {
         let updatedList = [];
-        if (req.files.vIDDoc.length > 0) {
-          let uploadedIDDocs = [];
-          let uploadedImages = [];
+        if (req.files.vPhotoID.length > 0) {
+          let uploadedLiveImages = [];
+          let uploadedPhotoIDs = [];
+          let uploadedVisitorIDs = [];
 
-          for (const fileData of req.files.vIDDoc) {
-            const vIDDocUrl = await uploadAndCreateDocument(fileData);
-            uploadedIDDocs.push(vIDDocUrl);
+          for (const fileData of req.files.vLiveImage) {
+            const vLiveImageURL = await uploadAndCreateDocument(fileData);
+            uploadedLiveImages.push(vLiveImageURL);
           }
 
-          for (const fileData of req.files.vImage) {
-            const vImageUrl = await uploadAndCreateDocument(fileData);
-            uploadedImages.push(vImageUrl);
+          for (const fileData of req.files.vPhotoID) {
+            const vPhotoIDURL = await uploadAndCreateDocument(fileData);
+            uploadedPhotoIDs.push(vPhotoIDURL);
+          }
+
+          for (const fileData of req.files.vVisitorID) {
+            const vVisitorIDURL = await uploadAndCreateDocument(fileData);
+            uploadedVisitorIDs.push(vVisitorIDURL);
           }
 
           updatedList = req.body.visitors.map((visitor, index) => ({
             ...visitor,
             reqMeetingID: requestMeeting.reqMeetingID,
-            vImage: uploadedImages[index],
-            vIDDoc: uploadedIDDocs[index],
+            vLiveImage: uploadedLiveImages[index],
+            vPhotoID: uploadedPhotoIDs[index],
+            vVisitorID: uploadedVisitorIDs[index]
           }));
         }
         else{
@@ -118,12 +130,22 @@ module.exports.visitorRequestMeeting = async (req, res) => {
         const mailMessage =
           "Your meeting request has been registered successfully.";
 
-        await sendMail(
-          req.body.vCompanyEmail,
-          "rtpl@rtplgroup.com",
-          mailSubject,
-          mailMessage
-        );
+        if(requestMeeting.typeOfVisitor == "Company"){
+          await sendMail(
+            req.body.vCompanyEmail,
+            "rtpl@rtplgroup.com",
+            mailSubject,
+            mailMessage
+          );
+        }
+        else{
+          await sendMail(
+            req.body.visitors[0].vMailID,
+            "rtpl@rtplgroup.com",
+            mailSubject,
+            mailMessage
+          )
+        }
 
         res.status(200).json({
           message: "Your meeting request has been registered successfully.",
@@ -152,6 +174,10 @@ module.exports.getVisitorRequestMeeting = async (req, res) => {
       // Employee,
       ReqMeetDetailsByRecp,
       ReqMeetVisitorDetails,
+      Company,
+      Office,
+      Department,
+      Designation,
     } = req.app.locals.models;
 
     let { page, pageSize, sort, sortBy, searchField } = req.query;
@@ -183,6 +209,7 @@ module.exports.getVisitorRequestMeeting = async (req, res) => {
         [Op.or]: [
           { ReqStatus: { [Op.like]: `%${searchField}%` } },
           { purposeOfMeeting: { [Op.like]: `%${searchField}%` } },
+          { contactPersonName: { [Op.like]: `%${searchField}`}},
           { vCompanyName: { [Op.like]: `%${searchField}%` } },
           { vCompanyContact: { [Op.like]: `%${searchField}%` } },
         ],
@@ -191,7 +218,14 @@ module.exports.getVisitorRequestMeeting = async (req, res) => {
 
     queryOptions.include.push(
       // { model: Employee, as: "employee" },
-      { model: ReqMeetDetailsByRecp, as: "reqMeetDetailsByRecp" },
+      { model: ReqMeetDetailsByRecp, as: "reqMeetDetailsByRecp",
+      include: [
+        { model: Company, as: 'company' },
+        { model: Office, as: 'office' },
+        { model: Department, as: 'department' },
+        { model: Designation, as: 'designation' }
+      ]
+      },
       { model: ReqMeetVisitorDetails, required: false, as: "visitorDetails" }
     );
 
@@ -262,6 +296,10 @@ module.exports.getVisitorListByToken = async (req, res) => {
       ReqMeetDetailsByRecp,
       // Employee,
       ReqMeetVisitorDetails,
+      Company,
+      Office,
+      Department,
+      Designation,
     } = req.app.locals.models;
     if (req.params) {
       const { TokenNumber } = req.params;
@@ -278,7 +316,14 @@ module.exports.getVisitorListByToken = async (req, res) => {
         where: { reqMeetDetailsID: reqMeetingDetails.reqMeetDetailsID },
         include: [
           // { model: Employee, as: "employee" },
-          { model: ReqMeetDetailsByRecp, as: "reqMeetDetailsByRecp" },
+          { model: ReqMeetDetailsByRecp, as: "reqMeetDetailsByRecp",
+          include: [
+            { model: Company, as: 'company' },
+            { model: Office, as: 'office' },
+            { model: Department, as: 'department' },
+            { model: Designation, as: 'designation' }
+          ]
+          },
           {
             model: ReqMeetVisitorDetails,
             required: false,
@@ -315,6 +360,10 @@ module.exports.getVisitorListByCode = async (req, res) => {
       ReqMeetDetailsByRecp,
       // Employee,
       ReqMeetVisitorDetails,
+      Company,
+      Office,
+      Department,
+      Designation,
     } = req.app.locals.models;
     if (req.params) {
       const { emp_code } = req.params;
@@ -331,7 +380,14 @@ module.exports.getVisitorListByCode = async (req, res) => {
         where: { reqMeetDetailsID: reqMeetingDetails.reqMeetDetailsID },
         include: [
           // { model: Employee, as: "employee" },
-          { model: ReqMeetDetailsByRecp, as: "reqMeetDetailsByRecp" },
+          { model: ReqMeetDetailsByRecp, as: "reqMeetDetailsByRecp",
+          include: [
+            { model: Company, as: 'company' },
+            { model: Office, as: 'office' },
+            { model: Department, as: 'department' },
+            { model: Designation, as: 'designation' }
+          ]
+          },
           {
             model: ReqMeetVisitorDetails,
             required: false,
@@ -413,6 +469,10 @@ module.exports.getVisitorMeetingByempId = async (req, res) => {
       // Employee,
       ReqMeetDetailsByRecp,
       ReqMeetVisitorDetails,
+      Company,
+      Office,
+      Department,
+      Designation,
     } = req.app.locals.models;
 
     if (req.params) {
@@ -447,6 +507,7 @@ module.exports.getVisitorMeetingByempId = async (req, res) => {
           [Op.or]: [
             { ReqStatus: { [Op.like]: `%${searchField}%` } },
             { purposeOfMeeting: { [Op.like]: `%${searchField}%` } },
+            { contactPersonName: { [Op.like]: `%${searchField}%` } },
             { vCompanyName: { [Op.like]: `%${searchField}%` } },
             { vCompanyContact: { [Op.like]: `%${searchField}%` } },
           ],
@@ -455,11 +516,21 @@ module.exports.getVisitorMeetingByempId = async (req, res) => {
 
       queryOptions.include.push(
         // { model: Employee, as: "employee" },
-        { model: ReqMeetDetailsByRecp, as: "reqMeetDetailsByRecp" },
+        { model: ReqMeetDetailsByRecp, as: "reqMeetDetailsByRecp", 
+        where: {
+          empId: empId,
+        },
+        include: [
+          { model: Company, as: 'company' },
+          { model: Office, as: 'office' },
+          { model: Department, as: 'department' },
+          { model: Designation, as: 'designation' }
+        ] 
+        },
         { model: ReqMeetVisitorDetails, required: false, as: "visitorDetails" }
       );
 
-      queryOptions.where = { ...queryOptions.where, empId: empId };
+      // queryOptions.where = { ...queryOptions.where, empId: empId };
 
       const requestMeetings = await RequestMeeting.findAll(queryOptions);
 
@@ -487,6 +558,10 @@ module.exports.getVisitorMeetingByReqMeetingID = async (req, res) => {
       // Employee,
       ReqMeetDetailsByRecp,
       ReqMeetVisitorDetails,
+      Company,
+      Office,
+      Department,
+      Designation,
     } = req.app.locals.models;
 
     if (req.params) {
@@ -496,7 +571,14 @@ module.exports.getVisitorMeetingByReqMeetingID = async (req, res) => {
         where: { reqMeetingID: reqMeetingID },
         include: [
           // { model: Employee, as: "employee" },
-          { model: ReqMeetDetailsByRecp, as: "reqMeetDetailsByRecp" },
+          { model: ReqMeetDetailsByRecp, as: "reqMeetDetailsByRecp",
+          include: [
+            { model: Company, as: 'company' },
+            { model: Office, as: 'office' },
+            { model: Department, as: 'department' },
+            { model: Designation, as: 'designation' }
+          ]
+          },
           {
             model: ReqMeetVisitorDetails,
             required: false,
@@ -526,16 +608,11 @@ module.exports.getVisitorsByCompanyContact = async (req, res) => {
   try {
     const { RequestMeeting, ReqMeetVisitorDetails } = req.app.locals.models;
 
-    const { companyDetail } = req.body;
+    const { companyGST, visitorPAN } = req.body;
 
-    if (companyDetail) {
+    if (companyGST) {
       const reqMeeting = await RequestMeeting.findOne({
-        where: {
-          [Op.or]: [
-            { vCompanyContact: companyDetail },
-            { vCompanyEmail: companyDetail },
-          ],
-        },
+        where: { vCompanyGST: companyGST },
       });
 
       if (reqMeeting) {
@@ -553,6 +630,19 @@ module.exports.getVisitorsByCompanyContact = async (req, res) => {
             "Previous Meetings Can't be Fetched for Given Company Detail.",
         });
       }
+    } else if(visitorPAN) {
+      
+      const details = await ReqMeetVisitorDetails.findAll({
+        where: { vPANCard: visitorPAN },
+        // group: ['vPANCard', 'vFirstName', 'vLastName'],
+        // having: Sequelize.literal('COUNT(*) = 1'),
+      });
+
+      res.status(200).json({
+        message: "Visitor Details Fetched Successfully.",
+        details: details,
+      });
+
     } else {
       console.log("Invalid perameter");
       res.status(400).json({ error: "Invalid perameter" });

@@ -395,6 +395,7 @@ module.exports.resetToken = async (req, res) => {
           const token = createAccessToken(newObject);
           res.setHeader("Authorization", `Bearer ${token}`);
           return res.status(200).json({
+            token: token,
             message: "Token Reset Done Successfully."
           });
         } else {

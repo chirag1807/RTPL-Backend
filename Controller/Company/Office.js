@@ -126,7 +126,10 @@ module.exports.getOfficesByCompany = async (req, res) => {
 
     const offices = await Office.findAll(queryOptions);
 
-    res.status(200).json({ data: offices });
+    res.status(200).json({ 
+      message: "Offices Fetched Successfully.",
+      data: offices
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });

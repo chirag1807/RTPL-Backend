@@ -36,8 +36,9 @@ router.post('/visitor_request_meeting1',
 
 router.post('/visitor_request_meeting',
 upload.fields([
-    { name: 'vIDDoc', maxCount: 5 },
-    { name: 'vImage', maxCount: 5 },
+    { name: 'vLiveImage', maxCount: 5 },
+    { name: 'vPhotoID', maxCount: 5 },
+    { name: 'vVisitorID', maxCount: 5 },
 ]),
 visitorController.visitorRequestMeeting);
 

@@ -14,15 +14,15 @@ const Employee = sequelize.define('Employees', {
   },
   empProfileImg: {
     type: DataTypes.STRING,
-    allowNull: true
+    allowNull: false
   },
   empIdCard: {
     type: DataTypes.STRING,
-    allowNull: true
+    allowNull: false
   },
   empAadharCard: {
     type: DataTypes.STRING,
-    allowNull: true
+    allowNull: false
   },
   permissions: {
     type: DataTypes.STRING,
@@ -56,7 +56,7 @@ const Employee = sequelize.define('Employees', {
   },
   birthDate: {
     type: DataTypes.DATEONLY,
-    allowNull: true,
+    allowNull: false,
   },
   joiningDate: {
     type: DataTypes.DATEONLY,

@@ -9,21 +9,36 @@ const RequestMeeting = sequelize.define('RequestMeetings', {
         primaryKey: true,
         autoIncrement: true
     },
+    typeOfVisitor: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        validate: {
+          isIn: [['Company', 'Individual']],
+        },
+    },
     vCompanyName: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: true
+    },
+    vCompanyIndustry: {
+        type: DataTypes.STRING,
+        allowNull: true
     },
     vCompanyAddress: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: true
     },
     vCompanyContact: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: true
     },
     vCompanyEmail: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: true
+    },
+    vCompanyGST: {
+        type: DataTypes.STRING,
+        allowNull: true
     },
     purposeOfMeeting: {
         type: DataTypes.STRING,

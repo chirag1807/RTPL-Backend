@@ -26,7 +26,7 @@ const ReqMeetVisitorDetails = sequelize.define('ReqMeetVisitorDetails', {
     },
     vDateOfBirth: {
         type: DataTypes.DATEONLY,
-        allowNull: true
+        allowNull: false
     },
     vAnniversaryDate: {
         type: DataTypes.DATEONLY,
@@ -34,13 +34,39 @@ const ReqMeetVisitorDetails = sequelize.define('ReqMeetVisitorDetails', {
     },
     vDesignation: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: true
     },
-    vImage: {
+    vDepartment: {
         type: DataTypes.STRING,
         allowNull: false
     },
-    vIDDoc: {
+    //from this vPANCard to below 4, used for individual only, that's why allowNull: true
+    vPANCard: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    vAddress: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    vContact: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    vMailID: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    //upto here vMailID
+    vLiveImage: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    vPhotoID: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    vVisitorID: {
         type: DataTypes.STRING,
         allowNull: false
     },
