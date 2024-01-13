@@ -90,7 +90,8 @@ const Meeting = sequelize.define('Meetings', {
     },
     MeetingPurpose: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
+        //here i write it as allowNull true, so frontend team needs to check this validation at frontend level.
     },
     meetingDate: {
         type: DataTypes.DATEONLY,

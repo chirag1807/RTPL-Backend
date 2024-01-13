@@ -1,5 +1,6 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../utils/config');
+const Employee = require('./employee');
 const Company = require('./company');
 const Office = require('./office');
 const Department = require('./department');
@@ -47,6 +48,14 @@ const ReqMeetDetailsByRecp = sequelize.define('ReqMeetDetailsByRecp', {
         type: DataTypes.STRING,
         allowNull: false
     },
+    empId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: Employee,
+            key:'empId',
+        },
+    },
     emp_code: {
         type: DataTypes.STRING,
         allowNull: false,
@@ -64,6 +73,7 @@ const ReqMeetDetailsByRecp = sequelize.define('ReqMeetDetailsByRecp', {
 ReqMeetDetailsByRecp.belongsTo(Company, { foreignKey: 'companyID', as: 'company' });
 ReqMeetDetailsByRecp.belongsTo(Office, { foreignKey: 'officeID', as: 'office' });
 ReqMeetDetailsByRecp.belongsTo(Department, { foreignKey: 'departmentID', as: 'department' });
-ReqMeetDetailsByRecp.belongsTo(Designation, {foreignKey: 'designationID', as: 'designation'})
+ReqMeetDetailsByRecp.belongsTo(Designation, {foreignKey: 'designationID', as: 'designation'});
+ReqMeetDetailsByRecp.belongsTo(Employee, {foreignKey: 'empId', as: 'employee'});
 
 module.exports = ReqMeetDetailsByRecp;
