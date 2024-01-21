@@ -75,6 +75,7 @@ module.exports.deleteEmployee = async (req, res) => {
       if (employeeDetails) {
         await employeeDetails.update({
           isDeleted: isDeleted,
+          isActive: false,
           deletedBy: updatedBy,
         });
         // await employeeDetails.destroy();
@@ -183,8 +184,8 @@ module.exports.getNonAdminEmployees = async (req, res) => {
     } else {
       queryOptions.where = {
         ...queryOptions.where,
-        isActive: isActive ? isActive : 1,
-        isDeleted: isDeleted ? isDeleted : 0,
+        isActive: isActive != undefined ? isActive : 1,
+        isDeleted: isDeleted != undefined ? isDeleted : 0,
         isAdmin: 0,
       };
     }
@@ -192,7 +193,10 @@ module.exports.getNonAdminEmployees = async (req, res) => {
     const nonAdminEmployees = await Employee.findAll(queryOptions);
 
     if (nonAdminEmployees.length === 0) {
-      return res.status(404).json({ message: "No employees found" });
+      return res.status(404).json({ 
+        message: "No employees found",
+        data: []
+      });
     }
 
     res.status(200).json({
@@ -250,7 +254,10 @@ module.exports.getNonAdminEmployeesById = async (req, res) => {
     });
 
     if (nonAdminEmployees.length === 0) {
-      return res.status(404).json({ message: "No employees found" });
+      return res.status(404).json({
+        message: "No employees found",
+        data: []
+      });
     }
 
     res.status(200).json({
