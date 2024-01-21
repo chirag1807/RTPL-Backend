@@ -447,6 +447,7 @@ module.exports.deleteAdmin = async (req, res) => {
             if (employeeDetails) {
                 await employeeDetails.update({
                     isDeleted: 1,
+                    isActive: 0,
                     deletedBy: updatedBy
                 });
                 await employeeDetails.destroy();
@@ -466,3 +467,30 @@ module.exports.deleteAdmin = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+
+module.exports.superAdminPermissions = async (req, res) => {
+    try {
+        const { Employee } = req.app.locals.models;
+        const updatedBy = req.decodedEmpCode;
+        if(req.params.id){
+            const empId = req.params.id;
+            const employeeDetails = await Employee.findByPk(empId);
+            if (employeeDetails) {
+                await employeeDetails.update({
+                    permissions: req.body.permissions,
+                    updatedBy: updatedBy
+                });
+                res.json({ message: "Admin permission added successfully." });
+            } else {
+                res.status(404).json({ error: `Admin with id ${empId} not found.` });
+            }
+        }
+        else{
+            console.log("Invalid perameter");
+            res.status(400).json({ error: "Invalid perameter" });
+        }
+    } catch (error) {
+        console.error("An error occurred:", error);
+        res.status(500).json({ error: error.message });
+    }
+}

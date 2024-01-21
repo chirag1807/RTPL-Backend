@@ -28,5 +28,9 @@ router.put('/:id',
 router.delete('/:id',
     isSuper,
     adminController.deleteAdmin);
+router.put('/superAdminPermissions/:id',
+    isSuper,
+    adminController.superAdminPermissions
+)
 
 module.exports = router;
