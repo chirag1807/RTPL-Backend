@@ -33,7 +33,11 @@ const Employee = sequelize.define('Employees', {
     },
     set(value) {
       console.log(value)
-      this.setDataValue('permissions', value);
+      if (Array.isArray(value)) {
+        this.setDataValue('permissions', value.join(','));
+      } else if (typeof value === 'string') {
+        this.setDataValue('permissions', value);
+      }
     },
   },
   aadharNumber: {

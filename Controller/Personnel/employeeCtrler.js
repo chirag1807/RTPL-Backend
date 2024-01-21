@@ -1,5 +1,6 @@
 const COMMON = require("../../Common/common");
 const CONSTANT = require("../../constant/constant");
+const { createAccessToken } = require("../../Middleware/auth");
 const { Op } = require("sequelize");
 const inputFieldsEmployee = [
   "firstName",
@@ -7,12 +8,14 @@ const inputFieldsEmployee = [
   "emp_code",
   "department",
   "destination",
+  "permissions",
   "email",
   "phone",
   "company",
   "Office",
   "password",
   "isActive",
+  "isAdmin",
   "isDeleted",
   "createdBy",
   "updatedBy",
@@ -36,13 +39,15 @@ module.exports.updateEmployee = async (req, res) => {
 
     COMMON.setModelUpdatedByFieldValue(req);
 
-    const hashedPassword = await COMMON.ENCRYPT(req.body.password);
-    if (!hashedPassword) {
-      return res
-        .status(500)
-        .json({ error: CONSTANT.MESSAGE_CONSTANT.SOMETHING_WENT_WRONG });
+    if (req.body.password) {
+      const hashedPassword = await COMMON.ENCRYPT(req.body.password);
+      if (!hashedPassword) {
+        return res
+          .status(500)
+          .json({ error: CONSTANT.MESSAGE_CONSTANT.SOMETHING_WENT_WRONG });
+      }
+      req.body.password = hashedPassword;
     }
-    req.body.password = hashedPassword;
 
     req.body.updatedBy = updatedBy;
 
@@ -70,7 +75,7 @@ module.exports.deleteEmployee = async (req, res) => {
       if (employeeDetails) {
         await employeeDetails.update({
           isDeleted: isDeleted,
-          deletedBy: updatedBy
+          deletedBy: updatedBy,
         });
         // await employeeDetails.destroy();
 
@@ -94,7 +99,16 @@ module.exports.getNonAdminEmployees = async (req, res) => {
     const { Employee, Company, Office, Department, Designation, EmployeeRole } =
       req.app.locals.models;
 
-    let { page, pageSize, sort, sortBy, searchField, isActive, isDeleted, history } = req.query;
+    let {
+      page,
+      pageSize,
+      sort,
+      sortBy,
+      searchField,
+      isActive,
+      isDeleted,
+      history,
+    } = req.query;
 
     page = Math.max(1, parseInt(page, 10)) || 1;
     pageSize = Math.max(1, parseInt(pageSize, 10)) || 10;
@@ -160,17 +174,13 @@ module.exports.getNonAdminEmployees = async (req, res) => {
       }
     );
 
-    if(history && history == 1){
+    if (history && history == 1) {
       queryOptions.where = {
         ...queryOptions.where,
-        [Op.or]: [
-          { isActive: 1 },
-          { isDeleted: 1 },
-        ],
+        [Op.or]: [{ isActive: 1 }, { isDeleted: 1 }],
         isAdmin: 0,
       };
-    }
-    else{
+    } else {
       queryOptions.where = {
         ...queryOptions.where,
         isActive: isActive ? isActive : 1,
@@ -271,9 +281,23 @@ module.exports.activateEmployee = async (req, res) => {
     }
 
     // Update isActive to true
-    await Employee.update({ isActive: isActive, updatedBy: updatedBy }, { where: { empId } });
+    const employeeUpdated = await employee.update({
+      isActive: isActive,
+      updatedBy: updatedBy,
+    });
+    // const employeeUpdated = await Employee.update({ isActive: isActive, updatedBy: updatedBy }, { where: { empId } });
 
-    res.status(200).json({ message: "Employee activated successfully." });
+    if (employeeUpdated) {
+      const token = createAccessToken(employeeUpdated.dataValues);
+      res.status(200).json({
+        message: "Employee activated successfully.",
+        token: token,
+      });
+    } else {
+      res.status(400).json({
+        message: "Employee can not be activated.",
+      });
+    }
   } catch (error) {
     console.error("An error occurred:", error);
     res.status(500).json({ error: error.message });
@@ -332,4 +356,4 @@ module.exports.getEmployeeByEmpCode = async (req, res) => {
     console.error("An error occurred:", error);
     res.status(500).json({ error: error.message });
   }
-}
+};
