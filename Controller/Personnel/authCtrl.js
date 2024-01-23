@@ -70,20 +70,35 @@ module.exports.login = async (req, res) => {
         res.setHeader("Authorization", `Bearer ${token}`);
         res.status(200).json({
           message: "Login successfully",
-          token: token,
-          employeeDetails: employeeDetails.dataValues
+          response_type: "SUCCESS",
+          data: {
+            token: token,
+            employeeDetails: employeeDetails.dataValues
+          },
         });
       } else {
         console.log("Invalid credentials");
-        res.status(400).json({ error: "Invalid credentials" });
+        res.status(400).json({
+          response_type: "FAILED",
+          data: {},
+          message: "Invalid credentials"
+        });
       }
     } else {
       console.log("Invalid perameter");
-      res.status(400).json({ error: "Invalid perameter" });
+      res.status(400).json({
+        response_type: "FAILED",
+        data: {},
+        message: "Invalid perameter"
+      });
     }
   } catch (error) {
     console.log(error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      response_type: "FAILED",
+      data: {},
+      message: error.message
+    });
   }
 };
 
@@ -99,17 +114,27 @@ module.exports.Registration = async (req, res) => {
       COMMON.setModelCreatedByFieldValue(req);
       // Validate email
       if (!validator.isEmail(req.body.email)) {
-        return res.status(400).json({ error: "Invalid email" });
+        res.status(400).json({
+          response_type: "FAILED",
+          data: {},
+          message: "Invalid email"
+        });
       }
       // Validate phone number
       if (!validator.isMobilePhone(req.body.phone.toString(), "any")) {
-        return res.status(400).json({ error: "Invalid phone number" });
+        res.status(400).json({
+          response_type: "FAILED",
+          data: {},
+          message: "Invalid phone number"
+        });
       }
       const hashedPassword = await COMMON.ENCRYPT(req.body.password);
       if (!hashedPassword) {
-        return res
-          .status(500)
-          .json({ error: CONSTANT.MESSAGE_CONSTANT.SOMETHING_WENT_WRONG });
+        res.status(500).json({
+          response_type: "FAILED",
+          data: {},
+          message: CONSTANT.MESSAGE_CONSTANT.SOMETHING_WENT_WRONG
+        });
       }
       req.body.password = hashedPassword;
       const isExistEmployee = await Employee.findOne({
@@ -138,25 +163,41 @@ module.exports.Registration = async (req, res) => {
           if (result.success) {
             const token = createAccessToken(employee.dataValues);
             res.setHeader("Authorization", `Bearer ${token}`);
-            res
-              .status(201)
-              .json({ message: "Employee registered successfully" });
+            res.status(201).json({
+              response_type: "SUCCESS",
+              data: {},
+              message: "Employee registered successfully"
+            });
           } else {
-            res.status(400).json({ error: result.message });
+            res.status(400).json({
+              response_type: "FAILED",
+              data: {},
+              message: result.message
+            });
           }
         }
       } else {
-        res
-          .status(400)
-          .json({ message: "Employee with this Email Already Exist" });
+        res.status(400).json({
+          response_type: "FAILED",
+          data: {},
+          message: "Employee with this Email Already Exist"
+        });
       }
     } else {
       console.log("Invalid perameter");
-      res.status(400).json({ error: "Invalid perameter" });
+      res.status(400).json({
+        response_type: "FAILED",
+        data: {},
+        message: "Invalid perameter"
+      });
     }
   } catch (error) {
     console.error("An error occurred:", error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      response_type: "FAILED",
+      data: {},
+      message: error.message
+    });
   }
 };
 

@@ -23,22 +23,33 @@ module.exports.addCompany = async (req, res) => {
             });
             if (comapany) {
                 res.status(200).json({
+                    response_type: "SUCCESS",
+                    data: {},
                     message: "Your company has been registered successfully.",
                 });
             } else {
                 res.status(400).json({
-                    message:
-                        "Sorry, Your company has not registered. Please try again later",
+                    response_type: "FAILED",
+                    data: {},
+                    message: "Sorry, Your company has not registered. Please try again later",
                 });
             }
         }
         else {
             console.log("Invalid perameter");
-            res.status(400).json({ error: "Invalid perameter" });
+            res.status(400).json({
+              message: "Invalid perameter",
+              response_type: "FAILED",
+              data: {},
+            });
         }
     } catch (error) {
         console.log(error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({
+          message: error.message,
+              response_type: "FAILED",
+              data: {},
+        });
     }
 }
 
