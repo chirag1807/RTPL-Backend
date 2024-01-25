@@ -22,21 +22,33 @@ module.exports.addDesignation = async (req, res) => {
       });
       if (designation) {
         res.status(200).json({
+          response_type: "SUCCESS",
+          data: {},
           message: "Your designation has been registered successfully.",
         });
       } else {
         res.status(400).json({
+          response_type: "FAILED",
+          data: {},
           message:
             "Sorry, Your designation has not registered. Please try again later",
         });
       }
     } else {
       console.log("Invalid perameter");
-      res.status(400).json({ error: "Invalid perameter" });
+      res.status(400).json({
+        response_type: "FAILED",
+        data: {},
+        message: "Invalid perameter",
+      });
     }
   } catch (error) {
     console.log(error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      response_type: "FAILED",
+      data: {},
+      message: error.message,
+    });
   }
 };
 
@@ -91,21 +103,34 @@ module.exports.getDesignationsByDepartmentID = async (req, res) => {
 
       if (designations) {
         res.status(200).json({
+          response_type: "SUCCESS",
           message: "Designations Fetched Successfully.",
-          designations: designations,
+          data: {
+            designations: designations,
+          },
         });
       } else {
         res.status(400).json({
+          response_type: "FAILED",
+          data: {},
           message: "Designations Can't be Fetched, Please Try Again Later.",
         });
       }
     } else {
-        console.log("Invalid perameter");
-        res.status(400).json({ error: "Invalid perameter" });
+      console.log("Invalid perameter");
+      res.status(400).json({
+        response_type: "FAILED",
+        data: {},
+        message: "Invalid perameter",
+      });
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      response_type: "FAILED",
+      data: {},
+      message: error.message,
+    });
   }
 };
 
@@ -156,17 +181,26 @@ module.exports.getDesignations = async (req, res) => {
 
     if (designations) {
       res.status(200).json({
+        response_type: "SUCCESS",
         message: "Designations Fetched Successfully.",
-        designations: designations,
+        data: {
+          designations: designations,
+        },
       });
     } else {
       res.status(400).json({
+        response_type: "FAILED",
+        data: {},
         message: "Designations Can't be Fetched, Please Try Again Later.",
       });
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      data: {},
+      response_type: "FAILED",
+      message: error.message,
+    });
   }
 };
 
@@ -185,21 +219,34 @@ module.exports.getDesignationByID = async (req, res) => {
 
       if (designation) {
         res.status(200).json({
+          response_type: "SUCCESS",
           message: "Designation Fetched Successfully.",
-          designation: designation,
+          data: {
+            designation: designation,
+          },
         });
       } else {
         res.status(400).json({
+          response_type: "FAILED",
+          data: {},
           message: "Designation Can't be Fetched, Please Try Again Later.",
         });
       }
     } else {
       console.log("Invalid perameter");
-      res.status(400).json({ error: "Invalid perameter" });
+      res.status(400).json({
+        response_type: "FAILED",
+        data: {},
+        message: "Invalid perameter",
+      });
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      response_type: "FAILED",
+      data: {},
+      error: error.message,
+    });
   }
 };
 
@@ -215,9 +262,11 @@ module.exports.updateDesignation = async (req, res) => {
       const designation = await Designation.findByPk(designationID);
 
       if (!designation) {
-        return res
-          .status(404)
-          .json({ error: "Designation not found for the given ID" });
+        return res.status(404).json({
+          response_type: "FAILED",
+          data: {},
+          message: "Designation not found for the given ID",
+        });
       }
       req.body.updatedBy = updatedBy;
       const updatedDesignation = await Designation.update(req.body, {
@@ -226,24 +275,33 @@ module.exports.updateDesignation = async (req, res) => {
       });
 
       if (updatedDesignation) {
-        res
-          .status(200)
-          .json({ message: "Designation has been Updated Successfully." });
+        res.status(200).json({
+          response_type: "SUCCESS",
+          data: {},
+          message: "Designation has been Updated Successfully.",
+        });
       } else {
-        res
-          .status(400)
-          .json({
-            message:
-              "Designation has not been Updated, Please Try Again Later.",
-          });
+        res.status(400).json({
+          response_type: "FAILED",
+          data: {},
+          message: "Designation has not been Updated, Please Try Again Later.",
+        });
       }
     } else {
       console.log("Invalid perameter");
-      res.status(400).json({ error: "Invalid perameter" });
+      res.status(400).json({
+        response_type: "FAILED",
+        data: {},
+        message: "Invalid perameter",
+      });
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      response_type: "FAILED",
+      data: {},
+      message: error.message,
+    });
   }
 };
 
@@ -259,9 +317,11 @@ module.exports.deleteDesignation = async (req, res) => {
       const designation = await Designation.findByPk(designationID);
 
       if (!designation) {
-        return res
-          .status(404)
-          .json({ error: "Designation not found for the given ID" });
+        return res.status(404).json({
+          response_type: "FAILED",
+          data: {},
+          message: "Designation not found for the given ID",
+        });
       }
 
       const updatedDesignation = await designation.update({
@@ -273,31 +333,40 @@ module.exports.deleteDesignation = async (req, res) => {
         const deletedDesignation = await designation.destroy();
 
         if (deletedDesignation) {
-          res
-            .status(200)
-            .json({ message: "Designation has been Deleted Successfully." });
+          res.status(200).json({
+            response_type: "SUCCESS",
+            data: {},
+            message: "Designation has been Deleted Successfully.",
+          });
         } else {
-          res
-            .status(400)
-            .json({
-              message:
-                "Designation has not been Deleted, Please Try Again Later.",
-            });
-        }
-      } else {
-        res
-          .status(400)
-          .json({
+          res.status(400).json({
+            response_type: "FAILED",
+            data: {},
             message:
               "Designation has not been Deleted, Please Try Again Later.",
           });
+        }
+      } else {
+        res.status(400).json({
+          response_type: "FAILED",
+          data: {},
+          message: "Designation has not been Deleted, Please Try Again Later.",
+        });
       }
     } else {
       console.log("Invalid perameter");
-      res.status(400).json({ error: "Invalid perameter" });
+      res.status(400).json({
+        response_type: "FAILED",
+        data: {},
+        message: "Invalid perameter",
+      });
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      response_type: "FAILED",
+      data: {},
+      message: error.message,
+    });
   }
 };
