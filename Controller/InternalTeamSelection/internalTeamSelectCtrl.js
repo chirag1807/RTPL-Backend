@@ -16,21 +16,31 @@ module.exports.getInternalMembersByMeetingID = async (req, res) => {
 
       if (internalMemebers) {
         res.status(200).json({
+          response_type: "SUCCESS",
           message: "Internal Members Fetched Successfully.",
-          internalMembers: internalMemebers,
+          data: {
+            internalMembers: internalMemebers},
         });
       } else {
         res.status(400).json({
+          response_type: "FAILED",
+          data: {},
           message: "Internal Members Can't be Fetched, Please Try Again Later.",
         });
       }
     } else {
       console.log("Invalid perameter");
-      res.status(400).json({ error: "Invalid perameter" });
+      res.status(400).json({ 
+        response_type: "FAILED",
+        data: {},
+        message: "Invalid perameter" });
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ 
+      response_type: "FAILED",
+      data: {},
+      error: error.message });
   }
 };
 
@@ -85,13 +95,22 @@ module.exports.getMeetingsForInternalTeam = async (req, res) => {
     if (!meetingsForEmployee || meetingsForEmployee.length === 0) {
       return res
         .status(404)
-        .json({ message: "No meetings found for the provided employee." });
+        .json({ 
+          response_type: "FAILED",
+          data: {},
+          message: "No meetings found for the provided employee." });
     }
 
-    res.status(200).json({ meetingsForEmployee });
+    res.status(200).json({ 
+      response_type: "SUCCESS",
+      data: {meetingsForEmployee: meetingsForEmployee},
+      message: "Meetings for Employee Fetched." });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ 
+      response_type: "FAILED",
+      data: {},
+      message: error.message });
   }
 };
 
@@ -112,7 +131,10 @@ module.exports.updateInternalMember = async (req, res) => {
       if (!updateMember) {
         return res
           .status(404)
-          .json({ error: "Internal member not found for the given ID" });
+          .json({ 
+            response_type: "FAILED",
+            data: {},
+            message: "Internal member not found for the given ID" });
       }
 
       const updatedMember = await updateMember.update(req.body, {
@@ -122,22 +144,33 @@ module.exports.updateInternalMember = async (req, res) => {
       if (updatedMember) {
         res
           .status(200)
-          .json({ message: "Internal Member has been Updated Successfully." });
+          .json({ 
+            response_type: "SUCCESS",
+            data: {},
+            message: "Internal Member has been Updated Successfully." });
       } else {
         res
           .status(400)
           .json({
+            response_type: "FAILED",
+            data: {},
             message:
               "Internal Member has not been Updated, Please Try Again Later.",
           });
       }
     } else {
       console.log("Invalid perameter");
-      res.status(400).json({ error: "Invalid perameter" });
+      res.status(400).json({ 
+        response_type: "FAILED",
+        data: {},
+        message: "Invalid perameter" });
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ 
+      response_type: "FAILED",
+      data: {},
+      message: error.message });
   }
 };
 
@@ -157,7 +190,10 @@ module.exports.deleteInternalMember = async (req, res) => {
       if (!internalMember) {
         return res
           .status(404)
-          .json({ error: "Internal member not found for the given ID" });
+          .json({ 
+            response_type: "FAILED",
+            data: {},
+            message: "Internal member not found for the given ID" });
       }
 
       const deletedInternalMember = await internalMember.destroy();
@@ -165,11 +201,16 @@ module.exports.deleteInternalMember = async (req, res) => {
       if (deletedInternalMember) {
         res
           .status(200)
-          .json({ message: "Internal member has been Deleted Successfully." });
+          .json({ 
+            response_type: "SUCCESS",
+            data: {},
+            message: "Internal member has been Deleted Successfully." });
       } else {
         res
           .status(400)
           .json({
+            response_type: "FAILED",
+            data: {},
             message:
               "Internal member has not been Deleted, Please Try Again Later.",
           });
@@ -177,7 +218,10 @@ module.exports.deleteInternalMember = async (req, res) => {
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ 
+      response_type: "FAILED",
+      data: {},
+      message: error.message });
   }
 };
 
@@ -200,14 +244,23 @@ module.exports.takeAttendanceOfInternalMembers = async (req, res) => {
         }
       }
 
-      res.status(200).json({ message: 'Attendance marked successfully.' });
+      res.status(200).json({ 
+        response_type: "SUCCESS",
+        data: {},
+        message: 'Attendance marked successfully.' });
     }
     else{
       console.log("Invalid perameter");
-      res.status(400).json({ error: "Invalid perameter" });
+      res.status(400).json({ 
+        response_type: "FAILED",
+        data: {},
+        message: "Invalid perameter" });
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ 
+      response_type: "FAILED",
+      data: {},
+      message: error.message });
   }
 }
