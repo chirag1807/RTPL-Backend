@@ -64,7 +64,11 @@ module.exports.login = async (req, res) => {
           employeeDetails.password
         );
         if (!passwordMatch) {
-          return res.status(401).json({ error: "Invalid credentials" });
+          return res.status(200).json({ 
+            response_type: "FAILED",
+            data: {},
+            message: "Invalid credentials"
+           });
         }
         const token = createAccessToken(employeeDetails.dataValues);
         res.setHeader("Authorization", `Bearer ${token}`);
@@ -163,7 +167,7 @@ module.exports.Registration = async (req, res) => {
           if (result.success) {
             const token = createAccessToken(employee.dataValues);
             res.setHeader("Authorization", `Bearer ${token}`);
-            res.status(201).json({
+            res.status(200).json({
               response_type: "SUCCESS",
               data: {},
               message: "Employee registered successfully"
@@ -221,13 +225,19 @@ module.exports.changePassword = async (req, res) => {
             employeeDetails.password
           );
           if (!passwordMatch) {
-            return res.status(401).json({ error: "Invalid Password" });
+            return res.status(401).json({ 
+              response_type: "FAILED",
+              data: {},
+              message: "Invalid Password" });
           }
           const hashedPassword = await COMMON.ENCRYPT(req.body.newPassword);
           if (!hashedPassword) {
             return res
               .status(500)
-              .json({ error: CONSTANT.MESSAGE_CONSTANT.SOMETHING_WENT_WRONG });
+              .json({ 
+                response_type: "FAILED",
+                data: {},
+                message: CONSTANT.MESSAGE_CONSTANT.SOMETHING_WENT_WRONG });
           }
           return await Employee.update(
             {
@@ -243,28 +253,41 @@ module.exports.changePassword = async (req, res) => {
               // Return a success response
               res
                 .status(200)
-                .json({ message: "Employee password change successfully" });
+                .json({ 
+                  response_type: "SUCCESS",
+                  data: {},
+                  message: "Employee password change successfully" });
             })
             .catch((error) => {
               console.error("An error occurred:", error);
               // Return an error response
-              res.status(500).json({ error: error.message });
+              res.status(500).json({ 
+                response_type: "FAILED",
+                data: {},
+                message: error.message });
             });
         } else {
           res
             .status(404)
-            .json({ error: CONSTANT.MESSAGE_CONSTANT.SOMETHING_WENT_WRONG });
+            .json({ 
+              response_type: "FAILED",
+              data: {},
+              message: CONSTANT.MESSAGE_CONSTANT.SOMETHING_WENT_WRONG });
         }
       }
     } else {
       console.log("Invalid perameter");
-      // Return an error response indicating missing data
-      res.status(400).json({ error: "Invalid perameter" });
+      res.status(400).json({ 
+        response_type: "FAILED",
+        data: {},
+        message: "Invalid perameter" });
     }
   } catch (error) {
     console.error("An error occurred:", error);
-    // Return an error response
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ 
+      response_type: "FAILED",
+      data: {},
+      message: error.message });
   }
 };
 
@@ -280,7 +303,10 @@ module.exports.forgotPassword = async (req, res) => {
         if (!hashedPassword) {
           res
             .status(500)
-            .json({ error: CONSTANT.MESSAGE_CONSTANT.SOMETHING_WENT_WRONG });
+            .json({ 
+              response_type: "FAILED",
+              data: {},
+              message: CONSTANT.MESSAGE_CONSTANT.SOMETHING_WENT_WRONG });
         }
         user.password = hashedPassword;
         const updatedPassword = await user.save();
@@ -288,23 +314,37 @@ module.exports.forgotPassword = async (req, res) => {
           res
             .status(400)
             .json({
+              response_type: "FAILED",
+              data: {},
               message: "Password Can not be Setted, Please Try Again Later.",
             });
         }
 
         res
           .status(200)
-          .json({ message: "User Password Changed Successfully." });
+          .json({ 
+            response_type: "SUCCESS",
+            data: {},
+            message: "User Password Changed Successfully." });
       } else {
-        res.status(404).json({ message: "User Not Found." });
+        res.status(404).json({ 
+          response_type: "FAILED",
+          data: {},
+          message: "User Not Found." });
       }
     } else {
       console.log("Invalid perameter");
-      res.status(400).json({ error: "Invalid perameter" });
+      res.status(400).json({ 
+        response_type: "FAILED",
+        data: {},
+        message: "Invalid perameter" });
     }
   } catch (error) {
     console.error("An error occurred:", error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ 
+      response_type: "FAILED",
+      data: {},
+      message: error.message });
   }
 };
 
@@ -371,11 +411,14 @@ module.exports.sendCode = async (req, res) => {
 
         if (result) {
           res.status(200).json({
+            response_type: "SUCCESS",
             message: "Verification Code Sent Successfully.",
-            result: result,
+            data: {result: result},
           });
         } else {
           res.status(403).json({
+            response_type: "FAILED",
+            data: {},
             message:
               "Verification Code Can not be Sent, Please Try Again Later.",
           });
@@ -383,11 +426,17 @@ module.exports.sendCode = async (req, res) => {
       }
     } else {
       console.log("Invalid perameter");
-      res.status(400).json({ error: "Invalid perameter" });
+      res.status(400).json({ 
+        response_type: "FAILED",
+        data: {},
+        message: "Invalid perameter" });
     }
   } catch (error) {
     console.error("An error occurred:", error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ 
+      response_type: "FAILED",
+      data: {},
+      message: error.message });
   }
 };
 
@@ -400,29 +449,46 @@ module.exports.verifyCode = async (req, res) => {
       if (!codeExists) {
         return res
           .status(404)
-          .json({ error: "Code not found for the given ID" });
+          .json({ 
+            response_type: "FAILED",
+            data: {},
+            message: "Code not found for the given ID" });
       }
 
       if (new Date().getTime() > codeExists.expiresIn) {
         res.status(498).json({
+          response_type: "FAILED",
+          data: {},
           message: "Verification Code Expired, Please Try Again Later.",
         });
       } else {
         if (codeExists.verificationCode == req.body.coeFromUser) {
           res
             .status(200)
-            .json({ message: "Code Verification Done Successfully." });
+            .json({ 
+              response_type: "SUCCESS",
+              data: {},
+              message: "Code Verification Done Successfully." });
         } else {
-          res.status(401).json({ message: "Please Enter Valid Code." });
+          res.status(401).json({ 
+            response_type: "FAILED",
+            data: {},
+            message: "Please Enter Valid Code." });
         }
       }
     } else {
       console.log("Invalid perameter");
-      res.status(400).json({ error: "Invalid perameter" });
+      res.status(400).json({ 
+        response_type: "FAILED",
+        data: {},
+        message: "Invalid perameter" });
     }
   } catch (error) {
     console.error("An error occurred:", error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ 
+      response_type: "FAILED",
+      data: {},
+      message: error.message }); 
   }
 };
 
@@ -436,22 +502,30 @@ module.exports.resetToken = async (req, res) => {
           const token = createAccessToken(newObject);
           res.setHeader("Authorization", `Bearer ${token}`);
           return res.status(200).json({
-            token: token,
+            response_type: "SUCCESS",
+            data: {token: token},
             message: "Token Reset Done Successfully."
           });
         } else {
           return res.status(401).json({
-            msg: "Please Do Login Again",
-            jwtMsg: err.message,
+            response_type: "FAILED",
+            data: {},
+            message: "Please Do Login Again",
           });
         }
       });
     } else {
       console.log("Invalid perameter");
-      res.status(400).json({ error: "Invalid perameter" });
+      res.status(400).json({ 
+        response_type: "FAILED",
+        data: {},
+        message: "Invalid perameter" });
     }
   } catch (error) {
     console.error("An error occurred:", error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ 
+      response_type: "FAILED",
+      data: {},
+      message: error.message });
   }
 };

@@ -21,10 +21,14 @@ module.exports.addMeetingType = async (req, res) => {
             });
             if (meetingType) {
                 res.status(200).json({
+                    response_type: "SUCCESS",
+                    data: {},
                     message: "Your meeting type has been registered successfully.",
                 });
             } else {
                 res.status(400).json({
+                    response_type: "FAILED",
+                    data: {},
                     message:
                         "Sorry, Your meeting type has not registered. Please try again later",
                 });
@@ -32,11 +36,17 @@ module.exports.addMeetingType = async (req, res) => {
         }
         else {
             console.log("Invalid perameter");
-            res.status(400).json({ error: "Invalid perameter" });
+            res.status(400).json({ 
+                response_type: "FAILED",
+                data: {},
+                message: "Invalid perameter" });
         }
     } catch (error) {
         console.log(error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ 
+            response_type: "FAILED",
+            data: {},
+            message: error.message });
     }
 }
 
@@ -77,21 +87,34 @@ module.exports.getMeetingTypes = async (req, res) => {
             isActive: isActive ? isActive : true,
         };
 
+        const totalCount = await MeetingType.count({
+            where: queryOptions.where,
+          });
+        const totalPage = Math.ceil(totalCount / pageSize);
+
         const meetingTypes = await MeetingType.findAll(queryOptions);
 
         if (meetingTypes) {
             res.status(200).json({
+                totalPage: totalPage,
+                currentPage: page,
+                response_type: "SUCCESS",
                 message: "Meeting Types Fetched Successfully.",
-                meetings: meetingTypes,
+                data: {meetings: meetingTypes},
             });
         } else {
             res.status(400).json({
+                response_type: "FAILED",
+                data: {},
                 message: "Meeting Types Can't be Fetched, Please Try Again Later.",
             });
         }
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ 
+            response_type: "FAILED",
+            data: {},
+            message: error.message });
     }
 }
 
@@ -107,22 +130,31 @@ module.exports.getMeetingTypeByID = async (req, res) => {
 
             if (meetingType) {
                 res.status(200).json({
+                    response_type: "SUCCESS",
                     message: "Meeting Type Fetched Successfully.",
-                    meeting: meetingType,
+                    data: {meeting: meetingType},
                 });
             } else {
                 res.status(400).json({
+                    response_type: "FAILED",
+                    data: {},
                     message: "Meeting Type Can't be Fetched, Please Try Again Later.",
                 });
             }
         }
         else {
             console.log("Invalid perameter");
-            res.status(400).json({ error: "Invalid perameter" });
+            res.status(400).json({ 
+                response_type: "FAILED",
+                data: {},
+                message: "Invalid perameter" });
         }
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ 
+            response_type: "FAILED",
+            data: {},
+            message: error.message });
     }
 }
 
@@ -141,7 +173,10 @@ module.exports.updateMeetingType = async (req, res) => {
             if (!meetingType) {
                 return res
                     .status(404)
-                    .json({ error: "MeetingType not found for the given ID" });
+                    .json({ 
+                        response_type: "FAILED",
+                        data: {},
+                        message: "MeetingType not found for the given ID" });
             }
 
             const updatedMeetingType = await meetingType.update( req.body, {
@@ -149,19 +184,31 @@ module.exports.updateMeetingType = async (req, res) => {
             });
 
             if (updatedMeetingType) {
-                res.status(200).json({ message: "Meeting Type has been Updated Successfully." });
+                res.status(200).json({ 
+                    response_type: "SUCCESS",
+                    data: {},
+                    message: "Meeting Type has been Updated Successfully." });
             }
             else {
-                res.status(400).json({ message: "Meeting Type has not been Updated, Please Try Again Later." });
+                res.status(400).json({ 
+                    response_type: "FAILED",
+                    data:{},
+                    message: "Meeting Type has not been Updated, Please Try Again Later." });
             }
         }
         else {
             console.log("Invalid perameter");
-            res.status(400).json({ error: "Invalid perameter" });
+            res.status(400).json({ 
+                response_type: "FAILED",
+                data: {},
+                message: "Invalid perameter" });
         }
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: "Internal server error" });
+        res.status(500).json({ 
+            response_type: "FAILED",
+            data: {},
+            message: error.message });
     }
 }
 
@@ -179,7 +226,10 @@ module.exports.deleteMeetingType = async (req, res) => {
             if (!meetingType) {
                 return res
                     .status(404)
-                    .json({ error: "MeetingType not found for the given ID" });
+                    .json({ 
+                        response_type: "FAILED",
+                        data: {},
+                        message: "MeetingType not found for the given ID" });
             }
 
             const updatedMeetingType = await meetingType.update({ deletedBy: updatedBy, isDeleted: true, isActive: false });
@@ -187,19 +237,31 @@ module.exports.deleteMeetingType = async (req, res) => {
                 const deletedMeetingType = await meetingType.destroy();
 
                 if (deletedMeetingType) {
-                    res.status(200).json({ message: "Meeting Type has been Deleted Successfully." });
+                    res.status(200).json({ 
+                        response_type: "SUCCESS",
+                        data: {},
+                        message: "Meeting Type has been Deleted Successfully." });
                 }
                 else {
-                    res.status(400).json({ message: "Meeting Type has not been Deleted, Please Try Again Later." });
+                    res.status(400).json({ 
+                        response_type: "FAILED",
+                        data: {},
+                        message: "Meeting Type has not been Deleted, Please Try Again Later." });
                 }
             }
             else {
                 console.log("Invalid perameter");
-                res.status(400).json({ error: "Invalid perameter" });
+                res.status(400).json({ 
+                    response_type: "FAILED",
+                    data: {},
+                    message: "Invalid perameter" });
             }
         }
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: "Internal server error" });
+        res.status(500).json({ 
+            response_type: "FAILED",
+            data: {},
+            message: error.message });
     }
 }

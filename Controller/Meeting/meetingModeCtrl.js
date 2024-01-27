@@ -21,10 +21,14 @@ module.exports.addMeetingMode = async (req, res) => {
             });
             if (meetingMode) {
                 res.status(200).json({
+                    response_type: "SUCCESS",
+                    data: {},
                     message: "Your meeting mode has been registered successfully.",
                 });
             } else {
                 res.status(400).json({
+                    response_type: "FAILED",
+                    data: {},
                     message:
                         "Sorry, Your meeting mode has not registered. Please try again later",
                 });
@@ -32,11 +36,17 @@ module.exports.addMeetingMode = async (req, res) => {
         }
         else {
             console.log("Invalid perameter");
-            res.status(400).json({ error: "Invalid perameter" });
+            res.status(400).json({ 
+                response_type: "FAILED",
+                data: {},
+                message: "Invalid perameter" });
         }
     } catch (error) {
         console.log(error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ 
+            response_type: "FAILED",
+            data: {},
+            message: error.message });
     }
 }
 
@@ -74,21 +84,34 @@ module.exports.getMeetingModes = async (req, res) => {
 
     queryOptions.where = { ...queryOptions.where, isActive: isActive ? isActive : true };
 
+    const totalCount = await MeetingMode.count({
+        where: queryOptions.where,
+      });
+    const totalPage = Math.ceil(totalCount / pageSize);
+
     const meetingModes = await MeetingMode.findAll(queryOptions);
 
         if (meetingModes) {
             res.status(200).json({
+                totalPage: totalPage,
+                currentPage: page,
+                response_type: "SUCCESS",
                 message: "Meeting Modes Fetched Successfully.",
-                meetings: meetingModes,
+                data: {meetings: meetingModes},
             });
         } else {
             res.status(400).json({
+                response_type: "FAILED",
+                data: {},
                 message: "Meeting Modes Can't be Fetched, Please Try Again Later.",
             });
         }
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({
+            response_type: "FAILED", 
+            data: {},
+            message: error.message });
     }
 }
 
@@ -106,22 +129,31 @@ module.exports.getMeetingModeByID = async (req, res) => {
 
             if (meetingModes) {
                 res.status(200).json({
+                    response_type: "SUCCESS",
                     message: "Meeting Mode Fetched Successfully.",
-                    meetings: meetingModes,
+                    data: {meetings: meetingModes},
                 });
             } else {
                 res.status(400).json({
+                    response_type: "FAILED",
+                    data: {},
                     message: "Meeting Mode Can't be Fetched, Please Try Again Later.",
                 });
             }
         }
         else {
             console.log("Invalid perameter");
-            res.status(400).json({ error: "Invalid perameter" });
+            res.status(400).json({ 
+                response_type: "FAILED",
+                data: {},
+                message: "Invalid perameter" });
         }
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ 
+            response_type: "FAILED",
+            data: {},
+            message: error.message });
     }
 }
 
@@ -138,7 +170,10 @@ module.exports.updateMeetingMode = async (req, res) => {
             const meetingMode = await MeetingMode.findByPk(meetingModeID);
 
             if (!meetingMode) {
-                return res.status(404).json({ error: 'MeetingMode not found for the given ID' });
+                return res.status(404).json({ 
+                    response_type: "FAILED",
+                    data: {},
+                    message: 'MeetingMode not found for the given ID' });
             }
 
             const updatedMeetingMode = await meetingMode.update(req.body, {
@@ -146,19 +181,31 @@ module.exports.updateMeetingMode = async (req, res) => {
             });
 
             if (updatedMeetingMode) {
-                res.status(200).json({ message: "Meeting Mode has been Updated Successfully." });
+                res.status(200).json({ 
+                    response_type: "SUCCESS",
+                    data: {},
+                    message: "Meeting Mode has been Updated Successfully." });
             }
             else {
-                res.status(400).json({ message: "Meeting Mode has not been Updated, Please Try Again Later." });
+                res.status(400).json({ 
+                    response_type: "FAILED",
+                    data: {},
+                    message: "Meeting Mode has not been Updated, Please Try Again Later." });
             }
         }
         else {
             console.log("Invalid perameter");
-            res.status(400).json({ error: "Invalid perameter" });
+            res.status(400).json({ 
+                response_type: "FAILED",
+                data: {},
+                message: "Invalid perameter" });
         }
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ 
+            response_type: "FAILED",
+            data: {},
+            message: error.message });
     }
 }
 
@@ -174,7 +221,10 @@ module.exports.deleteMeetingMode = async (req, res) => {
             const meetingMode = await MeetingMode.findByPk(meetingModeID);
 
             if (!meetingMode) {
-                return res.status(404).json({ error: 'MeetingMode not found for the given ID' });
+                return res.status(404).json({ 
+                    response_type: "FAILED",
+                    data: {},
+                    message: 'MeetingMode not found for the given ID' });
             }
 
             const updatedMeetingMode = await meetingMode.update({ deletedBy: updatedBy, isDeleted: true, isActive: false });
@@ -183,17 +233,29 @@ module.exports.deleteMeetingMode = async (req, res) => {
                 const deletedMeetingMode = await meetingMode.destroy();
 
                 if (deletedMeetingMode) {
-                    res.status(200).json({ message: "Meeting Mode has been Deleted Successfully." });
+                    res.status(200).json({ 
+                        response_type: "SUCCESS",
+                        data: {},
+                        message: "Meeting Mode has been Deleted Successfully." });
                 }
                 else {
-                    res.status(400).json({ message: "Meeting Mode has not been Deleted, Please Try Again Later." });
+                    res.status(400).json({ 
+                        response_type: "FAILED",
+                        data: {},
+                        message: "Meeting Mode has not been Deleted, Please Try Again Later." });
                 }
             } else {
-                res.status(400).json({ message: "Meeting Mode has not been Deleted, Please Try Again Later." });
+                res.status(400).json({ 
+                    response_type: "FAILED",
+                    data: {},
+                    message: "Meeting Mode has not been Deleted, Please Try Again Later." });
             }
         }
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ 
+            response_type: "FAILED",
+            data: {},
+            message: error.message });
     }
 }
