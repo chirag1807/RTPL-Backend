@@ -89,12 +89,19 @@ module.exports.getConferenceRooms = async (req, res) => {
       as: "office",
     });
 
+    const totalCount = await ConferenceRoom.count({
+      where: queryOptions.where,
+    });
+    const totalPage = Math.ceil(totalCount / pageSize);
+
     const conferenceRooms = await ConferenceRoom.findAll(queryOptions);
 
     if (conferenceRooms) {
       res.status(200).json({
         response_type: "SUCCESS",
         message: "Conference Room Fetched Successfully.",
+        totalPage: totalPage,
+        currentPage: page,
         data: {
           conferenceRooms: conferenceRooms,
         },
@@ -202,12 +209,19 @@ module.exports.getConferenceRoomByOfficeID = async (req, res) => {
         as: "office",
       });
 
+      const totalCount = await ConferenceRoom.count({
+        where: queryOptions.where,
+      });
+      const totalPage = Math.ceil(totalCount / pageSize);
+
       const conferenceRooms = await ConferenceRoom.findAll(queryOptions);
 
       if (conferenceRooms) {
         res.status(200).json({
           response_type: "SUCCESS",
           message: "Conference Rooms Fetched Successfully.",
+          totalPage: totalPage,
+          currentPage: page,
           data: {
             conferenceRooms: conferenceRooms,
           },

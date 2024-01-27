@@ -89,12 +89,19 @@ module.exports.getDepartments = async (req, res) => {
       isActive: isActive ? isActive : true,
     };
 
+    const totalCount = await Department.count({
+      where: queryOptions.where,
+    });
+    const totalPage = Math.ceil(totalCount / pageSize);
+
     const departments = await Department.findAll(queryOptions);
 
     if (departments) {
       res.status(200).json({
         response_type: "SUCCESS",
         message: "Departments Fetched Successfully.",
+        totalPage: totalPage,
+        currentPage: page,
         data: {
           departments: departments,
         },

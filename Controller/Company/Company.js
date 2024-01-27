@@ -94,12 +94,19 @@ module.exports.getCompanies = async (req, res) => {
       isActive: isActive ? isActive : true,
     };
 
+    const totalCount = await Company.count({
+      where: queryOptions.where,
+    });
+    const totalPage = Math.ceil(totalCount / pageSize);
+    
     const company = await Company.findAll(queryOptions);
 
     if (company) {
       res.status(200).json({
         response_type: "SUCCESS",
         message: "Companies Fetched Successfully.",
+        totalPage: totalPage,
+        currentPage: page,
         data: {
           company: company,
         },

@@ -73,17 +73,26 @@ module.exports.addAdmin = async (req, res) => {
             req.body.isActive = true;
             req.body.createdBy = createdBy;
             if (!validator.isEmail(req.body.email)) {
-                return res.status(400).json({ error: "Invalid email" });
+                return res.status(400).json({ 
+                    response_type: "FAILED",
+                    data: {},
+                    message: "Invalid email" });
             }
             // Validate phone number
             if (!validator.isMobilePhone(req.body.phone.toString(), "any")) {
-                return res.status(400).json({ error: "Invalid phone number" });
+                return res.status(400).json({ 
+                    response_type: "FAILED",
+                    data: {},
+                    message: "Invalid phone number" });
             }
             const hashedPassword = await COMMON.ENCRYPT(req.body.password);
             if (!hashedPassword) {
                 return res
                     .status(500)
-                    .json({ error: CONSTANT.MESSAGE_CONSTANT.SOMETHING_WENT_WRONG });
+                    .json({ 
+                        response_type: "FAILED",
+                        data: {},
+                        error: CONSTANT.MESSAGE_CONSTANT.SOMETHING_WENT_WRONG });
             }
             req.body.password = hashedPassword;
 
@@ -118,23 +127,38 @@ module.exports.addAdmin = async (req, res) => {
                     if (result.success) {
                         const token = createAccessToken(employee.dataValues);
                         res.setHeader("Authorization", `Bearer ${token}`);
-                        res.status(201).json({ message: "Admin registered successfully" });
+                        res.status(200).json({ 
+                            response_type: "SUCCESS",
+                            data: {},
+                            message: "Admin registered successfully" });
                     } else {
-                        res.status(400).json({ error: result.message });
+                        res.status(400).json({ 
+                            response_type: "FAILED",
+                            data: {},
+                            message: result.message });
                     }
                 }
             } else {
                 res
                     .status(400)
-                    .json({ message: "Admin with this Email Already Exist" });
+                    .json({ 
+                        response_type: "FAILED",
+                        data: {},
+                        message: "Admin with this Email Already Exist" });
             }
         } else {
             console.log("Invalid perameter");
-            res.status(400).json({ error: "Invalid perameter" });
+            res.status(400).json({ 
+                response_type: "FAILED",
+                data: {},
+                message: "Invalid perameter" });
         }
     } catch (error) {
         console.error("An error occurred:", error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ 
+            response_type: "FAILED",
+            data: {},
+            message: error.message });
     }
 };
 
@@ -156,17 +180,26 @@ module.exports.addReceptionist = async (req, res) => {
             req.body.isActive = true;
             req.body.createdBy = createdBy;
             if (!validator.isEmail(req.body.email)) {
-                return res.status(400).json({ error: "Invalid email" });
+                return res.status(400).json({ 
+                    response_type: "FAILED",
+                    data: {},
+                    message: "Invalid email" });
             }
             // Validate phone number
             if (!validator.isMobilePhone(req.body.phone.toString(), "any")) {
-                return res.status(400).json({ error: "Invalid phone number" });
+                return res.status(400).json({ 
+                    response_type: "FAILED",
+                    data: {},
+                    message: "Invalid phone number" });
             }
             const hashedPassword = await COMMON.ENCRYPT(req.body.password);
             if (!hashedPassword) {
                 return res
                     .status(500)
-                    .json({ error: CONSTANT.MESSAGE_CONSTANT.SOMETHING_WENT_WRONG });
+                    .json({ 
+                        response_type: "FAILED",
+                        data: {},
+                        message: CONSTANT.MESSAGE_CONSTANT.SOMETHING_WENT_WRONG });
             }
             req.body.password = hashedPassword;
             const isExistEmployee = await Employee.findOne({
@@ -192,23 +225,38 @@ module.exports.addReceptionist = async (req, res) => {
                     if (result.success) {
                         const token = createAccessToken(employee.dataValues);
                         res.setHeader("Authorization", `Bearer ${token}`);
-                        res.status(201).json({ message: "Receptionist registered successfully" });
+                        res.status(200).json({ 
+                            response_type: "SUCCESS",
+                            data: {},
+                            message: "Receptionist registered successfully" });
                     } else {
-                        res.status(400).json({ error: result.message });
+                        res.status(400).json({ 
+                            response_type: "FAILED",
+                            data: {},
+                            message: result.message });
                     }
                 }
             } else {
                 res
                     .status(400)
-                    .json({ message: "Receptionist with this Email Already Exist" });
+                    .json({ 
+                        response_type: "FAILED",
+                        data: {},
+                        message: "Receptionist with this Email Already Exist" });
             }
         } else {
             console.log("Invalid perameter");
-            res.status(400).json({ error: "Invalid perameter" });
+            res.status(400).json({ 
+                response_type: "FAILED",
+                data: {},
+                message: "Invalid perameter" });
         }
     } catch (error) {
         console.error("An error occurred:", error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ 
+            response_type: "FAILED",
+            data: {},
+            message: error.message });
     }
 };
 
@@ -248,16 +296,23 @@ module.exports.getAllData = async (req, res) => {
         });
 
         if (data.length === 0) {
-            return res.status(404).json({ message: "No Admins found" });
+            return res.status(404).json({ 
+                response_type: "FAILED",
+                data: {},
+                message: "No Admins found" });
         }
 
         res.status(200).json({
+            response_type: "SUCCESS",
             message: "data Fetched Successfully.",
             data: data,
         });
     } catch (error) {
         console.error("An error occurred:", error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ 
+            response_type: "FAILED",
+            data: {},
+            message: error.message });
     }
 };
 
@@ -297,16 +352,23 @@ module.exports.getAdmins = async (req, res) => {
         });
 
         if (data.length === 0) {
-            return res.status(404).json({ message: "No Admins found" });
+            return res.status(404).json({ 
+                response_type: "FAILED",
+                data: {},
+                message: "No Admins found" });
         }
 
         res.status(200).json({
+            response_type: "SUCCESS",
             message: "data Fetched Successfully.",
             data: data,
         });
     } catch (error) {
         console.error("An error occurred:", error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ 
+            response_type: "FAILED",
+            data: {},
+            message: error.message });
     }
 };
 
@@ -384,19 +446,36 @@ module.exports.getAdmins = async (req, res) => {
 
         queryOptions.where = { ...queryOptions.where, isActive: isActive ? isActive : true, isAdmin: true };
 
+        const totalCount = await Employee.count({
+            where: queryOptions.where,
+          });
+          const totalPage = Math.ceil(totalCount / pageSize);
+
         const nonAdminEmployees = await Employee.findAll(queryOptions);
 
         if (nonAdminEmployees.length === 0) {
-            return res.status(404).json({ message: "No Admins found" });
+            return res.status(200).json({ 
+                totalPage: 0,
+                currentPage: 0,
+                response_type: "SUCCESS",
+                message: "Admins Fetched Successfully.",
+                data: {nonAdminEmployees: []},
+            });
         }
 
         res.status(200).json({
+            totalPage: totalPage,
+            currentPage: page,
+            response_type: "SUCCESS",
             message: "Admins Fetched Successfully.",
-            data: nonAdminEmployees,
+            data: {nonAdminEmployees: nonAdminEmployees},
         });
     } catch (error) {
         console.error("An error occurred:", error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ 
+            response_type: "FAILED",
+            data: {},
+            message: error.message });
     }
 };
 
@@ -409,7 +488,10 @@ module.exports.updateAdmin = async (req, res) => {
 
         const employeeExists = await Employee.findByPk(id);
         if (!employeeExists) {
-            return res.status(404).json({ error: `Admin with id ${id} not found` });
+            return res.status(404).json({ 
+                response_type: "FAILED",
+                data: {},
+                message: `Admin with id ${id} not found` });
         }
 
         COMMON.setModelUpdatedByFieldValue(req);
@@ -418,7 +500,10 @@ module.exports.updateAdmin = async (req, res) => {
         if (!hashedPassword) {
             return res
                 .status(500)
-                .json({ error: CONSTANT.MESSAGE_CONSTANT.SOMETHING_WENT_WRONG });
+                .json({ 
+                    response_type: "FAILED",
+                    data: {},
+                    message: CONSTANT.MESSAGE_CONSTANT.SOMETHING_WENT_WRONG });
         }
         req.body.password = hashedPassword;
 
@@ -429,10 +514,16 @@ module.exports.updateAdmin = async (req, res) => {
             fields: inputFieldsEmployee,
         });
 
-        res.status(200).json({ message: "Admin updated successfully" });
+        res.status(200).json({ 
+            response_type: "SUCCESS",
+            data: {},
+            message: "Admin updated successfully" });
     } catch (error) {
         console.error("An error occurred:", error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ 
+            response_type: "FAILED",
+            data: {},
+            message: error.message });
     }
 };
 
@@ -452,19 +543,29 @@ module.exports.deleteAdmin = async (req, res) => {
                 });
                 await employeeDetails.destroy();
                 // Return a success response
-                res.json({ message: "Admin deleted successfully." });
+                res.status(200).json({ 
+                    response_type: "SUCCESS",
+                    data: {},
+                    message: "Admin deleted successfully." });
             } else {
-                res.status(404).json({ error: `Admin with id ${empId} not found.` });
+                res.status(404).json({ 
+                    response_type: "FAILED",
+                    data: {},
+                    message: `Admin with id ${empId} not found.` });
             }
         } else {
             console.log("Invalid perameter");
-            // Return an error response indicating missing data
-            res.status(400).json({ error: "Invalid perameter" });
+            res.status(400).json({ 
+                response_type: "FAILED",
+                data: {},
+                message: "Invalid perameter" });
         }
     } catch (error) {
         console.error("An error occurred:", error);
-        // Return an error response
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ 
+            response_type: "FAILED",
+            data: {},
+            message: error.message });
     }
 };
 
@@ -480,17 +581,29 @@ module.exports.superAdminPermissions = async (req, res) => {
                     permissions: req.body.permissions,
                     updatedBy: updatedBy
                 });
-                res.json({ message: "Admin permission added successfully." });
+                res.status(200).json({ 
+                    response_type: "SUCCESS",
+                    data: {},
+                    message: "Admin permission added successfully." });
             } else {
-                res.status(404).json({ error: `Admin with id ${empId} not found.` });
+                res.status(404).json({ 
+                    response_type: "FAILED",
+                    data: {},
+                    message: `Admin with id ${empId} not found.` });
             }
         }
         else{
             console.log("Invalid perameter");
-            res.status(400).json({ error: "Invalid perameter" });
+            res.status(400).json({ 
+                response_type: "FAILED",
+                data: {},
+                message: "Invalid perameter" });
         }
     } catch (error) {
         console.error("An error occurred:", error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ 
+            response_type: "FAILED",
+            data: {},
+            message: error.message });
     }
 }

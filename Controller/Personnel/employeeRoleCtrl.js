@@ -21,10 +21,14 @@ module.exports.addEmployeeRole = async (req, res) => {
             });
             if (employeeRole) {
                 res.status(200).json({
+                    response_type: "SUCCESS",
+                    data: {},
                     message: "Employee Role has been registered successfully.",
                 });
             } else {
                 res.status(400).json({
+                    response_type: "FAILED",
+                    data: {},
                     message:
                         "Sorry, Employee Role has not registered. Please try again later",
                 });
@@ -32,11 +36,17 @@ module.exports.addEmployeeRole = async (req, res) => {
         }
         else {
             console.log("Invalid perameter");
-            res.status(400).json({ error: "Invalid perameter" });
+            res.status(400).json({ 
+                response_type: "FAILED",
+                data: {},
+                message: "Invalid perameter" });
         }
     } catch (error) {
         console.log(error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ 
+            response_type: "FAILED",
+            data: {},
+            message: error.message });
     }
 }
 
@@ -75,21 +85,34 @@ module.exports.getEmployeeRoles = async (req, res) => {
 
     queryOptions.where = { ...queryOptions.where, isActive: isActive ? isActive : true };
 
+    const totalCount = await EmployeeRole.count({
+        where: queryOptions.where,
+      });
+      const totalPage = Math.ceil(totalCount / pageSize);
+      
     const employeeRoles = await EmployeeRole.findAll(queryOptions);
 
         if (employeeRoles) {
             res.status(200).json({
+                totalPage: totalPage,
+                currentPage: page,
+                response_type: "SUCCESS",
                 message: "Employee Roles Fetched Successfully.",
-                employeeRoles: employeeRoles,
+                data: {employeeRoles: employeeRoles},
             });
         } else {
             res.status(400).json({
+                response_type: "FAILED",
                 message: "Employee Roles Can't be Fetched, Please Try Again Later.",
+                data: {}
             });
         }
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ 
+            response_type: "FAILED",
+            data: {},
+            message: error.message });
     }
 }
 
@@ -108,22 +131,31 @@ module.exports.getEmployeeRoleByID = async (req, res) => {
 
             if (employeeRole) {
                 res.status(200).json({
+                    response_type: "SUCCESS",
                     message: "Employee Role Fetched Successfully.",
-                    employeeRole: employeeRole,
+                    data: {employeeRole: employeeRole},
                 });
             } else {
                 res.status(400).json({
+                    response_type: "FAILED",
+                    data: {},
                     message: "Employee Role Can't be Fetched, Please Try Again Later.",
                 });
             }
         }
         else {
             console.log("Invalid perameter");
-            res.status(400).json({ error: "Invalid perameter" });
+            res.status(400).json({ 
+                response_type: "FAILED",
+                data: {},
+                message: "Invalid perameter" });
         }
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ 
+            response_type: "FAILED",
+            data: {},
+            message: error.message });
     }
 }
 
@@ -140,7 +172,10 @@ module.exports.updateEmployeeRole = async (req, res) => {
             const employeeRole = await EmployeeRole.findByPk(roleID);
 
             if (!employeeRole) {
-                return res.status(404).json({ error: 'EmployeeR ole not found for the given ID' });
+                return res.status(404).json({ 
+                    response_type: "FAILED",
+                    data: {},
+                    message: 'EmployeeR ole not found for the given ID' });
             }
 
             const updatedEmployeeRole = await employeeRole.update(req.body, {
@@ -148,15 +183,24 @@ module.exports.updateEmployeeRole = async (req, res) => {
             });
 
             if (updatedEmployeeRole) {
-                res.status(200).json({ message: "Employee Role has been Updated Successfully." });
+                res.status(200).json({ 
+                    response_type: "SUCCESS",
+                    data: {},
+                    message: "Employee Role has been Updated Successfully." });
             }
             else {
-                res.status(400).json({ message: "Employee Role has not been Updated, Please Try Again Later." });
+                res.status(400).json({ 
+                    response_type: "FAILED",
+                    data: {},
+                    message: "Employee Role has not been Updated, Please Try Again Later." });
             }
         }
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ 
+            response_type: "FAILED",
+            data: {},
+            message: error.message });
     }
 }
 
@@ -172,7 +216,10 @@ module.exports.deleteEmployeeRole = async (req, res) => {
             const employeeRole = await EmployeeRole.findByPk(roleID);
 
             if (!employeeRole) {
-                return res.status(404).json({ error: 'Employee Role not found for the given ID' });
+                return res.status(404).json({ 
+                    response_type: "FAILED",
+                    data: {},
+                    message: 'Employee Role not found for the given ID' });
             }
 
             const updatedEmployeeRole = await employeeRole.update({ deletedBy: updatedBy, isDeleted: true, isActive: false });
@@ -181,17 +228,29 @@ module.exports.deleteEmployeeRole = async (req, res) => {
                 const deletedEmployeeRole = await employeeRole.destroy();
 
                 if (deletedEmployeeRole) {
-                    res.status(200).json({ message: "Employee Role has been Deleted Successfully." });
+                    res.status(200).json({ 
+                        response_type: "SUCCESS",
+                        data: {},
+                        message: "Employee Role has been Deleted Successfully." });
                 }
                 else {
-                    res.status(400).json({ message: "Employee Role has not been Deleted, Please Try Again Later." });
+                    res.status(400).json({ 
+                        response_type: "FAILED",
+                        data: {},
+                        message: "Employee Role has not been Deleted, Please Try Again Later." });
                 }
             } else {
-                res.status(400).json({ message: "Employee Role has not been Deleted, Please Try Again Later." });
+                res.status(400).json({ 
+                    response_type: "FAILED",
+                    data: {},
+                    message: "Employee Role has not been Deleted, Please Try Again Later." });
             }
         }
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ 
+            response_type: "FAILED",
+            data: {},
+            message: error.message });
     }
 }

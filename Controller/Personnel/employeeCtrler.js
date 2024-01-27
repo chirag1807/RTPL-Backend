@@ -34,7 +34,10 @@ module.exports.updateEmployee = async (req, res) => {
     if (!employeeExists) {
       return res
         .status(404)
-        .json({ error: `Employee with id ${id} not found` });
+        .json({ 
+          response_type: "FAILED",
+          data: {},
+          message: `Employee with id ${id} not found` });
     }
 
     COMMON.setModelUpdatedByFieldValue(req);
@@ -44,7 +47,10 @@ module.exports.updateEmployee = async (req, res) => {
       if (!hashedPassword) {
         return res
           .status(500)
-          .json({ error: CONSTANT.MESSAGE_CONSTANT.SOMETHING_WENT_WRONG });
+          .json({ 
+            response_type: "FAILED",
+            data: {},
+            message: CONSTANT.MESSAGE_CONSTANT.SOMETHING_WENT_WRONG });
       }
       req.body.password = hashedPassword;
     }
@@ -56,10 +62,16 @@ module.exports.updateEmployee = async (req, res) => {
       fields: inputFieldsEmployee,
     });
 
-    res.status(200).json({ message: "Employee updated successfully" });
+    res.status(200).json({ 
+      response_type: "SUCCESS",
+      data: {},
+      message: "Employee updated successfully" });
   } catch (error) {
     console.error("An error occurred:", error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ 
+      response_type: "FAILED",
+      data: {},
+      message: error.message });
   }
 };
 
@@ -80,17 +92,29 @@ module.exports.deleteEmployee = async (req, res) => {
         });
         // await employeeDetails.destroy();
 
-        res.json({ message: "Employee deleted successfully." });
+        res.status(200).json({
+          response_type: "SUCCESS",
+          data: {},
+          message: "Employee deleted successfully." });
       } else {
-        res.status(404).json({ error: `Employee with id ${empId} not found.` });
+        res.status(404).json({ 
+          response_type: "FAILED",
+          data: {},
+          message: `Employee with id ${empId} not found.` });
       }
     } else {
       console.log("Invalid perameter");
-      res.status(400).json({ error: "Invalid perameter" });
+      res.status(400).json({ 
+        response_type: "FAILED",
+        data: {},
+        message: "Invalid perameter" });
     }
   } catch (error) {
     console.error("An error occurred:", error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ 
+      response_type: "FAILED",
+      data: {},
+      message: error.message });
   }
 };
 
@@ -190,22 +214,39 @@ module.exports.getNonAdminEmployees = async (req, res) => {
       };
     }
 
+    const totalCount = await Employee.count({
+      where: queryOptions.where,
+    });
+    const totalPage = Math.ceil(totalCount / pageSize);
+
     const nonAdminEmployees = await Employee.findAll(queryOptions);
 
     if (nonAdminEmployees.length === 0) {
-      return res.status(404).json({ 
+      return res.status(200).json({ 
+        totalPage: 0,
+        currentPage: 0,
+        response_type: "SUCCESS",
         message: "No employees found",
-        data: []
+        data: {
+          nonAdminEmployees: []
+        }
       });
     }
 
     res.status(200).json({
+      totalPage: totalPage,
+      currentPage: page,
+      response_type: "SUCCESS",
       message: "Employees Fetched Successfully.",
-      data: nonAdminEmployees,
+      data: {
+        nonAdminEmployees: nonAdminEmployees},
     });
   } catch (error) {
     console.error("An error occurred:", error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ 
+      response_type: "FAILED",
+      data: {},
+      message: error.message });
   }
 };
 
@@ -255,18 +296,26 @@ module.exports.getNonAdminEmployeesById = async (req, res) => {
 
     if (nonAdminEmployees.length === 0) {
       return res.status(404).json({
+        response_type: "SUCCESS",
         message: "No employees found",
-        data: []
+        data: {
+          nonAdminEmployees: []
+        }
       });
     }
 
     res.status(200).json({
+      response_type: "SUCCESS",
       message: "Employees Fetched Successfully.",
-      data: nonAdminEmployees,
+      data: {
+        nonAdminEmployees: nonAdminEmployees},
     });
   } catch (error) {
     console.error("An error occurred:", error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ 
+      response_type: "FAILED",
+      data: {},
+      message: error.message });
   }
 };
 
@@ -278,13 +327,19 @@ module.exports.activateEmployee = async (req, res) => {
     const updatedBy = req.decodedEmpCode;
 
     if (!empId) {
-      return res.status(400).json({ error: "empId is required" });
+      return res.status(400).json({ 
+        response_type: "FAILED",
+        data: {},
+        message: "empId is required" });
     }
 
     const employee = await Employee.findOne({ where: { empId } });
 
     if (!employee) {
-      return res.status(404).json({ message: "Employee not found" });
+      return res.status(404).json({ 
+        response_type: "FAILED",
+        data: {},
+        message: "Employee not found" });
     }
 
     // Update isActive to true
@@ -297,17 +352,23 @@ module.exports.activateEmployee = async (req, res) => {
     if (employeeUpdated) {
       const token = createAccessToken(employeeUpdated.dataValues);
       res.status(200).json({
+        response_type: "SUCCESS",
         message: "Employee activated successfully.",
-        token: token,
+        data: {token: token},
       });
     } else {
       res.status(400).json({
+        response_type: "FAILED",
+        data: {},
         message: "Employee can not be activated.",
       });
     }
   } catch (error) {
     console.error("An error occurred:", error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ 
+      response_type: "FAILED",
+      data: {},
+      message: error.message });
   }
 };
 
@@ -352,15 +413,22 @@ module.exports.getEmployeeByEmpCode = async (req, res) => {
     });
 
     if (employees.length === 0) {
-      return res.status(404).json({ message: "No employees found" });
+      return res.status(404).json({ 
+        response_type: "FAILED",
+        data: {},
+        message: "No employees found" });
     }
 
     res.status(200).json({
+      response_type: "SUCCESS",
+      data: {employees: employees},
       message: "Employees Fetched Successfully.",
-      employees: employees,
     });
   } catch (error) {
     console.error("An error occurred:", error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ 
+      response_type: "FAILED",
+      data: {},
+      message: error.message });
   }
 };

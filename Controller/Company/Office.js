@@ -158,11 +158,18 @@ module.exports.getOfficesByCompany = async (req, res) => {
       as: "company",
     });
 
+    const totalCount = await Office.count({
+      where: queryOptions.where,
+    });
+    const totalPage = Math.ceil(totalCount / pageSize);
+
     const offices = await Office.findAll(queryOptions);
 
     res.status(200).json({
       response_type: "SUCCESS",
       message: "Offices Fetched Successfully.",
+      totalPage: totalPage,
+      currentPage: page,
       data: {
         offices: offices,
       },
@@ -221,12 +228,19 @@ module.exports.getOffices = async (req, res) => {
       isActive: isActive ? isActive : true,
     };
 
+    const totalCount = await Office.count({
+      where: queryOptions.where,
+    });
+    const totalPage = Math.ceil(totalCount / pageSize);
+
     const offices = await Office.findAll(queryOptions);
 
     if (offices) {
       res.status(200).json({
         response_type: "SUCCESS",
         message: "Offices Fetched Successfully.",
+        totalPage: totalPage,
+        currentPage: page,
         data: {
           offices: offices,
         },

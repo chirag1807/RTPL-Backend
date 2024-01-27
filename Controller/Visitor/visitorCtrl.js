@@ -71,10 +71,16 @@ module.exports.visitorRequestMeeting = async (req, res) => {
     const { RequestMeeting, ReqMeetVisitorDetails } = req.app.locals.models;
     if (req.body) {
       if (req.body.vCompanyEmail && !validator.isEmail(req.body.vCompanyEmail)) {
-        return res.status(400).json({ error: "Invalid email." });
+        return res.status(400).json({ 
+          response_type: "FAILED",
+          data: {},
+          message: "Invalid email." });
       }
       if (req.body.vCompanyContact && !validator.isMobilePhone(req.body.vCompanyContact.toString(), "any")) {
-        return res.status(400).json({ error: "Invalid phone number." });
+        return res.status(400).json({ 
+          response_type: "FAILED",
+          data: {},
+          message: "Invalid phone number." });
       }
 
       const requestMeeting = await RequestMeeting.create(req.body, {
@@ -148,21 +154,31 @@ module.exports.visitorRequestMeeting = async (req, res) => {
         }
 
         res.status(200).json({
+          response_type: "SUCCESS",
+          data: {},
           message: "Your meeting request has been registered successfully.",
         });
       } else {
         res.status(400).json({
+          response_type: "FAILED",
+          data: {},
           message:
             "Sorry, Your meeting request has not registered. Please try again later",
         });
       }
     } else {
       console.log("Invalid perameter");
-      res.status(400).json({ error: "Invalid perameter" });
+      res.status(400).json({ 
+        response_type: "FAILED",
+        data: {},
+        message: "Invalid perameter" });
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ 
+      response_type: "FAILED",
+      data: {},
+      message: error.message });
   }
 };
 
@@ -229,21 +245,34 @@ module.exports.getVisitorRequestMeeting = async (req, res) => {
       { model: ReqMeetVisitorDetails, required: false, as: "visitorDetails" }
     );
 
+    const totalCount = await RequestMeeting.count({
+      where: queryOptions.where,
+    });
+    const totalPage = Math.ceil(totalCount / pageSize);
+
     const requestMeetings = await RequestMeeting.findAll(queryOptions);
 
     if (requestMeetings) {
       res.status(200).json({
+        totalPage: totalPage,
+        currentPage: page,
+        response_type: "SUCCESS",
         message: "Request Meetings Fetched Successfully.",
-        meetings: requestMeetings,
+        data: {meetings: requestMeetings},
       });
     } else {
       res.status(400).json({
+        response_type: "FAILED",
+        data: {},
         message: "Request Meetings Can't be Fetched.",
       });
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ 
+      response_type: "FAILED",
+      data: {},
+      message: error.message });
   }
 };
 
@@ -268,24 +297,37 @@ module.exports.saveTokenByReceptionist = async (req, res) => {
           await requestMeeting.save();
           res
             .status(200)
-            .json({ message: "Data and token submited successfully.." });
+            .json({ 
+              response_type: "SUCCESS",
+              data: {},
+              message: "Data and token submited successfully.." });
         } else {
           res.status(400).json({
+            response_type: "FAILED",
+            data: {},
             message: "ID you've passed is not exist in visitor registration.",
           });
         }
       } else {
         res.status(400).json({
+          response_type: "FAILED",
+          data: {},
           message: "Data and token can't be submitted, please try again later.",
         });
       }
     } else {
       console.log("Invalid perameter");
-      res.status(400).json({ error: "Invalid perameter" });
+      res.status(400).json({ 
+        response_type: "FAILED",
+        data: {},
+        message: "Invalid perameter" });
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ 
+      response_type: "FAILED",
+      data: {},
+      message: error.message });
   }
 };
 
@@ -309,7 +351,10 @@ module.exports.getVisitorListByToken = async (req, res) => {
       });
 
       if (!reqMeetingDetails) {
-        return res.status(404).json({ error: "Token and Data not found" });
+        return res.status(404).json({ 
+          response_type: "FAILED",
+          data: {},
+          message: "Token and Data not found" });
       }
 
       const reqMeeting = await RequestMeeting.findOne({
@@ -334,21 +379,30 @@ module.exports.getVisitorListByToken = async (req, res) => {
 
       if (reqMeeting) {
         res.status(200).json({
+          response_type: "SUCCESS",
           message: "Request Meeting Fetched Successfully.",
-          meetings: reqMeeting,
+          data: {meetings: reqMeeting},
         });
       } else {
         res.status(400).json({
+          response_type: "FAILED",
+          data: {},
           message: "Request Meeting Can't be Fetched.",
         });
       }
     } else {
       console.log("Invalid perameter");
-      res.status(400).json({ error: "Invalid perameter" });
+      res.status(400).json({ 
+        response_type: "FAILED",
+        data: {},
+        message: "Invalid perameter" });
     }
   } catch (error) {
     console.log(error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ 
+      response_type: "FAILED",
+      data: {},
+      message: error.message });
   }
 };
 
@@ -373,7 +427,10 @@ module.exports.getVisitorListByCode = async (req, res) => {
       });
 
       if (!reqMeetingDetails) {
-        return res.status(404).json({ error: "Data not found" });
+        return res.status(404).json({ 
+          response_type: "SUCCESS",
+          data: {},
+          message: "Data not found" });
       }
 
       const reqMeeting = await RequestMeeting.findOne({
@@ -398,21 +455,30 @@ module.exports.getVisitorListByCode = async (req, res) => {
 
       if (reqMeeting) {
         res.status(200).json({
+          response_type: "SUCCESS",
           message: "Request Meeting Fetched Successfully.",
-          meetings: reqMeeting,
+          data: {meetings: reqMeeting},
         });
       } else {
         res.status(400).json({
+          response_type: "FAILED",
+          data: {},
           message: "Request Meeting Can't be Fetched.",
         });
       }
     } else {
       console.log("Invalid perameter");
-      res.status(400).json({ error: "Invalid perameter" });
+      res.status(400).json({ 
+        response_type: "FAILED",
+        data: {},
+        message: "Invalid perameter" });
     }
   } catch (error) {
     console.log(error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ 
+      response_type: "FAILED",
+      data: {},
+      message: error.message });
   }
 };
 
@@ -432,7 +498,9 @@ module.exports.updateVisitorMeetingStatus = async (req, res) => {
 
       if (!requestMeeting) {
         return res.status(404).json({
-          error: "Request Meeting not found for the given Request Meeting ID.",
+          response_type: "FAILED",
+          data: {},
+          message: "Request Meeting not found for the given Request Meeting ID.",
         });
       }
 
@@ -448,17 +516,25 @@ module.exports.updateVisitorMeetingStatus = async (req, res) => {
       if (updatedReqMeeting) {
         res
           .status(200)
-          .json({ message: "Status Updated successfully", updatedReqMeeting });
+          .json({ 
+            response_type: "SUCCESS",
+            message: "Status Updated successfully",
+            data: {
+              updatedReqMeeting: updatedReqMeeting} });
       } else {
         res.status(400).json({
+          response_type: "FAILED",
+          data: {},
           message: "Status Can't be Updated, Please Try Again Later.",
-          updatedReqMeeting,
         });
       }
     }
   } catch (error) {
     console.log(error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ 
+      response_type: "FAILED",
+      data: {},
+      message: error.message });
   }
 };
 
@@ -532,22 +608,35 @@ module.exports.getVisitorMeetingByempId = async (req, res) => {
 
       // queryOptions.where = { ...queryOptions.where, empId: empId };
 
+      const totalCount = await RequestMeeting.count({
+        where: queryOptions.where,
+      });
+      const totalPage = Math.ceil(totalCount / pageSize);
+
       const requestMeetings = await RequestMeeting.findAll(queryOptions);
 
       if (requestMeetings) {
         res.status(200).json({
+          totalPage: totalPage,
+          currentPage: page,
+          response_type: "SUCCESS",
           message: "Request Meetings Fetched Successfully.",
-          meetings: requestMeetings,
+          data: {meetings: requestMeetings},
         });
       } else {
         res.status(400).json({
+          response_type: "FAILED",
+          data: {},
           message: "Request Meetings Can't be Fetched.",
         });
       }
     }
   } catch (error) {
     console.log(error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ 
+      response_type: "FAILED",
+      data: {},
+      message: error.message });
   }
 };
 
@@ -589,18 +678,24 @@ module.exports.getVisitorMeetingByReqMeetingID = async (req, res) => {
 
       if (requestMeetings) {
         res.status(200).json({
+          response_type: "SUCCESS",
           message: "Request Meetings Fetched Successfully.",
-          meetings: requestMeetings,
+          data: {meetings: requestMeetings},
         });
       } else {
         res.status(400).json({
+          response_type: "FAILED",
+          data: {},
           message: "Request Meetings Can't be Fetched.",
         });
       }
     }
   } catch (error) {
     console.log(error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ 
+      response_type: "FAILED",
+      data: {},
+      message: error.message });
   }
 };
 
@@ -621,11 +716,14 @@ module.exports.getVisitorsByCompanyContact = async (req, res) => {
         });
 
         res.status(200).json({
+          response_type: "SUCCESS",
           message: "Visitor Details Fetched Successfully.",
-          details: details,
+          data: {details: details},
         });
       } else {
         res.status(400).json({
+          response_type: "FAILED",
+          data: {},
           message:
             "Previous Meetings Can't be Fetched for Given Company Detail.",
         });
@@ -639,16 +737,23 @@ module.exports.getVisitorsByCompanyContact = async (req, res) => {
       });
 
       res.status(200).json({
+        response_type: "SUCCESS",
         message: "Visitor Details Fetched Successfully.",
-        details: details,
+        data: {details: details},
       });
 
     } else {
       console.log("Invalid perameter");
-      res.status(400).json({ error: "Invalid perameter" });
+      res.status(400).json({ 
+        response_type: "FAILED",
+        data: {},
+        message: "Invalid perameter" });
     }
   } catch (error) {
     console.log(error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ 
+      response_type: "FAILED",
+      data: {},
+      message: error.message });
   }
 };

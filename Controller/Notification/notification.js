@@ -156,11 +156,17 @@ module.exports.getNotification = async (req, res) => {
         )
       ];
 
-      res.status(201).json({ message: "success", data: employeeNotifications });
+      res.status(200).json({ 
+        response_type: "SUCCESS",
+        message: "Notifications Fetches Successfully.",
+        data: {employeeNotifications: employeeNotifications} });
     }
   } catch (error) {
     console.error("An error occurred:", error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ 
+      response_type: "FAILED",
+      data: {},
+      message: error.message });
   }
 };
 

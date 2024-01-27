@@ -90,6 +90,11 @@ module.exports.getMeetingsForInternalTeam = async (req, res) => {
       as: "meeting",
     });
 
+    const totalCount = await InternalTeamSelect.count({
+      where: queryOptions.where,
+    });
+    const totalPage = Math.ceil(totalCount / pageSize);
+
     const meetingsForEmployee = await InternalTeamSelect.findAll(queryOptions);
 
     if (!meetingsForEmployee || meetingsForEmployee.length === 0) {
@@ -103,8 +108,11 @@ module.exports.getMeetingsForInternalTeam = async (req, res) => {
 
     res.status(200).json({ 
       response_type: "SUCCESS",
+      totalPage: totalPage,
+      currentPage: page,
       data: {meetingsForEmployee: meetingsForEmployee},
       message: "Meetings for Employee Fetched." });
+      
   } catch (error) {
     console.error(error);
     res.status(500).json({ 

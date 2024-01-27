@@ -177,12 +177,19 @@ module.exports.getDesignations = async (req, res) => {
       isActive: isActive ? isActive : true,
     };
 
+    const totalCount = await Designation.count({
+      where: queryOptions.where,
+    });
+    const totalPage = Math.ceil(totalCount / pageSize);
+
     const designations = await Designation.findAll(queryOptions);
 
     if (designations) {
       res.status(200).json({
         response_type: "SUCCESS",
         message: "Designations Fetched Successfully.",
+        totalPage: totalPage,
+        currentPage: page,
         data: {
           designations: designations,
         },
