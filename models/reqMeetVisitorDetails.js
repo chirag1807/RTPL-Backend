@@ -70,6 +70,11 @@ const ReqMeetVisitorDetails = sequelize.define('ReqMeetVisitorDetails', {
         type: DataTypes.STRING,
         allowNull: false
     },
+    isAttended: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+    },
 }, {
     timestamps: true,
     paranoid: true
