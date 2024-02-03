@@ -48,6 +48,6 @@ router.get('/get_visitor_list_bytoken/:TokenNumber', visitorController.getVisito
 router.put('/update_visitor_meeting_status/:reqMeetingID', isActive, visitorController.updateVisitorMeetingStatus);
 router.get('/get_visitor_list_by_empId/:empId', visitorController.getVisitorMeetingByempId);
 router.get('/get_visitor_list_by_reqmeetid/:reqMeetingID', visitorController.getVisitorMeetingByReqMeetingID);
-router.get('/get_visitor_by_company_contact', visitorController.getVisitorsByCompanyContact);
+router.post('/get_visitor_by_company_contact', visitorController.getVisitorsByCompanyContact);
 
 module.exports = router;

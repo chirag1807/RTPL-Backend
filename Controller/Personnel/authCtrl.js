@@ -39,6 +39,7 @@ const uploadAndCreateDocument = async (file) => {
       folder: 'RTPL_DOCS',
     });
 
+    console.log(file[0].path);
     fs.unlinkSync(file[0].path);
 
     return result.secure_url;
@@ -58,7 +59,7 @@ module.exports.login = async (req, res) => {
           emp_code: req.body.emp_code,
         },
       });
-      if (employeeDetails) {
+      if (employeeDetails && employeeDetails.email == req.body.email) {
         const passwordMatch = await COMMON.DECRYPT(
           req.body.password,
           employeeDetails.password
@@ -295,8 +296,14 @@ module.exports.forgotPassword = async (req, res) => {
   try {
     const { Employee } = req.app.locals.models;
     if (req.body) {
-      const user = Employee.findOne({
-        //find user using token here
+      // const decodedData = jwt.verify(
+      //   req.headers.authorization.split(" ")[1],
+      //   CONSTANT.JWT.SECRET
+      // );
+      const user = await Employee.findOne({
+        where: {
+          email: req.body.email,
+        },
       });
       if (user) {
         const hashedPassword = await COMMON.ENCRYPT(req.body.newPassword);
@@ -332,7 +339,8 @@ module.exports.forgotPassword = async (req, res) => {
           data: {},
           message: "User Not Found." });
       }
-    } else {
+    } 
+    else {
       console.log("Invalid perameter");
       res.status(400).json({ 
         response_type: "FAILED",
@@ -352,13 +360,13 @@ module.exports.sendCode = async (req, res) => {
   try {
     const { Employee, VerifyCode } = req.app.locals.models;
     if (req.body) {
-      const decodedData = jwt.verify(
-        req.headers.authorization.split(" ")[1],
-        CONSTANT.JWT.SECRET
-      );
+      // const decodedData = jwt.verify(
+      //   req.headers.authorization.split(" ")[1],
+      //   CONSTANT.JWT.SECRET
+      // );
       const user = await Employee.findOne({
         where: {
-          empId: decodedData.empId,
+          email: req.body.email,
         },
       });
 
@@ -393,13 +401,12 @@ module.exports.sendCode = async (req, res) => {
 `;
 
         let subject = "Verify Your Email";
-        const res = await sendMail(
-          req.body.newEmail,
+        await sendMail(
+          req.body.email,
           "rtpl@rtplgroup.com",
           subject,
           htmlContent
         );
-        console.log(res);
 
         const email = await VerifyCode.create({
           verificationCode,
