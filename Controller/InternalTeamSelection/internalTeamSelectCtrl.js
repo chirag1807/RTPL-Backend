@@ -248,7 +248,46 @@ module.exports.takeAttendanceOfInternalMembers = async (req, res) => {
 
       for (const teamMember of teamMembers) {
         if (empIds.includes(teamMember.empId)) {
-          await teamMember.update({ isAttended: true });
+          await teamMember.update({ isAttended: 1 });
+        }
+      }
+
+      res.status(200).json({ 
+        response_type: "SUCCESS",
+        data: {},
+        message: 'Attendance marked successfully.' });
+    }
+    else{
+      console.log("Invalid perameter");
+      res.status(400).json({ 
+        response_type: "FAILED",
+        data: {},
+        message: "Invalid perameter" });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ 
+      response_type: "FAILED",
+      data: {},
+      message: error.message });
+  }
+}
+
+module.exports.takeAttendanceOfVisitors = async (req, res) => {
+  const { ReqMeetVisitorDetails } = req.app.locals.models;
+  
+  try {
+    if(req.body){
+      const reqMeetingID = req.body.reqMeetingID;
+      const visitorIds = req.body.visitorIds;
+
+      const visitors = await ReqMeetVisitorDetails.findAll({
+        where: { reqMeetingID },
+      });
+
+      for (const visitor of visitors) {
+        if (visitorIds.includes(visitor.visitorID)) {
+          await visitor.update({ isAttended: 1 });
         }
       }
 

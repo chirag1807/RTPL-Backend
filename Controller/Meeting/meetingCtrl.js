@@ -33,7 +33,7 @@ const inputFieldOuterMeeting = [
 
 const inputFieldsInternalMembers = ["empId", "meetingID"];
 
-const inputFieldTimeSlot = ["meetingStartTime", "meetingEndTime"];
+const inputFieldTimeSlot = ["meetingID", "meetingStartTime", "meetingEndTime"];
 
 //global method to convert file into uri
 const uploadAndCreateDocument = async (file) => {

@@ -134,6 +134,18 @@ const Meeting = sequelize.define('Meetings', {
     meetingDoc: {
         type: DataTypes.STRING,
         allowNull: true,
+        // get() {
+        //     const meetingDocString = this.getDataValue('meetingDoc');
+        //     return meetingDocString ? meetingDocString.split(',').map(id => parseInt(id, 10)) : [];
+        //   },
+        //   set(value) {
+        //     console.log(value)
+        //     if (Array.isArray(value)) {
+        //       this.setDataValue('meetingDoc', value.join(','));
+        //     } else if (typeof value === 'string') {
+        //       this.setDataValue('meetingDoc', value);
+        //     }
+        //   },
     },
     remark: {
         type: DataTypes.STRING,

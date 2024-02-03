@@ -1,7 +1,7 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../utils/config");
 
-const VeirfyCode = sequelize.define("MeetingModes", {
+const VerifyCode = sequelize.define("VerifyCode", {
     verificationCodeID: {
       type: DataTypes.INTEGER,
       primaryKey: true,
@@ -12,7 +12,7 @@ const VeirfyCode = sequelize.define("MeetingModes", {
       allowNull: false,
     },
     expiresIn: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.BIGINT,
         allowNull: false,
     },
     email: {
@@ -22,4 +22,4 @@ const VeirfyCode = sequelize.define("MeetingModes", {
   }
 );
 
-module.exports = VeirfyCode;
+module.exports = VerifyCode;
