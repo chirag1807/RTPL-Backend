@@ -15,7 +15,7 @@ const sendMail = async (recipientEmail, senderEmail, subject, message) => {
     from: senderEmail,
     to: recipientEmail,
     subject: subject,
-    text: message,
+    html: message,
   };
 
   try {

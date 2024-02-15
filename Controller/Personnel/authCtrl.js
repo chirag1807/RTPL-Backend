@@ -5,6 +5,7 @@ const CONSTANT = require("../../constant/constant");
 const sendMail = require("../../Middleware/emaiService");
 const jwt = require('jsonwebtoken');
 const fs = require('fs');
+const { Op } = require("sequelize");
 
 const cloudinary = require('../../utils/cloudinary');
 const ErrorHandler = require("../../utils/errorhandler");
@@ -68,7 +69,7 @@ module.exports.login = async (req, res) => {
           return res.status(200).json({ 
             response_type: "FAILED",
             data: {},
-            message: "Invalid credentials"
+            message: "Invalid credentials, please provide right credentials"
            });
         }
         const token = createAccessToken(employeeDetails.dataValues);
@@ -81,12 +82,19 @@ module.exports.login = async (req, res) => {
             employeeDetails: employeeDetails.dataValues
           },
         });
+      } else if (employeeDetails && employeeDetails.email != req.body.email){
+        console.log("Invalid email id");
+        res.status(400).json({
+          response_type: "FAILED",
+          data: {},
+          message: "Invalid email id, please provide valid email id."
+        });
       } else {
         console.log("Invalid credentials");
         res.status(400).json({
           response_type: "FAILED",
           data: {},
-          message: "Invalid credentials"
+          message: "Invalid employee code, please provide valid employee code."
         });
       }
     } else {
@@ -122,7 +130,7 @@ module.exports.Registration = async (req, res) => {
         res.status(400).json({
           response_type: "FAILED",
           data: {},
-          message: "Invalid email"
+          message: "Invalid email id, please provide valid email id"
         });
       }
       // Validate phone number
@@ -130,7 +138,7 @@ module.exports.Registration = async (req, res) => {
         res.status(400).json({
           response_type: "FAILED",
           data: {},
-          message: "Invalid phone number"
+          message: "Invalid phone number, please provide valid phone number"
         });
       }
       const hashedPassword = await COMMON.ENCRYPT(req.body.password);
@@ -144,7 +152,12 @@ module.exports.Registration = async (req, res) => {
       req.body.password = hashedPassword;
       const isExistEmployee = await Employee.findOne({
         where: {
-          email: req.body.email,
+          [Op.or]: [
+            { emp_code: req.body.emp_code },
+            { email: req.body.email },
+            {phone: req.body.phone},
+            {aadharNumber: req.body.aadharNumber}
+          ]
         },
       });
       if (!isExistEmployee) {
@@ -181,11 +194,18 @@ module.exports.Registration = async (req, res) => {
             });
           }
         }
+        else {
+          res.status(500).json({
+            response_type: "FAILED",
+            data: {},
+            message: "Employee Registration Failed."
+          });
+        }
       } else {
         res.status(400).json({
           response_type: "FAILED",
           data: {},
-          message: "Employee with this Email Already Exist"
+          message: "Employee with this Email or Employee Code or Phone Number or Aadhar Number Already Exist."
         });
       }
     } else {
@@ -337,7 +357,7 @@ module.exports.forgotPassword = async (req, res) => {
         res.status(404).json({ 
           response_type: "FAILED",
           data: {},
-          message: "User Not Found." });
+          message: "User with given email id doesn't exist." });
       }
     } 
     else {
@@ -369,6 +389,7 @@ module.exports.sendCode = async (req, res) => {
           email: req.body.email,
         },
       });
+      console.log(user);
 
       if (user) {
         const verificationCode = Math.floor(1000 + Math.random() * 9000);
@@ -385,7 +406,7 @@ module.exports.sendCode = async (req, res) => {
 
     <body style="font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4;">
         <div style="background-color: #2196F3; color: white; text-align: center; padding: 20px;">
-            <h2>[Your Company Name]</h2>
+            <h2>Rise and Grow Group of Companies</h2>
         </div>
 
         <div style="padding: 20px;">
@@ -393,7 +414,7 @@ module.exports.sendCode = async (req, res) => {
             <p>Please verify your email address by entering below code.</p>
             <p>Your verification code is: <strong>${verificationCode}</strong></p>
             <p>If you did not initiate this change, please contact our support team immediately.</p>
-            <p>Best regards,<br>[Your Company Name]</p>
+            <p>Best regards,<br>Rise and Grow Group of Companies</p>
         </div>
     </body>
 
@@ -431,6 +452,13 @@ module.exports.sendCode = async (req, res) => {
           });
         }
       }
+      else {
+        console.log("User with given email id doesn't exist.");
+        res.status(400).json({ 
+          response_type: "FAILED",
+          data: {},
+          message: "User with given email id doesn't exist." });
+        }
     } else {
       console.log("Invalid perameter");
       res.status(400).json({ 
@@ -443,7 +471,7 @@ module.exports.sendCode = async (req, res) => {
     res.status(500).json({ 
       response_type: "FAILED",
       data: {},
-      message: error.message });
+      message: "Failed to Send Email, Please Try Again Later." });
   }
 };
 
