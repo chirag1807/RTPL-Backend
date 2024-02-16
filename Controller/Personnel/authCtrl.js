@@ -5,7 +5,6 @@ const CONSTANT = require("../../constant/constant");
 const sendMail = require("../../Middleware/emaiService");
 const jwt = require('jsonwebtoken');
 const fs = require('fs');
-const { Op } = require("sequelize");
 
 const cloudinary = require('../../utils/cloudinary');
 const ErrorHandler = require("../../utils/errorhandler");
@@ -19,7 +18,7 @@ const inputFieldsEmployee = [
   "lastName",
   "emp_code",
   "birthDate",
-  "joiningDate",
+  "anniversaryDate",
   "email",
   "featureString",
   "phone",
@@ -150,17 +149,58 @@ module.exports.Registration = async (req, res) => {
         });
       }
       req.body.password = hashedPassword;
-      const isExistEmployee = await Employee.findOne({
+      const isExistEmployeeCode = await Employee.findOne({
         where: {
-          [Op.or]: [
-            { emp_code: req.body.emp_code },
-            { email: req.body.email },
-            {phone: req.body.phone},
-            {aadharNumber: req.body.aadharNumber}
-          ]
+          emp_code: req.body.emp_code,
         },
       });
-      if (!isExistEmployee) {
+      if(isExistEmployeeCode){
+        fs.unlinkSync(file[0].path);
+        res.status(400).json({
+          response_type: "FAILED",
+          data: {},
+          message: "Employee with this Employee Code Already Exist."
+        });
+      }
+      const isExistEmailId = await Employee.findOne({
+        where: {
+          email: req.body.email,
+        },
+      });
+      if(isExistEmailId){
+        fs.unlinkSync(file[0].path);
+        res.status(400).json({
+          response_type: "FAILED",
+          data: {},
+          message: "Employee with this Email Id Already Exist."
+        });
+      }
+      const isExistPhoneNo = await Employee.findOne({
+        where: {
+          phone: req.body.phone,
+        },
+      });
+      if(isExistPhoneNo){
+        fs.unlinkSync(file[0].path);
+        res.status(400).json({
+          response_type: "FAILED",
+          data: {},
+          message: "Employee with this Phone No Already Exist."
+        });
+      }
+      const isExistAadharNo = await Employee.findOne({
+        where: {
+          aadharNumber: req.body.aadharNumber,
+        },
+      });
+      if(isExistAadharNo){
+        fs.unlinkSync(file[0].path);
+        res.status(400).json({
+          response_type: "FAILED",
+          data: {},
+          message: "Employee with this Aadhar No Already Exist."
+        });
+      }
         req.body.empAadharCard = aadharCard;
         req.body.empIdCard = idCard;
         req.body.empProfileImg = photo;
@@ -195,19 +235,13 @@ module.exports.Registration = async (req, res) => {
           }
         }
         else {
+          fs.unlinkSync(file[0].path);
           res.status(500).json({
             response_type: "FAILED",
             data: {},
             message: "Employee Registration Failed."
           });
         }
-      } else {
-        res.status(400).json({
-          response_type: "FAILED",
-          data: {},
-          message: "Employee with this Email or Employee Code or Phone Number or Aadhar Number Already Exist."
-        });
-      }
     } else {
       console.log("Invalid perameter");
       res.status(400).json({

@@ -17,7 +17,7 @@ const inputFieldsEmployee = [
     "lastName",
     "emp_code",
     "birthDate",
-    "joiningDate",
+    "anniversaryDate",
     "email",
     "featureString",
     "phone",
@@ -66,25 +66,24 @@ module.exports.addAdmin = async (req, res) => {
             const photo = await uploadAndCreateDocument(req.files.empProfileImg);
 
             const createdBy = req.decodedEmpCode;
-            // get value of CreatedBy
-            // COMMON.setModelCreatedByFieldValue(req);
-            // Validate email
+            
             req.body.isAdmin = true;
             req.body.isActive = true;
             req.body.createdBy = createdBy;
             if (!validator.isEmail(req.body.email)) {
-                return res.status(400).json({ 
-                    response_type: "FAILED",
-                    data: {},
-                    message: "Invalid email" });
-            }
-            // Validate phone number
-            if (!validator.isMobilePhone(req.body.phone.toString(), "any")) {
-                return res.status(400).json({ 
-                    response_type: "FAILED",
-                    data: {},
-                    message: "Invalid phone number" });
-            }
+                res.status(400).json({
+                  response_type: "FAILED",
+                  data: {},
+                  message: "Invalid email id, please provide valid email id"
+                });
+              }
+              if (!validator.isMobilePhone(req.body.phone.toString(), "any")) {
+                res.status(400).json({
+                  response_type: "FAILED",
+                  data: {},
+                  message: "Invalid phone number, please provide valid phone number"
+                });
+              }
             const hashedPassword = await COMMON.ENCRYPT(req.body.password);
             if (!hashedPassword) {
                 return res
@@ -96,12 +95,58 @@ module.exports.addAdmin = async (req, res) => {
             }
             req.body.password = hashedPassword;
 
-            const isExistEmployee = await Employee.findOne({
+            const isExistEmployeeCode = await Employee.findOne({
                 where: {
-                    email: req.body.email,
+                  emp_code: req.body.emp_code,
                 },
-            });
-            if (!isExistEmployee) {
+              });
+              if(isExistEmployeeCode){
+                fs.unlinkSync(file[0].path);
+                res.status(400).json({
+                  response_type: "FAILED",
+                  data: {},
+                  message: "Admin with this Employee Code Already Exist."
+                });
+              }
+              const isExistEmailId = await Employee.findOne({
+                where: {
+                  email: req.body.email,
+                },
+              });
+              if(isExistEmailId){
+                fs.unlinkSync(file[0].path);
+                res.status(400).json({
+                  response_type: "FAILED",
+                  data: {},
+                  message: "Admin with this Email Id Already Exist."
+                });
+              }
+              const isExistPhoneNo = await Employee.findOne({
+                where: {
+                  phone: req.body.phone,
+                },
+              });
+              if(isExistPhoneNo){
+                fs.unlinkSync(file[0].path);
+                res.status(400).json({
+                  response_type: "FAILED",
+                  data: {},
+                  message: "Admin with this Phone No Already Exist."
+                });
+              }
+              const isExistAadharNo = await Employee.findOne({
+                where: {
+                  aadharNumber: req.body.aadharNumber,
+                },
+              });
+              if(isExistAadharNo){
+                fs.unlinkSync(file[0].path);
+                res.status(400).json({
+                  response_type: "FAILED",
+                  data: {},
+                  message: "Admin with this Aadhar No Already Exist."
+                });
+              }
                 req.body.empAadharCard = aadharCard;
                 req.body.empIdCard = idCard;
                 req.body.empProfileImg = photo;
@@ -138,14 +183,7 @@ module.exports.addAdmin = async (req, res) => {
                             message: result.message });
                     }
                 }
-            } else {
-                res
-                    .status(400)
-                    .json({ 
-                        response_type: "FAILED",
-                        data: {},
-                        message: "Admin with this Email Already Exist" });
-            }
+            
         } else {
             console.log("Invalid perameter");
             res.status(400).json({ 
@@ -180,18 +218,19 @@ module.exports.addReceptionist = async (req, res) => {
             req.body.isActive = true;
             req.body.createdBy = createdBy;
             if (!validator.isEmail(req.body.email)) {
-                return res.status(400).json({ 
-                    response_type: "FAILED",
-                    data: {},
-                    message: "Invalid email" });
-            }
-            // Validate phone number
-            if (!validator.isMobilePhone(req.body.phone.toString(), "any")) {
-                return res.status(400).json({ 
-                    response_type: "FAILED",
-                    data: {},
-                    message: "Invalid phone number" });
-            }
+                res.status(400).json({
+                  response_type: "FAILED",
+                  data: {},
+                  message: "Invalid email id, please provide valid email id"
+                });
+              }
+              if (!validator.isMobilePhone(req.body.phone.toString(), "any")) {
+                res.status(400).json({
+                  response_type: "FAILED",
+                  data: {},
+                  message: "Invalid phone number, please provide valid phone number"
+                });
+              }
             const hashedPassword = await COMMON.ENCRYPT(req.body.password);
             if (!hashedPassword) {
                 return res
@@ -202,12 +241,59 @@ module.exports.addReceptionist = async (req, res) => {
                         message: CONSTANT.MESSAGE_CONSTANT.SOMETHING_WENT_WRONG });
             }
             req.body.password = hashedPassword;
-            const isExistEmployee = await Employee.findOne({
+
+            const isExistEmployeeCode = await Employee.findOne({
                 where: {
-                    email: req.body.email,
+                  emp_code: req.body.emp_code,
                 },
-            });
-            if (!isExistEmployee) {
+              });
+              if(isExistEmployeeCode){
+                fs.unlinkSync(file[0].path);
+                res.status(400).json({
+                  response_type: "FAILED",
+                  data: {},
+                  message: "Admin with this Employee Code Already Exist."
+                });
+              }
+              const isExistEmailId = await Employee.findOne({
+                where: {
+                  email: req.body.email,
+                },
+              });
+              if(isExistEmailId){
+                fs.unlinkSync(file[0].path);
+                res.status(400).json({
+                  response_type: "FAILED",
+                  data: {},
+                  message: "Admin with this Email Id Already Exist."
+                });
+              }
+              const isExistPhoneNo = await Employee.findOne({
+                where: {
+                  phone: req.body.phone,
+                },
+              });
+              if(isExistPhoneNo){
+                fs.unlinkSync(file[0].path);
+                res.status(400).json({
+                  response_type: "FAILED",
+                  data: {},
+                  message: "Admin with this Phone No Already Exist."
+                });
+              }
+              const isExistAadharNo = await Employee.findOne({
+                where: {
+                  aadharNumber: req.body.aadharNumber,
+                },
+              });
+              if(isExistAadharNo){
+                fs.unlinkSync(file[0].path);
+                res.status(400).json({
+                  response_type: "FAILED",
+                  data: {},
+                  message: "Admin with this Aadhar No Already Exist."
+                });
+              }
 
                 req.body.empAadharCard = aadharCard;
                 req.body.empIdCard = idCard;
@@ -236,14 +322,6 @@ module.exports.addReceptionist = async (req, res) => {
                             message: result.message });
                     }
                 }
-            } else {
-                res
-                    .status(400)
-                    .json({ 
-                        response_type: "FAILED",
-                        data: {},
-                        message: "Receptionist with this Email Already Exist" });
-            }
         } else {
             console.log("Invalid perameter");
             res.status(400).json({ 
@@ -409,7 +487,7 @@ module.exports.getAdmins = async (req, res) => {
                     { lastName: { [Op.like]: `%${searchField}%` } },
                     { emp_code: { [Op.like]: `%${searchField}%` } },
                     { birthDate: { [Op.like]: `%${searchField}%` } },
-                    { joiningDate: { [Op.like]: `%${searchField}%` } },
+                    { anniversaryDate: { [Op.like]: `%${searchField}%` } },
                     { email: { [Op.like]: `%${searchField}%` } },
                     { phone: { [Op.like]: `%${searchField}%` } },
                 ],

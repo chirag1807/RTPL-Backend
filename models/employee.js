@@ -62,7 +62,7 @@ const Employee = sequelize.define('Employees', {
     type: DataTypes.DATEONLY,
     allowNull: false,
   },
-  joiningDate: {
+  anniversaryDate: {
     type: DataTypes.DATEONLY,
     allowNull: true,
   },
