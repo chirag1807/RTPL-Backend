@@ -164,7 +164,7 @@ module.exports.getNonAdminEmployees = async (req, res) => {
           { lastName: { [Op.like]: `%${searchField}%` } },
           { emp_code: { [Op.like]: `%${searchField}%` } },
           { birthDate: { [Op.like]: `%${searchField}%` } },
-          { joiningDate: { [Op.like]: `%${searchField}%` } },
+          { anniversaryDate: { [Op.like]: `%${searchField}%` } },
           { email: { [Op.like]: `%${searchField}%` } },
           { phone: { [Op.like]: `%${searchField}%` } },
         ],
