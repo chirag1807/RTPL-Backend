@@ -101,7 +101,6 @@ module.exports.addAdmin = async (req, res) => {
                 },
               });
               if(isExistEmployeeCode){
-                fs.unlinkSync(file[0].path);
                 res.status(400).json({
                   response_type: "FAILED",
                   data: {},
@@ -114,7 +113,6 @@ module.exports.addAdmin = async (req, res) => {
                 },
               });
               if(isExistEmailId){
-                fs.unlinkSync(file[0].path);
                 res.status(400).json({
                   response_type: "FAILED",
                   data: {},
@@ -127,7 +125,6 @@ module.exports.addAdmin = async (req, res) => {
                 },
               });
               if(isExistPhoneNo){
-                fs.unlinkSync(file[0].path);
                 res.status(400).json({
                   response_type: "FAILED",
                   data: {},
@@ -140,7 +137,6 @@ module.exports.addAdmin = async (req, res) => {
                 },
               });
               if(isExistAadharNo){
-                fs.unlinkSync(file[0].path);
                 res.status(400).json({
                   response_type: "FAILED",
                   data: {},
@@ -248,7 +244,6 @@ module.exports.addReceptionist = async (req, res) => {
                 },
               });
               if(isExistEmployeeCode){
-                fs.unlinkSync(file[0].path);
                 res.status(400).json({
                   response_type: "FAILED",
                   data: {},
@@ -261,7 +256,6 @@ module.exports.addReceptionist = async (req, res) => {
                 },
               });
               if(isExistEmailId){
-                fs.unlinkSync(file[0].path);
                 res.status(400).json({
                   response_type: "FAILED",
                   data: {},
@@ -274,7 +268,6 @@ module.exports.addReceptionist = async (req, res) => {
                 },
               });
               if(isExistPhoneNo){
-                fs.unlinkSync(file[0].path);
                 res.status(400).json({
                   response_type: "FAILED",
                   data: {},
@@ -287,7 +280,6 @@ module.exports.addReceptionist = async (req, res) => {
                 },
               });
               if(isExistAadharNo){
-                fs.unlinkSync(file[0].path);
                 res.status(400).json({
                   response_type: "FAILED",
                   data: {},
