@@ -276,6 +276,92 @@ module.exports.getVisitorRequestMeeting = async (req, res) => {
   }
 };
 
+module.exports.getVisitorPendingRequestMeeting = async (req, res) => {
+  try {
+    const {
+      RequestMeeting,
+      ReqMeetDetailsByRecp,
+      ReqMeetVisitorDetails,
+      Company,
+      Office,
+      Department,
+      Designation,
+    } = req.app.locals.models;
+
+    let { page, pageSize, sort, sortBy, searchField } = req.query;
+
+    page = Math.max(1, parseInt(page, 10)) || 1;
+    pageSize = Math.max(1, parseInt(pageSize, 10)) || 10;
+
+    const offset = (page - 1) * pageSize;
+
+    sort = sort ? sort.toUpperCase() : "ASC";
+
+    const queryOptions = {
+      limit: pageSize,
+      offset: offset,
+      include: [],
+    };
+
+    if (sortBy) {
+      queryOptions.order = [[sortBy, sort]];
+    }
+
+    if (
+      searchField &&
+      typeof searchField === "string" &&
+      searchField.trim() !== ""
+    ) {
+      queryOptions.where = {
+        [Op.and]: [
+          { ReqStatus: "Pending" },
+          {
+            [Op.or]: [
+              { purposeOfMeeting: { [Op.like]: `%${searchField}%` } },
+              { contactPersonName: { [Op.like]: `%${searchField}` } },
+              { vCompanyName: { [Op.like]: `%${searchField}%` } },
+              { vCompanyContact: { [Op.like]: `%${searchField}%` } },
+            ],
+          },
+        ],
+      };
+    }
+
+    queryOptions.include.push(
+      { model: ReqMeetVisitorDetails, required: false, as: "visitorDetails" }
+    );
+
+    const totalCount = await RequestMeeting.count({
+      where: queryOptions.where,
+    });
+    const totalPage = Math.ceil(totalCount / pageSize);
+
+    const requestMeetings = await RequestMeeting.findAll(queryOptions);
+
+    if (requestMeetings) {
+      res.status(200).json({
+        totalPage: totalPage,
+        currentPage: page,
+        response_type: "SUCCESS",
+        message: "Request Meetings Fetched Successfully.",
+        data: {meetings: requestMeetings},
+      });
+    } else {
+      res.status(400).json({
+        response_type: "FAILED",
+        data: {},
+        message: "Request Meetings Can't be Fetched.",
+      });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ 
+      response_type: "FAILED",
+      data: {},
+      message: error.message });
+  }
+};
+
 module.exports.saveTokenByReceptionist = async (req, res) => {
   try {
     const { RequestMeeting, ReqMeetDetailsByRecp } = req.app.locals.models;
@@ -292,8 +378,8 @@ module.exports.saveTokenByReceptionist = async (req, res) => {
       if (reqMeetDetailsByRecp) {
         const requestMeeting = await RequestMeeting.findByPk(reqMeetingID);
         if (requestMeeting) {
-          requestMeeting.reqMeetDetailsID =
-            reqMeetDetailsByRecp.reqMeetDetailsID;
+          requestMeeting.ReqStatus = "ReceptionistAccepted"
+          requestMeeting.reqMeetDetailsID = reqMeetDetailsByRecp.reqMeetDetailsID;
           await requestMeeting.save();
           res
             .status(200)

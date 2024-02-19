@@ -43,6 +43,7 @@ upload.fields([
 visitorController.visitorRequestMeeting);
 
 router.get('/get_visitor_req_list', visitorController.getVisitorRequestMeeting);
+router.get('/get_visitor_pending_req_list', visitorController.getVisitorPendingRequestMeeting);
 router.put('/save_token_by_recpt/:reqMeetingID', isRecept, visitorController.saveTokenByReceptionist);
 router.get('/get_visitor_list_bytoken/:TokenNumber', visitorController.getVisitorListByToken);
 router.put('/update_visitor_meeting_status/:reqMeetingID', isActive, visitorController.updateVisitorMeetingStatus);
