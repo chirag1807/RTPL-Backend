@@ -117,7 +117,8 @@ module.exports.login = async (req, res) => {
 module.exports.Registration = async (req, res) => {
   try {
     const { Employee } = req.app.locals.models;
-    if (req.body) {
+    const requestData = req.body;
+    if (requestData) {
       const aadharCard = await uploadAndCreateDocument(req.files.empAadharCard);
       const idCard = await uploadAndCreateDocument(req.files.empIdCard);
       const photo = await uploadAndCreateDocument(req.files.empProfileImg)
@@ -125,7 +126,7 @@ module.exports.Registration = async (req, res) => {
       // get value of CreatedBy
       COMMON.setModelCreatedByFieldValue(req);
       // Validate email
-      if (!validator.isEmail(req.body.email)) {
+      if (!validator.isEmail(requestData.email)) {
         res.status(400).json({
           response_type: "FAILED",
           data: {},
@@ -133,14 +134,14 @@ module.exports.Registration = async (req, res) => {
         });
       }
       // Validate phone number
-      if (!validator.isMobilePhone(req.body.phone.toString(), "any")) {
+      if (!validator.isMobilePhone(requestData.phone.toString(), "any")) {
         res.status(400).json({
           response_type: "FAILED",
           data: {},
           message: "Invalid phone number, please provide valid phone number"
         });
       }
-      const hashedPassword = await COMMON.ENCRYPT(req.body.password);
+      const hashedPassword = await COMMON.ENCRYPT(requestData.password);
       if (!hashedPassword) {
         res.status(500).json({
           response_type: "FAILED",
@@ -148,10 +149,10 @@ module.exports.Registration = async (req, res) => {
           message: CONSTANT.MESSAGE_CONSTANT.SOMETHING_WENT_WRONG
         });
       }
-      req.body.password = hashedPassword;
+      requestData.password = hashedPassword;
       const isExistEmployeeCode = await Employee.findOne({
         where: {
-          emp_code: req.body.emp_code,
+          emp_code: requestData.emp_code,
         },
       });
       if(isExistEmployeeCode){
@@ -163,7 +164,7 @@ module.exports.Registration = async (req, res) => {
       }
       const isExistEmailId = await Employee.findOne({
         where: {
-          email: req.body.email,
+          email: requestData.email,
         },
       });
       if(isExistEmailId){
@@ -175,7 +176,7 @@ module.exports.Registration = async (req, res) => {
       }
       const isExistPhoneNo = await Employee.findOne({
         where: {
-          phone: req.body.phone,
+          phone: requestData.phone,
         },
       });
       if(isExistPhoneNo){
@@ -187,7 +188,7 @@ module.exports.Registration = async (req, res) => {
       }
       const isExistAadharNo = await Employee.findOne({
         where: {
-          aadharNumber: req.body.aadharNumber,
+          aadharNumber: requestData.aadharNumber,
         },
       });
       if(isExistAadharNo){
@@ -197,10 +198,14 @@ module.exports.Registration = async (req, res) => {
           message: "Employee with this Aadhar No Already Exist."
         });
       }
-        req.body.empAadharCard = aadharCard;
-        req.body.empIdCard = idCard;
-        req.body.empProfileImg = photo;
-        const employee = await Employee.create(req.body, {
+      requestData.empAadharCard = aadharCard;
+      requestData.empIdCard = idCard;
+      requestData.empProfileImg = photo;
+        // const employeeData = { ...req.body };
+        if (req.body.anniversaryDate == ""){
+          delete requestData.anniversaryDate;
+        }
+        const employee = await Employee.create(requestData, {
           fields: inputFieldsEmployee,
         });
         if (employee) {
@@ -209,7 +214,7 @@ module.exports.Registration = async (req, res) => {
           let message = `UserID:${employee.emp_code}\nUrl:http://www.rptl.com `;
 
           const result = await sendMail(
-            req.body.email,
+            requestData.email,
             sender,
             subject,
             message
