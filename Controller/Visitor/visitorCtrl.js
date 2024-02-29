@@ -87,6 +87,8 @@ module.exports.visitorRequestMeeting = async (req, res) => {
         fields: inputFieldsRequestmeeting,
       });
 
+      console.log(req.files);
+
       if (requestMeeting) {
         let updatedList = [];
         if (req.files.vPhotoID.length > 0) {
@@ -293,13 +295,10 @@ module.exports.getVisitorPendingRequestMeeting = async (req, res) => {
     page = Math.max(1, parseInt(page, 10)) || 1;
     pageSize = Math.max(1, parseInt(pageSize, 10)) || 10;
 
-    const offset = (page - 1) * pageSize;
-
     sort = sort ? sort.toUpperCase() : "ASC";
 
     const queryOptions = {
       limit: pageSize,
-      offset: offset,
       include: [],
     };
 
@@ -334,6 +333,10 @@ module.exports.getVisitorPendingRequestMeeting = async (req, res) => {
     const totalCount = await RequestMeeting.count({
       where: queryOptions.where,
     });
+
+    const offset = Math.max(0, totalCount - (page * pageSize));
+    queryOptions.offset = offset;
+
     const totalPage = Math.ceil(totalCount / pageSize);
 
     const requestMeetings = await RequestMeeting.findAll(queryOptions);
@@ -369,8 +372,18 @@ module.exports.saveTokenByReceptionist = async (req, res) => {
       const { reqMeetingID } = req.params;
       // get value of updatedBy
       // COMMON.setModelUpdatedByFieldValue(req);
+      const existingToken = await ReqMeetDetailsByRecp.findOne({
+        where: { TokenNumber: req.body.TokenNumber }
+      });
 
-      console.log(req.body);
+      if (existingToken) {
+        return res.status(400).json({
+          response_type: "FAILED",
+          data: {},
+          message: "This token number is already exists."
+        });
+      }
+
       const reqMeetDetailsByRecp = await ReqMeetDetailsByRecp.create(req.body, {
         fields: inputFieldsRequestmeetingDetailsbyRecp,
       });
