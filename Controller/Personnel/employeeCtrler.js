@@ -211,6 +211,7 @@ module.exports.getNonAdminEmployees = async (req, res) => {
         isActive: isActive != undefined ? isActive : 1,
         isDeleted: isDeleted != undefined ? isDeleted : 0,
         isAdmin: 0,
+        isRecept: 0,
       };
     }
 

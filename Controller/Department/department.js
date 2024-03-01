@@ -55,20 +55,12 @@ module.exports.getDepartments = async (req, res) => {
   try {
     const { Department } = req.app.locals.models;
 
-    let { page, pageSize, sort, sortBy, searchField, isActive } = req.query;
-
-    page = Math.max(1, parseInt(page, 10)) || 1;
-    pageSize = Math.max(1, parseInt(pageSize, 10)) || 10;
-
-    const offset = (page - 1) * pageSize;
+    let { sort, sortBy, searchField, isActive } = req.query;
 
     // Ensure sortOrder is either 'ASC' or 'DESC', default to 'ASC' if undefined
     sort = sort ? sort.toUpperCase() : "ASC";
 
-    const queryOptions = {
-      limit: pageSize,
-      offset: offset,
-    };
+    const queryOptions = {};
 
     if (sortBy) {
       queryOptions.order = [[sortBy, sort]];
@@ -89,19 +81,12 @@ module.exports.getDepartments = async (req, res) => {
       isActive: isActive ? isActive : true,
     };
 
-    const totalCount = await Department.count({
-      where: queryOptions.where,
-    });
-    const totalPage = Math.ceil(totalCount / pageSize);
-
     const departments = await Department.findAll(queryOptions);
 
     if (departments) {
       res.status(200).json({
         response_type: "SUCCESS",
         message: "Departments Fetched Successfully.",
-        totalPage: totalPage,
-        currentPage: page,
         data: {
           departments: departments,
         },
