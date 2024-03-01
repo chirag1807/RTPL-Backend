@@ -59,18 +59,11 @@ module.exports.getDesignationsByDepartmentID = async (req, res) => {
     if (departmentID) {
       const { Department, Designation } = req.app.locals.models;
 
-      let { page, pageSize, sort, sortBy, searchField, isActive } = req.query;
-
-      page = Math.max(1, parseInt(page, 10)) || 1;
-      pageSize = Math.max(1, parseInt(pageSize, 10)) || 10;
-
-      const offset = (page - 1) * pageSize;
+      let { sort, sortBy, searchField, isActive } = req.query;
 
       sort = sort ? sort.toUpperCase() : "ASC";
 
       const queryOptions = {
-        limit: pageSize,
-        offset: offset,
         include: [],
       };
 
@@ -138,18 +131,11 @@ module.exports.getDesignations = async (req, res) => {
   try {
     const { Department, Designation } = req.app.locals.models;
 
-    let { page, pageSize, sort, sortBy, searchField, isActive } = req.query;
-
-    page = Math.max(1, parseInt(page, 10)) || 1;
-    pageSize = Math.max(1, parseInt(pageSize, 10)) || 10;
-
-    const offset = (page - 1) * pageSize;
+    let { sort, sortBy, searchField, isActive } = req.query;
 
     sort = sort ? sort.toUpperCase() : "ASC";
 
     const queryOptions = {
-      limit: pageSize,
-      offset: offset,
       include: [],
     };
 
@@ -177,19 +163,12 @@ module.exports.getDesignations = async (req, res) => {
       isActive: isActive ? isActive : true,
     };
 
-    const totalCount = await Designation.count({
-      where: queryOptions.where,
-    });
-    const totalPage = Math.ceil(totalCount / pageSize);
-
     const designations = await Designation.findAll(queryOptions);
 
     if (designations) {
       res.status(200).json({
         response_type: "SUCCESS",
         message: "Designations Fetched Successfully.",
-        totalPage: totalPage,
-        currentPage: page,
         data: {
           designations: designations,
         },
