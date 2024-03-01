@@ -1,8 +1,6 @@
 const validator = require("validator");
 const sendMail = require("../../Middleware/emaiService");
-const cloudinary = require("../../utils/cloudinary");
-const fs = require("fs");
-const ErrorHandler = require("../../utils/errorhandler");
+// const cloudinary = require("../../utils/cloudinary");
 const { Sequelize, Op } = require("sequelize");
 
 const inputFieldsRequestmeeting = [
@@ -37,6 +35,7 @@ const inputFieldsVisitorDetails = [
   "vVisitorID",
 ];
 
+
 const inputFieldsRequestmeetingDetailsbyRecp = [
   "companyID",
   "officeID",
@@ -49,27 +48,12 @@ const inputFieldsRequestmeetingDetailsbyRecp = [
 ];
 
 //global method to convert file into uri
-const uploadAndCreateDocument = async (file) => {
-  try {
-    const result = await cloudinary.uploader.upload(file.path, {
-      resource_type: "auto",
-      folder: "RTPL_DOCS",
-    });
-
-    fs.unlinkSync(file.path);
-
-    return result.secure_url;
-  } catch (error) {
-    console.log(error);
-    fs.unlinkSync(file.path);
-    throw new ErrorHandler("Unable to upload to Cloudinary", 400);
-  }
-};
 
 module.exports.visitorRequestMeeting = async (req, res) => {
   try {
     const { RequestMeeting, ReqMeetVisitorDetails } = req.app.locals.models;
     if (req.body) {
+      console.log(req.files)
       if (req.body.vCompanyEmail && !validator.isEmail(req.body.vCompanyEmail)) {
         return res.status(400).json({ 
           response_type: "FAILED",
@@ -87,31 +71,29 @@ module.exports.visitorRequestMeeting = async (req, res) => {
         fields: inputFieldsRequestmeeting,
       });
 
-      console.log(req.files);
-
       if (requestMeeting) {
         let updatedList = [];
-        if (req.files.vPhotoID.length > 0) {
+        // console.log(req.vPhotoID,"HK");
+        console.log(req.body)
+        if (req.vPhotoID.length > 0) {
           let uploadedLiveImages = [];
           let uploadedPhotoIDs = [];
           let uploadedVisitorIDs = [];
 
-          for (const fileData of req.files.vLiveImage) {
-            const vLiveImageURL = await uploadAndCreateDocument(fileData);
-            uploadedLiveImages.push(vLiveImageURL);
+          for (const fileData of req.vLiveImage) {
+            uploadedLiveImages.push(fileData);
           }
 
-          for (const fileData of req.files.vPhotoID) {
-            const vPhotoIDURL = await uploadAndCreateDocument(fileData);
-            uploadedPhotoIDs.push(vPhotoIDURL);
+          for (const fileData of req.vPhotoID) {
+            uploadedPhotoIDs.push(fileData);
+          }
+          console.log(req.files)
+          for (const fileData of req.vVisitorID) {
+            uploadedVisitorIDs.push(fileData);
           }
 
-          for (const fileData of req.files.vVisitorID) {
-            const vVisitorIDURL = await uploadAndCreateDocument(fileData);
-            uploadedVisitorIDs.push(vVisitorIDURL);
-          }
-
-          updatedList = req.body.visitors.map((visitor, index) => ({
+          console.log(req.body.visitors)
+          updatedList = JSON.parse(req.body.visitors).map((visitor, index) => ({
             ...visitor,
             reqMeetingID: requestMeeting.reqMeetingID,
             vLiveImage: uploadedLiveImages[index],
@@ -120,11 +102,12 @@ module.exports.visitorRequestMeeting = async (req, res) => {
           }));
         }
         else{
-          updatedList = req.body.visitors.map((visitor, _index) => ({
+          updatedList = JSON.parse(req.body.visitors).map((visitor, _index) => ({
             ...visitor,
             reqMeetingID: requestMeeting.reqMeetingID,
           }));
         }
+        console.log(updatedList)
 
         await Promise.all(
           updatedList.map(async (visitor) => {
@@ -148,7 +131,7 @@ module.exports.visitorRequestMeeting = async (req, res) => {
         }
         else{
           await sendMail(
-            req.body.visitors[0].vMailID,
+            JSON.parse(req.body.visitors)[0].vMailID,
             "rtpl@rtplgroup.com",
             mailSubject,
             mailMessage
@@ -198,15 +181,19 @@ module.exports.getVisitorRequestMeeting = async (req, res) => {
       Designation,
     } = req.app.locals.models;
 
-    let { page, pageSize, sort, sortBy, searchField, status } = req.query;
+    let { page, pageSize, sort, sortBy, searchField } = req.query;
 
     page = Math.max(1, parseInt(page, 10)) || 1;
     pageSize = Math.max(1, parseInt(pageSize, 10)) || 10;
 
+    const offset = (page - 1) * pageSize;
+
+    // Ensure sortOrder is either 'ASC' or 'DESC', default to 'ASC' if undefined
     sort = sort ? sort.toUpperCase() : "ASC";
 
     const queryOptions = {
       limit: pageSize,
+      offset: offset,
       include: [],
     };
 
@@ -221,6 +208,7 @@ module.exports.getVisitorRequestMeeting = async (req, res) => {
     ) {
       queryOptions.where = {
         [Op.or]: [
+          { ReqStatus: { [Op.like]: `%${searchField}%` } },
           { purposeOfMeeting: { [Op.like]: `%${searchField}%` } },
           { contactPersonName: { [Op.like]: `%${searchField}`}},
           { vCompanyName: { [Op.like]: `%${searchField}%` } },
@@ -229,36 +217,8 @@ module.exports.getVisitorRequestMeeting = async (req, res) => {
       };
     }
 
-    if (status === "accepted") {
-      queryOptions.where = {
-        ...queryOptions.where,
-        ReqStatus: "ReceptionistAccepted"
-      };
-    } else if (status === "cancelled") {
-      queryOptions.where = {
-        ...queryOptions.where,
-        ReqStatus: "ReceptionistRejected"
-      };
-    } else if (status === "pending") {
-      queryOptions.where = {
-        ...queryOptions.where,
-        ReqStatus: "Pending"
-      };
-    }
-
-    if (visitorType === "company") {
-      queryOptions.where = {
-        ...queryOptions.where,
-        typeOfVisitor: "Company"
-      };
-    } else if (visitorType === "individual") {
-      queryOptions.where = {
-        ...queryOptions.where,
-        typeOfVisitor: "Individual"
-      };
-    }
-
     queryOptions.include.push(
+      // { model: Employee, as: "employee" },
       { model: ReqMeetDetailsByRecp, as: "reqMeetDetailsByRecp",
       include: [
         { model: Company, as: 'company' },
@@ -273,10 +233,6 @@ module.exports.getVisitorRequestMeeting = async (req, res) => {
     const totalCount = await RequestMeeting.count({
       where: queryOptions.where,
     });
-
-    const offset = Math.max(0, totalCount - (page * pageSize));
-    queryOptions.offset = offset;
-
     const totalPage = Math.ceil(totalCount / pageSize);
 
     const requestMeetings = await RequestMeeting.findAll(queryOptions);
@@ -322,10 +278,13 @@ module.exports.getVisitorPendingRequestMeeting = async (req, res) => {
     page = Math.max(1, parseInt(page, 10)) || 1;
     pageSize = Math.max(1, parseInt(pageSize, 10)) || 10;
 
+    const offset = (page - 1) * pageSize;
+
     sort = sort ? sort.toUpperCase() : "ASC";
 
     const queryOptions = {
       limit: pageSize,
+      offset: offset,
       include: [],
     };
 
@@ -360,10 +319,6 @@ module.exports.getVisitorPendingRequestMeeting = async (req, res) => {
     const totalCount = await RequestMeeting.count({
       where: queryOptions.where,
     });
-
-    const offset = Math.max(0, totalCount - (page * pageSize));
-    queryOptions.offset = offset;
-
     const totalPage = Math.ceil(totalCount / pageSize);
 
     const requestMeetings = await RequestMeeting.findAll(queryOptions);
@@ -399,18 +354,8 @@ module.exports.saveTokenByReceptionist = async (req, res) => {
       const { reqMeetingID } = req.params;
       // get value of updatedBy
       // COMMON.setModelUpdatedByFieldValue(req);
-      const existingToken = await ReqMeetDetailsByRecp.findOne({
-        where: { TokenNumber: req.body.TokenNumber }
-      });
 
-      if (existingToken) {
-        return res.status(400).json({
-          response_type: "FAILED",
-          data: {},
-          message: "This token number is already exists."
-        });
-      }
-
+      console.log(req.body);
       const reqMeetDetailsByRecp = await ReqMeetDetailsByRecp.create(req.body, {
         fields: inputFieldsRequestmeetingDetailsbyRecp,
       });
@@ -680,15 +625,19 @@ module.exports.getVisitorMeetingByempId = async (req, res) => {
     if (req.params) {
       const { empId } = req.params;
 
-      let { page, pageSize, sort, sortBy, searchField, status, visitorType } = req.query;
+      let { page, pageSize, sort, sortBy, searchField } = req.query;
 
       page = Math.max(1, parseInt(page, 10)) || 1;
       pageSize = Math.max(1, parseInt(pageSize, 10)) || 10;
 
+      const offset = (page - 1) * pageSize;
+
+      // Ensure sortOrder is either 'ASC' or 'DESC', default to 'ASC' if undefined
       sort = sort ? sort.toUpperCase() : "ASC";
 
       const queryOptions = {
         limit: pageSize,
+        offset: offset,
         include: [],
       };
 
@@ -703,40 +652,12 @@ module.exports.getVisitorMeetingByempId = async (req, res) => {
       ) {
         queryOptions.where = {
           [Op.or]: [
+            { ReqStatus: { [Op.like]: `%${searchField}%` } },
             { purposeOfMeeting: { [Op.like]: `%${searchField}%` } },
             { contactPersonName: { [Op.like]: `%${searchField}%` } },
             { vCompanyName: { [Op.like]: `%${searchField}%` } },
             { vCompanyContact: { [Op.like]: `%${searchField}%` } },
           ],
-        };
-      }
-
-      if (status === "accepted") {
-        queryOptions.where = {
-          ...queryOptions.where,
-          ReqStatus: "ReceptionistAccepted"
-        };
-      } else if (status === "cancelled") {
-        queryOptions.where = {
-          ...queryOptions.where,
-          ReqStatus: "ReceptionistRejected"
-        };
-      } else if (status === "pending") {
-        queryOptions.where = {
-          ...queryOptions.where,
-          ReqStatus: "Pending"
-        };
-      }
-
-      if (visitorType === "company") {
-        queryOptions.where = {
-          ...queryOptions.where,
-          typeOfVisitor: "Company"
-        };
-      } else if (visitorType === "individual") {
-        queryOptions.where = {
-          ...queryOptions.where,
-          typeOfVisitor: "Individual"
         };
       }
 
@@ -756,12 +677,11 @@ module.exports.getVisitorMeetingByempId = async (req, res) => {
         { model: ReqMeetVisitorDetails, required: false, as: "visitorDetails" }
       );
 
+      // queryOptions.where = { ...queryOptions.where, empId: empId };
+
       const totalCount = await RequestMeeting.count({
         where: queryOptions.where,
       });
-      const offset = Math.max(0, totalCount - (page * pageSize));
-      queryOptions.offset = offset;
-
       const totalPage = Math.ceil(totalCount / pageSize);
 
       const requestMeetings = await RequestMeeting.findAll(queryOptions);
