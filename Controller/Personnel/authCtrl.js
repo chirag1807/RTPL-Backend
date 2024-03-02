@@ -53,13 +53,13 @@ const uploadAndCreateDocument = async (file) => {
 module.exports.login = async (req, res) => {
   try {
     const { Employee } = req.app.locals.models;
-    if (req.body.emp_code && req.body.password) {
+    if (req.body.email && req.body.password) {
       const employeeDetails = await Employee.findOne({
         where: {
-          emp_code: req.body.emp_code,
+          email: req.body.email,
         },
       });
-      if (employeeDetails && employeeDetails.email == req.body.email) {
+      if (employeeDetails && employeeDetails.emp_code == req.body.emp_code) {
         const passwordMatch = await COMMON.DECRYPT(
           req.body.password,
           employeeDetails.password
@@ -81,19 +81,19 @@ module.exports.login = async (req, res) => {
             employeeDetails: employeeDetails.dataValues
           },
         });
-      } else if (employeeDetails && employeeDetails.email != req.body.email){
-        console.log("Invalid email id");
+      } else if (employeeDetails && employeeDetails.emp_code != req.body.emp_code){
+        console.log("Invalid employee code");
         res.status(400).json({
           response_type: "FAILED",
           data: {},
-          message: "Invalid email id, please provide valid email id."
+          message: "Invalid employee code, please provide valid employee code."
         });
       } else {
         console.log("Invalid credentials");
         res.status(400).json({
           response_type: "FAILED",
           data: {},
-          message: "Invalid employee code, please provide valid employee code."
+          message: "Invalid email, please provide valid email."
         });
       }
     } else {
