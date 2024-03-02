@@ -736,17 +736,19 @@ module.exports.getListOfCreatedMeeting = async (req, res) => {
 
     page = Math.max(1, parseInt(page, 10)) || 1;
     pageSize = Math.max(1, parseInt(pageSize, 10)) || 10;
+    const offset = (page - 1) * pageSize;
 
-    sort = sort ? sort.toUpperCase() : "ASC";
+    sort = sort ? sort.toUpperCase() : "DESC";
 
     const queryOptions = {
       limit: pageSize,
+      offset: offset,
       include: [],
     };
 
-    if (sortBy) {
-      queryOptions.order = [[sortBy, sort]];
-    }
+    // if (sortBy) {
+      queryOptions.order = [["createdAt", sort]];
+    // }
 
     if (
       searchField &&
@@ -819,9 +821,6 @@ module.exports.getListOfCreatedMeeting = async (req, res) => {
     const totalCount = await Meeting.count({
       where: queryOptions.where,
     });
-
-    const offset = Math.max(0, totalCount - (page * pageSize));
-    queryOptions.offset = offset;
 
     const totalPage = Math.ceil(totalCount / pageSize);
 

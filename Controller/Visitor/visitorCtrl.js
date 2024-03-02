@@ -181,15 +181,13 @@ module.exports.getVisitorRequestMeeting = async (req, res) => {
       Designation,
     } = req.app.locals.models;
 
-    let { page, pageSize, sort, sortBy, searchField } = req.query;
+    let { page, pageSize, sort, sortBy, searchField, status, visitorType } = req.query;
 
     page = Math.max(1, parseInt(page, 10)) || 1;
     pageSize = Math.max(1, parseInt(pageSize, 10)) || 10;
-
     const offset = (page - 1) * pageSize;
 
-    // Ensure sortOrder is either 'ASC' or 'DESC', default to 'ASC' if undefined
-    sort = sort ? sort.toUpperCase() : "ASC";
+    sort = sort ? sort.toUpperCase() : "DESC";
 
     const queryOptions = {
       limit: pageSize,
@@ -197,9 +195,9 @@ module.exports.getVisitorRequestMeeting = async (req, res) => {
       include: [],
     };
 
-    if (sortBy) {
-      queryOptions.order = [[sortBy, sort]];
-    }
+    // if (sortBy) {
+      queryOptions.order = [["createdAt", sort]];
+    // }
 
     if (
       searchField &&
@@ -208,12 +206,40 @@ module.exports.getVisitorRequestMeeting = async (req, res) => {
     ) {
       queryOptions.where = {
         [Op.or]: [
-          { ReqStatus: { [Op.like]: `%${searchField}%` } },
           { purposeOfMeeting: { [Op.like]: `%${searchField}%` } },
           { contactPersonName: { [Op.like]: `%${searchField}`}},
           { vCompanyName: { [Op.like]: `%${searchField}%` } },
           { vCompanyContact: { [Op.like]: `%${searchField}%` } },
         ],
+      };
+    }
+
+    if (status === "accepted") {
+      queryOptions.where = {
+        ...queryOptions.where,
+        ReqStatus: "ReceptionistAccepted"
+      };
+    } else if (status === "cancelled") {
+      queryOptions.where = {
+        ...queryOptions.where,
+        ReqStatus: "ReceptionistRejected"
+      };
+    } else if (status === "pending") {
+      queryOptions.where = {
+        ...queryOptions.where,
+        ReqStatus: "Pending"
+      };
+    }
+
+    if (visitorType === "company") {
+      queryOptions.where = {
+        ...queryOptions.where,
+        typeOfVisitor: "Company"
+      };
+    } else if (visitorType === "individual") {
+      queryOptions.where = {
+        ...queryOptions.where,
+        typeOfVisitor: "Individual"
       };
     }
 
@@ -233,6 +259,7 @@ module.exports.getVisitorRequestMeeting = async (req, res) => {
     const totalCount = await RequestMeeting.count({
       where: queryOptions.where,
     });
+
     const totalPage = Math.ceil(totalCount / pageSize);
 
     const requestMeetings = await RequestMeeting.findAll(queryOptions);
@@ -625,15 +652,13 @@ module.exports.getVisitorMeetingByempId = async (req, res) => {
     if (req.params) {
       const { empId } = req.params;
 
-      let { page, pageSize, sort, sortBy, searchField } = req.query;
+      let { page, pageSize, sort, sortBy, searchField, status, visitorType} = req.query;
 
       page = Math.max(1, parseInt(page, 10)) || 1;
       pageSize = Math.max(1, parseInt(pageSize, 10)) || 10;
-
       const offset = (page - 1) * pageSize;
 
-      // Ensure sortOrder is either 'ASC' or 'DESC', default to 'ASC' if undefined
-      sort = sort ? sort.toUpperCase() : "ASC";
+      sort = sort ? sort.toUpperCase() : "DESC";
 
       const queryOptions = {
         limit: pageSize,
@@ -641,9 +666,9 @@ module.exports.getVisitorMeetingByempId = async (req, res) => {
         include: [],
       };
 
-      if (sortBy) {
-        queryOptions.order = [[sortBy, sort]];
-      }
+      // if (sortBy) {
+        queryOptions.order = [["createdAt", sort]];
+      // }
 
       if (
         searchField &&
@@ -652,7 +677,6 @@ module.exports.getVisitorMeetingByempId = async (req, res) => {
       ) {
         queryOptions.where = {
           [Op.or]: [
-            { ReqStatus: { [Op.like]: `%${searchField}%` } },
             { purposeOfMeeting: { [Op.like]: `%${searchField}%` } },
             { contactPersonName: { [Op.like]: `%${searchField}%` } },
             { vCompanyName: { [Op.like]: `%${searchField}%` } },
@@ -661,8 +685,36 @@ module.exports.getVisitorMeetingByempId = async (req, res) => {
         };
       }
 
+      if (status === "accepted") {
+        queryOptions.where = {
+          ...queryOptions.where,
+          ReqStatus: "EMployeeAccepted"
+        };
+      } else if (status === "cancelled") {
+        queryOptions.where = {
+          ...queryOptions.where,
+          ReqStatus: "EmployeeRejected"
+        };
+      } else if (status === "pending") {
+        queryOptions.where = {
+          ...queryOptions.where,
+          ReqStatus: "ReceptionistAccepted"
+        };
+      }
+
+      if (visitorType === "company") {
+        queryOptions.where = {
+          ...queryOptions.where,
+          typeOfVisitor: "Company"
+        };
+      } else if (visitorType === "individual") {
+        queryOptions.where = {
+          ...queryOptions.where,
+          typeOfVisitor: "Individual"
+        };
+      }
+
       queryOptions.include.push(
-        // { model: Employee, as: "employee" },
         { model: ReqMeetDetailsByRecp, as: "reqMeetDetailsByRecp", 
         where: {
           empId: empId,
@@ -677,11 +729,10 @@ module.exports.getVisitorMeetingByempId = async (req, res) => {
         { model: ReqMeetVisitorDetails, required: false, as: "visitorDetails" }
       );
 
-      // queryOptions.where = { ...queryOptions.where, empId: empId };
-
       const totalCount = await RequestMeeting.count({
         where: queryOptions.where,
       });
+
       const totalPage = Math.ceil(totalCount / pageSize);
 
       const requestMeetings = await RequestMeeting.findAll(queryOptions);
