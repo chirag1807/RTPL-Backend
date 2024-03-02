@@ -57,7 +57,7 @@ module.exports.getMeetingsForInternalTeam = async (req, res) => {
 
     const offset = (page - 1) * pageSize;
 
-    sort = sort ? sort.toUpperCase() : "ASC";
+    sort = sort ? sort.toUpperCase() : "DESC";
 
     const queryOptions = {
       limit: pageSize,
@@ -65,9 +65,9 @@ module.exports.getMeetingsForInternalTeam = async (req, res) => {
       include: [],
     };
 
-    if (sortBy) {
-      queryOptions.order = [[sortBy, sort]];
-    }
+    // if (sortBy) {
+      queryOptions.order = [["createdAt", sort]];
+    // }
 
     if (
       searchField &&

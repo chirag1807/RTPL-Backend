@@ -202,17 +202,19 @@ module.exports.getVisitorRequestMeeting = async (req, res) => {
 
     page = Math.max(1, parseInt(page, 10)) || 1;
     pageSize = Math.max(1, parseInt(pageSize, 10)) || 10;
+    const offset = (page - 1) * pageSize;
 
-    sort = sort ? sort.toUpperCase() : "ASC";
+    sort = sort ? sort.toUpperCase() : "DESC";
 
     const queryOptions = {
       limit: pageSize,
+      offset: offset,
       include: [],
     };
 
-    if (sortBy) {
-      queryOptions.order = [[sortBy, sort]];
-    }
+    // if (sortBy) {
+      queryOptions.order = [["createdAt", sort]];
+    // }
 
     if (
       searchField &&
@@ -273,9 +275,6 @@ module.exports.getVisitorRequestMeeting = async (req, res) => {
     const totalCount = await RequestMeeting.count({
       where: queryOptions.where,
     });
-
-    const offset = Math.max(0, totalCount - (page * pageSize));
-    queryOptions.offset = offset;
 
     const totalPage = Math.ceil(totalCount / pageSize);
 
@@ -680,21 +679,23 @@ module.exports.getVisitorMeetingByempId = async (req, res) => {
     if (req.params) {
       const { empId } = req.params;
 
-      let { page, pageSize, sort, sortBy, searchField, status, visitorType } = req.query;
+      let { page, pageSize, sort, sortBy, searchField, status, visitorType, assign } = req.query;
 
       page = Math.max(1, parseInt(page, 10)) || 1;
       pageSize = Math.max(1, parseInt(pageSize, 10)) || 10;
+      const offset = (page - 1) * pageSize;
 
-      sort = sort ? sort.toUpperCase() : "ASC";
+      sort = sort ? sort.toUpperCase() : "DESC";
 
       const queryOptions = {
         limit: pageSize,
+        offset: offset,
         include: [],
       };
 
-      if (sortBy) {
-        queryOptions.order = [[sortBy, sort]];
-      }
+      // if (sortBy) {
+        queryOptions.order = [["createdAt", sort]];
+      // }
 
       if (
         searchField &&
@@ -714,17 +715,17 @@ module.exports.getVisitorMeetingByempId = async (req, res) => {
       if (status === "accepted") {
         queryOptions.where = {
           ...queryOptions.where,
-          ReqStatus: "ReceptionistAccepted"
+          ReqStatus: "EMployeeAccepted"
         };
       } else if (status === "cancelled") {
         queryOptions.where = {
           ...queryOptions.where,
-          ReqStatus: "ReceptionistRejected"
+          ReqStatus: "EmployeeRejected"
         };
       } else if (status === "pending") {
         queryOptions.where = {
           ...queryOptions.where,
-          ReqStatus: "Pending"
+          ReqStatus: "ReceptionistAccepted"
         };
       }
 
@@ -741,7 +742,6 @@ module.exports.getVisitorMeetingByempId = async (req, res) => {
       }
 
       queryOptions.include.push(
-        // { model: Employee, as: "employee" },
         { model: ReqMeetDetailsByRecp, as: "reqMeetDetailsByRecp", 
         where: {
           empId: empId,
@@ -759,8 +759,6 @@ module.exports.getVisitorMeetingByempId = async (req, res) => {
       const totalCount = await RequestMeeting.count({
         where: queryOptions.where,
       });
-      const offset = Math.max(0, totalCount - (page * pageSize));
-      queryOptions.offset = offset;
 
       const totalPage = Math.ceil(totalCount / pageSize);
 
