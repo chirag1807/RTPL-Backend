@@ -2,6 +2,7 @@ const sendMail = require("../../Middleware/emaiService");
 const ErrorHandler = require("../../utils/errorhandler");
 const cloudinary = require("../../utils/cloudinary");
 const fs = require('fs');
+const { Op } = require("sequelize");
 
 const inputFieldsMeeting = [
   "empId",

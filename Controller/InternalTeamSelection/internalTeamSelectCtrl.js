@@ -1,3 +1,5 @@
+const { Op } = require("sequelize");
+
 const inputFieldsInternalTeamSelect = [
   "meetingID",
   "empId",
@@ -19,7 +21,8 @@ module.exports.getInternalMembersByMeetingID = async (req, res) => {
           response_type: "SUCCESS",
           message: "Internal Members Fetched Successfully.",
           data: {
-            internalMembers: internalMemebers},
+            internalMembers: internalMemebers,
+          },
         });
       } else {
         res.status(400).json({
@@ -30,27 +33,40 @@ module.exports.getInternalMembersByMeetingID = async (req, res) => {
       }
     } else {
       console.log("Invalid perameter");
-      res.status(400).json({ 
+      res.status(400).json({
         response_type: "FAILED",
         data: {},
-        message: "Invalid perameter" });
+        message: "Invalid perameter",
+      });
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ 
+    res.status(500).json({
       response_type: "FAILED",
       data: {},
-      error: error.message });
+      error: error.message,
+    });
   }
 };
 
 // notification for internal team memeber
 module.exports.getMeetingsForInternalTeam = async (req, res) => {
   try {
-    const { Meeting, InternalTeamSelect } = req.app.locals.models;
+    const {
+      Meeting,
+      Employee,
+      Office,
+      RequestMeeting,
+      AppointmentMeeting,
+      OuterMeeting,
+      MeetingType,
+      MeetingMode,
+      ConferenceRoom,
+      InternalTeamSelect,
+    } = req.app.locals.models;
     const { empId } = req.params;
 
-    let { page, pageSize, sort, sortBy, searchField } = req.query;
+    let { page, pageSize, sort, sortBy, searchField, type } = req.query;
 
     page = Math.max(1, parseInt(page, 10)) || 1;
     pageSize = Math.max(1, parseInt(pageSize, 10)) || 10;
@@ -66,7 +82,7 @@ module.exports.getMeetingsForInternalTeam = async (req, res) => {
     };
 
     // if (sortBy) {
-      queryOptions.order = [["createdAt", sort]];
+    queryOptions.order = [["createdAt", sort]];
     // }
 
     if (
@@ -88,7 +104,28 @@ module.exports.getMeetingsForInternalTeam = async (req, res) => {
     queryOptions.include.push({
       model: Meeting,
       as: "meeting",
+      where: {},
+      include: [
+        { model: Employee, as: "employee" },
+        { model: Office, as: "office" },
+        { model: RequestMeeting, as: "requestMeeting" },
+        { model: AppointmentMeeting, as: "appointmentMeeting" },
+        { model: OuterMeeting, as: "outerMeeting" },
+        { model: MeetingType, as: "meetingType" },
+        { model: MeetingMode, as: "meetingMode" },
+        { model: ConferenceRoom, as: "conferenceRoom" },
+      ],
     });
+
+    if (type) {
+      if (type === "Request") {
+        queryOptions.include[0].where.requestID = { [Op.not]: null };
+      } else if (type === "Outer") {
+        queryOptions.include[0].where.outerMeetingID = { [Op.not]: null };
+      } else if (type === "Internal") {
+        queryOptions.include[0].where.appointmentMeetingID = { [Op.not]: null };
+      }
+    }
 
     const totalCount = await InternalTeamSelect.count({
       where: queryOptions.where,
@@ -98,27 +135,27 @@ module.exports.getMeetingsForInternalTeam = async (req, res) => {
     const meetingsForEmployee = await InternalTeamSelect.findAll(queryOptions);
 
     if (!meetingsForEmployee || meetingsForEmployee.length === 0) {
-      return res
-        .status(404)
-        .json({ 
-          response_type: "FAILED",
-          data: {},
-          message: "No meetings found for the provided employee." });
+      return res.status(404).json({
+        response_type: "FAILED",
+        data: {},
+        message: "No meetings found for the provided employee.",
+      });
     }
 
-    res.status(200).json({ 
+    res.status(200).json({
       response_type: "SUCCESS",
       totalPage: totalPage,
       currentPage: page,
-      data: {meetingsForEmployee: meetingsForEmployee},
-      message: "Meetings for Employee Fetched." });
-      
+      data: { meetingsForEmployee: meetingsForEmployee },
+      message: "Meetings for Employee Fetched.",
+    });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ 
+    res.status(500).json({
       response_type: "FAILED",
       data: {},
-      message: error.message });
+      message: error.message,
+    });
   }
 };
 
@@ -137,12 +174,11 @@ module.exports.updateInternalMember = async (req, res) => {
       });
 
       if (!updateMember) {
-        return res
-          .status(404)
-          .json({ 
-            response_type: "FAILED",
-            data: {},
-            message: "Internal member not found for the given ID" });
+        return res.status(404).json({
+          response_type: "FAILED",
+          data: {},
+          message: "Internal member not found for the given ID",
+        });
       }
 
       const updatedMember = await updateMember.update(req.body, {
@@ -150,35 +186,34 @@ module.exports.updateInternalMember = async (req, res) => {
       });
 
       if (updatedMember) {
-        res
-          .status(200)
-          .json({ 
-            response_type: "SUCCESS",
-            data: {},
-            message: "Internal Member has been Updated Successfully." });
+        res.status(200).json({
+          response_type: "SUCCESS",
+          data: {},
+          message: "Internal Member has been Updated Successfully.",
+        });
       } else {
-        res
-          .status(400)
-          .json({
-            response_type: "FAILED",
-            data: {},
-            message:
-              "Internal Member has not been Updated, Please Try Again Later.",
-          });
+        res.status(400).json({
+          response_type: "FAILED",
+          data: {},
+          message:
+            "Internal Member has not been Updated, Please Try Again Later.",
+        });
       }
     } else {
       console.log("Invalid perameter");
-      res.status(400).json({ 
+      res.status(400).json({
         response_type: "FAILED",
         data: {},
-        message: "Invalid perameter" });
+        message: "Invalid perameter",
+      });
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ 
+    res.status(500).json({
       response_type: "FAILED",
       data: {},
-      message: error.message });
+      message: error.message,
+    });
   }
 };
 
@@ -196,49 +231,45 @@ module.exports.deleteInternalMember = async (req, res) => {
       });
 
       if (!internalMember) {
-        return res
-          .status(404)
-          .json({ 
-            response_type: "FAILED",
-            data: {},
-            message: "Internal member not found for the given ID" });
+        return res.status(404).json({
+          response_type: "FAILED",
+          data: {},
+          message: "Internal member not found for the given ID",
+        });
       }
 
       const deletedInternalMember = await internalMember.destroy();
 
       if (deletedInternalMember) {
-        res
-          .status(200)
-          .json({ 
-            response_type: "SUCCESS",
-            data: {},
-            message: "Internal member has been Deleted Successfully." });
+        res.status(200).json({
+          response_type: "SUCCESS",
+          data: {},
+          message: "Internal member has been Deleted Successfully.",
+        });
       } else {
-        res
-          .status(400)
-          .json({
-            response_type: "FAILED",
-            data: {},
-            message:
-              "Internal member has not been Deleted, Please Try Again Later.",
-          });
+        res.status(400).json({
+          response_type: "FAILED",
+          data: {},
+          message:
+            "Internal member has not been Deleted, Please Try Again Later.",
+        });
       }
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ 
+    res.status(500).json({
       response_type: "FAILED",
       data: {},
-      message: error.message });
+      message: error.message,
+    });
   }
 };
 
 module.exports.takeAttendanceOfInternalMembers = async (req, res) => {
   try {
     const { InternalTeamSelect } = req.app.locals.models;
-    
-    if(req.body){
 
+    if (req.body) {
       const meetingID = req.body.meetingID;
       const empIds = req.body.empIds;
 
@@ -252,32 +283,34 @@ module.exports.takeAttendanceOfInternalMembers = async (req, res) => {
         }
       }
 
-      res.status(200).json({ 
+      res.status(200).json({
         response_type: "SUCCESS",
         data: {},
-        message: 'Attendance marked successfully.' });
-    }
-    else{
+        message: "Attendance marked successfully.",
+      });
+    } else {
       console.log("Invalid perameter");
-      res.status(400).json({ 
+      res.status(400).json({
         response_type: "FAILED",
         data: {},
-        message: "Invalid perameter" });
+        message: "Invalid perameter",
+      });
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ 
+    res.status(500).json({
       response_type: "FAILED",
       data: {},
-      message: error.message });
+      message: error.message,
+    });
   }
-}
+};
 
 module.exports.takeAttendanceOfVisitors = async (req, res) => {
   const { ReqMeetVisitorDetails } = req.app.locals.models;
-  
+
   try {
-    if(req.body){
+    if (req.body) {
       const reqMeetingID = req.body.reqMeetingID;
       const visitorIds = req.body.visitorIds;
 
@@ -291,23 +324,25 @@ module.exports.takeAttendanceOfVisitors = async (req, res) => {
         }
       }
 
-      res.status(200).json({ 
+      res.status(200).json({
         response_type: "SUCCESS",
         data: {},
-        message: 'Attendance marked successfully.' });
-    }
-    else{
+        message: "Attendance marked successfully.",
+      });
+    } else {
       console.log("Invalid perameter");
-      res.status(400).json({ 
+      res.status(400).json({
         response_type: "FAILED",
         data: {},
-        message: "Invalid perameter" });
+        message: "Invalid perameter",
+      });
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ 
+    res.status(500).json({
       response_type: "FAILED",
       data: {},
-      message: error.message });
+      message: error.message,
+    });
   }
-}
+};

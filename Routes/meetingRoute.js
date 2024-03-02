@@ -1,12 +1,12 @@
 const express = require('express');
 const meetingController = require('../Controller/Meeting/meetingCtrl');
-const { isRecept, isActive, authenticateToken } = require('../Middleware/auth');
+const { isActive, isAdmin, authenticateToken } = require('../Middleware/auth');
 const { upload } = require('../utils/multer');
 const router = express.Router();
 
 router.post('/create_request_meeting', isActive, meetingController.createRequestMeeting);
 router.post('/create_outer_meeting', isActive, meetingController.createOuterMeeting);
-router.put('/update_outer_meeting_status/:outerMeetingID', isRecept, meetingController.updateOuterMeetingStatus);
+router.put('/update_outer_meeting_status/:outerMeetingID', isAdmin(11), meetingController.updateOuterMeetingStatus);
 router.post('/create_appointment_meeting', isActive, meetingController.createAppointmentMeeting);
 router.put('/update_appointment_meeting_status/:appointmentMeetingID', isActive, meetingController.updateAppointmentMeetingStatus);
 router.post('/start-meeting', isActive, meetingController.startMeeting);
