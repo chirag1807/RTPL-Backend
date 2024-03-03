@@ -36,24 +36,6 @@ const inputFieldsInternalMembers = ["empId", "meetingID"];
 
 const inputFieldTimeSlot = ["meetingID", "meetingStartTime", "meetingEndTime"];
 
-//global method to convert file into uri
-const uploadAndCreateDocument = async (file) => {
-  try {
-    const result = await cloudinary.uploader.upload(file[0].path, {
-      resource_type: "auto",
-      folder: "RTPL_DOCS",
-    });
-
-    fs.unlinkSync(file[0].path);
-
-    return result.secure_url;
-  } catch (error) {
-    console.log(error);
-    fs.unlinkSync(file[0].path);
-    throw new ErrorHandler("Unable to upload to Cloudinary", 400);
-  }
-};
-
 module.exports.createRequestMeeting = async (req, res) => {
   try {
     const { Meeting, InternalTeamSelect, Employee } = req.app.locals.models;
@@ -499,21 +481,25 @@ module.exports.updateAppointmentMeetingStatus = async (req, res) => {
 
 module.exports.startMeeting = async (req, res) => {
   try {
-    const { Meeting, InternalTeamSelect } = req.app.locals.models;
-    const { meetingID, empIds } = req.body;
+    const { Meeting,
+      // InternalTeamSelect
+    } = req.app.locals.models;
+    const { meetingID,
+      // empIds
+    } = req.body;
 
     if (
-      !meetingID ||
-      !empIds ||
-      !Array.isArray(empIds) ||
-      empIds.length === 0
+      !meetingID
+      // || !empIds ||
+      // !Array.isArray(empIds) ||
+      // empIds.length === 0
     ) {
       return res
         .status(400)
         .json({ 
           response_type: "FAILED",
           data: {},
-          message: "meetingID and non-empty empIds array are required." });
+          message: "meetingID is required." });
     }
 
     const existingMeeting = await Meeting.findByPk(meetingID);
@@ -531,14 +517,14 @@ module.exports.startMeeting = async (req, res) => {
 
     await existingMeeting.save();
 
-    await Promise.all(
-      empIds.map(async (empId) => {
-        await InternalTeamSelect.update(
-          { status: "Accepted" },
-          { where: { meetingID, empId } }
-        );
-      })
-    );
+    // await Promise.all(
+    //   empIds.map(async (empId) => {
+    //     await InternalTeamSelect.update(
+    //       { status: "Accepted" },
+    //       { where: { meetingID, empId } }
+    //     );
+    //   })
+    // );
 
     return res.status(200).json({
       response_type: "SUCCESS",
@@ -622,8 +608,6 @@ module.exports.endMeeting = async (req, res) => {
     const { meetingID, remark } = req.body;
     const updatedBy = req.decodedEmpCode;
 
-    const meetingDocUrl = await uploadAndCreateDocument(req.file);
-
     if (!meetingID) {
       return res
         .status(400)
@@ -648,7 +632,7 @@ module.exports.endMeeting = async (req, res) => {
     meeting.isActive = false;
     meeting.remark = remark;
 
-    meeting.meetingDoc = meetingDocUrl;
+    meeting.meetingDoc = req.file.path;
 
     meeting.deletedBy = updatedBy;
 
@@ -880,6 +864,7 @@ module.exports.getAppointmentMeetings = async (req, res) => {
       MeetingType,
       MeetingMode,
       ConferenceRoom,
+      TimeSlot,
     } = req.app.locals.models;
 
     let { page, pageSize, sort, sortBy, searchField, status } = req.query;
@@ -937,6 +922,7 @@ module.exports.getAppointmentMeetings = async (req, res) => {
       { model: MeetingType, as: "meetingType" },
       { model: MeetingMode, as: "meetingMode" },
       { model: ConferenceRoom, as: "conferenceRoom" },
+      { model: TimeSlot, as: "timeSlot"},
       // {
       //   model: InternalTeamSelect,
       //   as: "internalTeamSelect",
