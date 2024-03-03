@@ -765,8 +765,6 @@ module.exports.getListOfCreatedMeeting = async (req, res) => {
       { model: Employee, as: "employee" },
       { model: Office, as: "office" },
       { model: RequestMeeting, as: "requestMeeting" },
-      // { model: AppointmentMeeting, as: "appointmentMeeting" },
-      // { model: OuterMeeting, as: "outerMeeting" },
       { model: MeetingType, as: "meetingType" },
       { model: MeetingMode, as: "meetingMode" },
       { model: ConferenceRoom, as: "conferenceRoom" },
@@ -874,7 +872,15 @@ module.exports.getListOfCreatedMeeting = async (req, res) => {
 
 module.exports.getAppointmentMeetings = async (req, res) => {
   try {
-    const { AppointmentMeeting } = req.app.locals.models;
+    const {
+      Meeting,
+      Employee,
+      Office,
+      AppointmentMeeting,
+      MeetingType,
+      MeetingMode,
+      ConferenceRoom,
+    } = req.app.locals.models;
 
     let { page, pageSize, sort, sortBy, searchField, status } = req.query;
 
@@ -890,9 +896,7 @@ module.exports.getAppointmentMeetings = async (req, res) => {
       include: [],
     };
 
-    // if (sortBy) {
       queryOptions.order = [["createdAt", sort]];
-    // }
 
     if (
       searchField &&
@@ -907,25 +911,51 @@ module.exports.getAppointmentMeetings = async (req, res) => {
       };
     }
 
-    queryOptions.where = {
-      ...queryOptions.where,
-      empId: req.user.empId
-    };
-
     if(status){
-      queryOptions.where = {
-        ...queryOptions.where,
-        status: status
-      }
+      queryOptions.include = [{
+        model: AppointmentMeeting,
+        as: 'appointmentMeeting',
+        where: {
+          empId: req.user.empId,
+          status: status
+        }
+      }];
+    }
+    else {
+      queryOptions.include = [{
+        model: AppointmentMeeting,
+        as: 'appointmentMeeting',
+        where: {
+          empId: req.user.empId,
+        }
+      }];
     }
 
-    const totalCount = await AppointmentMeeting.count({
+    queryOptions.include.push(
+      { model: Employee, as: "employee" },
+      { model: Office, as: "office" },
+      { model: MeetingType, as: "meetingType" },
+      { model: MeetingMode, as: "meetingMode" },
+      { model: ConferenceRoom, as: "conferenceRoom" },
+      // {
+      //   model: InternalTeamSelect,
+      //   as: "internalTeamSelect",
+      //   include: [
+      //     {
+      //       model: Employee,
+      //       as: "employee",
+      //     },
+      //   ],
+      // }
+    );
+
+    const totalCount = await Meeting.count({
       where: queryOptions.where,
     });
     
     const totalPage = Math.ceil(totalCount / pageSize);
 
-    const appointmentMeetings = await AppointmentMeeting.findAll(queryOptions);
+    const appointmentMeetings = await Meeting.findAll(queryOptions);
 
     if (appointmentMeetings) {
       res.status(200).json({
