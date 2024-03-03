@@ -765,7 +765,7 @@ module.exports.getListOfCreatedMeeting = async (req, res) => {
       { model: Employee, as: "employee" },
       { model: Office, as: "office" },
       { model: RequestMeeting, as: "requestMeeting" },
-      { model: AppointmentMeeting, as: "appointmentMeeting" },
+      // { model: AppointmentMeeting, as: "appointmentMeeting" },
       // { model: OuterMeeting, as: "outerMeeting" },
       { model: MeetingType, as: "meetingType" },
       { model: MeetingMode, as: "meetingMode" },
@@ -820,6 +820,14 @@ module.exports.getListOfCreatedMeeting = async (req, res) => {
         }
       }
       else{
+        if (status) {
+          queryOptions.include.push({
+            model: AppointmentMeeting,
+            as: "appointmentMeeting",
+            where: { status: status },
+            required: true
+          })
+        }
         queryOptions.where = {
           ...queryOptions.where,
           appointmentMeetingID: { [Op.not]: null }
@@ -868,21 +876,23 @@ module.exports.getAppointmentMeetings = async (req, res) => {
   try {
     const { AppointmentMeeting } = req.app.locals.models;
 
-    let { page, pageSize, sort, sortBy, searchField, cancelledMeeting } = req.query;
+    let { page, pageSize, sort, sortBy, searchField, status } = req.query;
 
     page = Math.max(1, parseInt(page, 10)) || 1;
     pageSize = Math.max(1, parseInt(pageSize, 10)) || 10;
+    const offset = (page - 1) * pageSize;
 
-    sort = sort ? sort.toUpperCase() : "ASC";
+    sort = sort ? sort.toUpperCase() : "DESC";
 
     const queryOptions = {
       limit: pageSize,
+      offset: offset,
       include: [],
     };
 
-    if (sortBy) {
-      queryOptions.order = [[sortBy, sort]];
-    }
+    // if (sortBy) {
+      queryOptions.order = [["createdAt", sort]];
+    // }
 
     if (
       searchField &&
@@ -899,16 +909,19 @@ module.exports.getAppointmentMeetings = async (req, res) => {
 
     queryOptions.where = {
       ...queryOptions.where,
-      status: cancelledMeeting ? "Rejected" : "Accepted",
       empId: req.user.empId
     };
+
+    if(status){
+      queryOptions.where = {
+        ...queryOptions.where,
+        status: status
+      }
+    }
 
     const totalCount = await AppointmentMeeting.count({
       where: queryOptions.where,
     });
-
-    const offset = Math.max(0, totalCount - (page * pageSize));
-    queryOptions.offset = offset;
     
     const totalPage = Math.ceil(totalCount / pageSize);
 
@@ -919,17 +932,13 @@ module.exports.getAppointmentMeetings = async (req, res) => {
         totalPage: totalPage,
         currentPage: page,
         response_type: "SUCCESS",
-        message: cancelledMeeting ?
-        "Cancelled Appointment Meetings Fetched Successfully." :
-        "Created Appointment Meetings Fetched Successfully.",
+        message: "Appointment Meetings Created For You Fetched Successfully.",
         data: {meetings: appointmentMeetings},
       });
     } else {
       res.status(400).json({
         response_type: "FAILED",
-        message: cancelledMeeting ?
-        "Cancelled Appointment Meetings Can't be Fetched." :
-        "Created Appointment Meetings Can't be Fetched.",
+        message: "Appointment Meetings Created For You Can't be Fetched.",
         data: {}
       });
     }

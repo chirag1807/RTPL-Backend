@@ -3,11 +3,8 @@ const COMMON = require("../../Common/common");
 const { createAccessToken } = require("../../Middleware/auth");
 const CONSTANT = require("../../constant/constant");
 const sendMail = require("../../Middleware/emaiService");
-const jwt = require('jsonwebtoken');
-const fs = require('fs');
+const jwt = require("jsonwebtoken");
 
-const cloudinary = require('../../utils/cloudinary');
-const ErrorHandler = require("../../utils/errorhandler");
 const inputFieldsEmployee = [
   "empProfileImg",
   "empIdCard",
@@ -31,25 +28,6 @@ const inputFieldsEmployee = [
   "designationID",
 ];
 
-//global method to convert file into uri
-const uploadAndCreateDocument = async (file) => {
-  try {
-    const result = await cloudinary.uploader.upload(file[0].path, {
-      resource_type: 'auto',
-      folder: 'RTPL_DOCS',
-    });
-
-    console.log(file[0].path);
-    fs.unlinkSync(file[0].path);
-
-    return result.secure_url;
-  } catch (error) {
-    console.log(error);
-    fs.unlinkSync(file[0].path);
-    throw new ErrorHandler("Unable to upload to Cloudinary", 400);
-  }
-};
-
 module.exports.login = async (req, res) => {
   try {
     const { Employee } = req.app.locals.models;
@@ -65,11 +43,11 @@ module.exports.login = async (req, res) => {
           employeeDetails.password
         );
         if (!passwordMatch) {
-          return res.status(200).json({ 
+          return res.status(200).json({
             response_type: "FAILED",
             data: {},
-            message: "Invalid credentials, please provide right credentials"
-           });
+            message: "Invalid credentials, please provide right credentials",
+          });
         }
         const token = createAccessToken(employeeDetails.dataValues);
         res.setHeader("Authorization", `Bearer ${token}`);
@@ -78,22 +56,25 @@ module.exports.login = async (req, res) => {
           response_type: "SUCCESS",
           data: {
             token: token,
-            employeeDetails: employeeDetails.dataValues
+            employeeDetails: employeeDetails.dataValues,
           },
         });
-      } else if (employeeDetails && employeeDetails.emp_code != req.body.emp_code){
+      } else if (
+        employeeDetails &&
+        employeeDetails.emp_code != req.body.emp_code
+      ) {
         console.log("Invalid employee code");
         res.status(400).json({
           response_type: "FAILED",
           data: {},
-          message: "Invalid employee code, please provide valid employee code."
+          message: "Invalid employee code, please provide valid employee code.",
         });
       } else {
         console.log("Invalid credentials");
         res.status(400).json({
           response_type: "FAILED",
           data: {},
-          message: "Invalid email, please provide valid email."
+          message: "Invalid email, please provide valid email.",
         });
       }
     } else {
@@ -101,7 +82,7 @@ module.exports.login = async (req, res) => {
       res.status(400).json({
         response_type: "FAILED",
         data: {},
-        message: "Invalid perameter"
+        message: "Invalid perameter",
       });
     }
   } catch (error) {
@@ -109,7 +90,7 @@ module.exports.login = async (req, res) => {
     res.status(500).json({
       response_type: "FAILED",
       data: {},
-      message: error.message
+      message: error.message,
     });
   }
 };
@@ -119,10 +100,7 @@ module.exports.Registration = async (req, res) => {
     const { Employee } = req.app.locals.models;
     const requestData = req.body;
     if (requestData) {
-      const aadharCard = await uploadAndCreateDocument(req.files.empAadharCard);
-      const idCard = await uploadAndCreateDocument(req.files.empIdCard);
-      const photo = await uploadAndCreateDocument(req.files.empProfileImg)
-
+      
       // get value of CreatedBy
       COMMON.setModelCreatedByFieldValue(req);
       // Validate email
@@ -130,7 +108,7 @@ module.exports.Registration = async (req, res) => {
         res.status(400).json({
           response_type: "FAILED",
           data: {},
-          message: "Invalid email id, please provide valid email id"
+          message: "Invalid email id, please provide valid email id",
         });
       }
       // Validate phone number
@@ -138,7 +116,7 @@ module.exports.Registration = async (req, res) => {
         res.status(400).json({
           response_type: "FAILED",
           data: {},
-          message: "Invalid phone number, please provide valid phone number"
+          message: "Invalid phone number, please provide valid phone number",
         });
       }
       const hashedPassword = await COMMON.ENCRYPT(requestData.password);
@@ -146,7 +124,7 @@ module.exports.Registration = async (req, res) => {
         res.status(500).json({
           response_type: "FAILED",
           data: {},
-          message: CONSTANT.MESSAGE_CONSTANT.SOMETHING_WENT_WRONG
+          message: CONSTANT.MESSAGE_CONSTANT.SOMETHING_WENT_WRONG,
         });
       }
       requestData.password = hashedPassword;
@@ -155,11 +133,11 @@ module.exports.Registration = async (req, res) => {
           emp_code: requestData.emp_code,
         },
       });
-      if(isExistEmployeeCode){
+      if (isExistEmployeeCode) {
         res.status(400).json({
           response_type: "FAILED",
           data: {},
-          message: "Employee with this Employee Code Already Exist."
+          message: "Employee with this Employee Code Already Exist.",
         });
       }
       const isExistEmailId = await Employee.findOne({
@@ -167,11 +145,11 @@ module.exports.Registration = async (req, res) => {
           email: requestData.email,
         },
       });
-      if(isExistEmailId){
+      if (isExistEmailId) {
         res.status(400).json({
           response_type: "FAILED",
           data: {},
-          message: "Employee with this Email Id Already Exist."
+          message: "Employee with this Email Id Already Exist.",
         });
       }
       const isExistPhoneNo = await Employee.findOne({
@@ -179,11 +157,11 @@ module.exports.Registration = async (req, res) => {
           phone: requestData.phone,
         },
       });
-      if(isExistPhoneNo){
+      if (isExistPhoneNo) {
         res.status(400).json({
           response_type: "FAILED",
           data: {},
-          message: "Employee with this Phone No Already Exist."
+          message: "Employee with this Phone No Already Exist.",
         });
       }
       const isExistAadharNo = await Employee.findOne({
@@ -191,63 +169,62 @@ module.exports.Registration = async (req, res) => {
           aadharNumber: requestData.aadharNumber,
         },
       });
-      if(isExistAadharNo){
+      if (isExistAadharNo) {
         res.status(400).json({
           response_type: "FAILED",
           data: {},
-          message: "Employee with this Aadhar No Already Exist."
+          message: "Employee with this Aadhar No Already Exist.",
         });
       }
-      requestData.empAadharCard = aadharCard;
-      requestData.empIdCard = idCard;
-      requestData.empProfileImg = photo;
-        // const employeeData = { ...req.body };
-        if (req.body.anniversaryDate == ""){
-          delete requestData.anniversaryDate;
-        }
-        const employee = await Employee.create(requestData, {
-          fields: inputFieldsEmployee,
-        });
-        if (employee) {
-          let sender = "rtpl@rtplgroup.com";
-          let subject = "Registeration Successfully Done";
-          let message = `UserID:${employee.emp_code}\nUrl:http://www.rptl.com `;
+      requestData.empAadharCard = req.files.empAadharCard[0].path;
+      requestData.empIdCard = req.files.empIdCard[0].path;
+      requestData.empProfileImg = req.files.empProfileImg[0].path;
+      // const employeeData = { empProfileImgreq.body };
+      if (req.body.anniversaryDate == "") {
+        delete requestData.anniversaryDate;
+      }
+      const employee = await Employee.create(requestData, {
+        fields: inputFieldsEmployee,
+      });
+      if (employee) {
+        let sender = "rtpl@rtplgroup.com";
+        let subject = "Registeration Successfully Done";
+        let message = `UserID:${employee.emp_code}\nUrl:http://www.rptl.com `;
 
-          const result = await sendMail(
-            requestData.email,
-            sender,
-            subject,
-            message
-          );
-          if (result.success) {
-            const token = createAccessToken(employee.dataValues);
-            res.setHeader("Authorization", `Bearer ${token}`);
-            res.status(200).json({
-              response_type: "SUCCESS",
-              data: {},
-              message: "Employee registered successfully"
-            });
-          } else {
-            res.status(400).json({
-              response_type: "FAILED",
-              data: {},
-              message: result.message
-            });
-          }
-        }
-        else {
-          res.status(500).json({
+        const result = await sendMail(
+          requestData.email,
+          sender,
+          subject,
+          message
+        );
+        if (result.success) {
+          const token = createAccessToken(employee.dataValues);
+          res.setHeader("Authorization", `Bearer ${token}`);
+          res.status(200).json({
+            response_type: "SUCCESS",
+            data: {},
+            message: "Employee registered successfully",
+          });
+        } else {
+          res.status(400).json({
             response_type: "FAILED",
             data: {},
-            message: "Employee Registration Failed."
+            message: result.message,
           });
         }
+      } else {
+        res.status(500).json({
+          response_type: "FAILED",
+          data: {},
+          message: "Employee Registration Failed.",
+        });
+      }
     } else {
       console.log("Invalid perameter");
       res.status(400).json({
         response_type: "FAILED",
         data: {},
-        message: "Invalid perameter"
+        message: "Invalid perameter",
       });
     }
   } catch (error) {
@@ -255,7 +232,7 @@ module.exports.Registration = async (req, res) => {
     res.status(500).json({
       response_type: "FAILED",
       data: {},
-      message: error.message
+      message: error.message,
     });
   }
 };
@@ -280,19 +257,19 @@ module.exports.changePassword = async (req, res) => {
             employeeDetails.password
           );
           if (!passwordMatch) {
-            return res.status(401).json({ 
+            return res.status(401).json({
               response_type: "FAILED",
               data: {},
-              message: "Invalid Password" });
+              message: "Invalid Password",
+            });
           }
           const hashedPassword = await COMMON.ENCRYPT(req.body.newPassword);
           if (!hashedPassword) {
-            return res
-              .status(500)
-              .json({ 
-                response_type: "FAILED",
-                data: {},
-                message: CONSTANT.MESSAGE_CONSTANT.SOMETHING_WENT_WRONG });
+            return res.status(500).json({
+              response_type: "FAILED",
+              data: {},
+              message: CONSTANT.MESSAGE_CONSTANT.SOMETHING_WENT_WRONG,
+            });
           }
           return await Employee.update(
             {
@@ -306,43 +283,44 @@ module.exports.changePassword = async (req, res) => {
           )
             .then(() => {
               // Return a success response
-              res
-                .status(200)
-                .json({ 
-                  response_type: "SUCCESS",
-                  data: {},
-                  message: "Employee password change successfully" });
+              res.status(200).json({
+                response_type: "SUCCESS",
+                data: {},
+                message: "Employee password change successfully",
+              });
             })
             .catch((error) => {
               console.error("An error occurred:", error);
               // Return an error response
-              res.status(500).json({ 
+              res.status(500).json({
                 response_type: "FAILED",
                 data: {},
-                message: error.message });
+                message: error.message,
+              });
             });
         } else {
-          res
-            .status(404)
-            .json({ 
-              response_type: "FAILED",
-              data: {},
-              message: CONSTANT.MESSAGE_CONSTANT.SOMETHING_WENT_WRONG });
+          res.status(404).json({
+            response_type: "FAILED",
+            data: {},
+            message: CONSTANT.MESSAGE_CONSTANT.SOMETHING_WENT_WRONG,
+          });
         }
       }
     } else {
       console.log("Invalid perameter");
-      res.status(400).json({ 
+      res.status(400).json({
         response_type: "FAILED",
         data: {},
-        message: "Invalid perameter" });
+        message: "Invalid perameter",
+      });
     }
   } catch (error) {
     console.error("An error occurred:", error);
-    res.status(500).json({ 
+    res.status(500).json({
       response_type: "FAILED",
       data: {},
-      message: error.message });
+      message: error.message,
+    });
   }
 };
 
@@ -362,51 +340,49 @@ module.exports.forgotPassword = async (req, res) => {
       if (user) {
         const hashedPassword = await COMMON.ENCRYPT(req.body.newPassword);
         if (!hashedPassword) {
-          res
-            .status(500)
-            .json({ 
-              response_type: "FAILED",
-              data: {},
-              message: CONSTANT.MESSAGE_CONSTANT.SOMETHING_WENT_WRONG });
+          res.status(500).json({
+            response_type: "FAILED",
+            data: {},
+            message: CONSTANT.MESSAGE_CONSTANT.SOMETHING_WENT_WRONG,
+          });
         }
         user.password = hashedPassword;
         const updatedPassword = await user.save();
         if (!updatedPassword) {
-          res
-            .status(400)
-            .json({
-              response_type: "FAILED",
-              data: {},
-              message: "Password Can not be Setted, Please Try Again Later.",
-            });
+          res.status(400).json({
+            response_type: "FAILED",
+            data: {},
+            message: "Password Can not be Setted, Please Try Again Later.",
+          });
         }
 
-        res
-          .status(200)
-          .json({ 
-            response_type: "SUCCESS",
-            data: {},
-            message: "User Password Changed Successfully." });
+        res.status(200).json({
+          response_type: "SUCCESS",
+          data: {},
+          message: "User Password Changed Successfully.",
+        });
       } else {
-        res.status(404).json({ 
+        res.status(404).json({
           response_type: "FAILED",
           data: {},
-          message: "User with given email id doesn't exist." });
+          message: "User with given email id doesn't exist.",
+        });
       }
-    } 
-    else {
+    } else {
       console.log("Invalid perameter");
-      res.status(400).json({ 
+      res.status(400).json({
         response_type: "FAILED",
         data: {},
-        message: "Invalid perameter" });
+        message: "Invalid perameter",
+      });
     }
   } catch (error) {
     console.error("An error occurred:", error);
-    res.status(500).json({ 
+    res.status(500).json({
       response_type: "FAILED",
       data: {},
-      message: error.message });
+      message: error.message,
+    });
   }
 };
 
@@ -475,7 +451,7 @@ module.exports.sendCode = async (req, res) => {
           res.status(200).json({
             response_type: "SUCCESS",
             message: "Verification Code Sent Successfully.",
-            data: {result: result},
+            data: { result: result },
           });
         } else {
           res.status(403).json({
@@ -485,27 +461,29 @@ module.exports.sendCode = async (req, res) => {
               "Verification Code Can not be Sent, Please Try Again Later.",
           });
         }
-      }
-      else {
+      } else {
         console.log("User with given email id doesn't exist.");
-        res.status(400).json({ 
+        res.status(400).json({
           response_type: "FAILED",
           data: {},
-          message: "User with given email id doesn't exist." });
-        }
+          message: "User with given email id doesn't exist.",
+        });
+      }
     } else {
       console.log("Invalid perameter");
-      res.status(400).json({ 
+      res.status(400).json({
         response_type: "FAILED",
         data: {},
-        message: "Invalid perameter" });
+        message: "Invalid perameter",
+      });
     }
   } catch (error) {
     console.error("An error occurred:", error);
-    res.status(500).json({ 
+    res.status(500).json({
       response_type: "FAILED",
       data: {},
-      message: "Failed to Send Email, Please Try Again Later." });
+      message: "Failed to Send Email, Please Try Again Later.",
+    });
   }
 };
 
@@ -516,12 +494,11 @@ module.exports.verifyCode = async (req, res) => {
       const codeExists = await VerifyCode.findByPk(req.body.verificationCodeID);
 
       if (!codeExists) {
-        return res
-          .status(404)
-          .json({ 
-            response_type: "FAILED",
-            data: {},
-            message: "Code not found for the given ID" });
+        return res.status(404).json({
+          response_type: "FAILED",
+          data: {},
+          message: "Code not found for the given ID",
+        });
       }
 
       if (new Date().getTime() > codeExists.expiresIn) {
@@ -532,32 +509,34 @@ module.exports.verifyCode = async (req, res) => {
         });
       } else {
         if (codeExists.verificationCode == req.body.coeFromUser) {
-          res
-            .status(200)
-            .json({ 
-              response_type: "SUCCESS",
-              data: {},
-              message: "Code Verification Done Successfully." });
+          res.status(200).json({
+            response_type: "SUCCESS",
+            data: {},
+            message: "Code Verification Done Successfully.",
+          });
         } else {
-          res.status(401).json({ 
+          res.status(401).json({
             response_type: "FAILED",
             data: {},
-            message: "Please Enter Valid Code." });
+            message: "Please Enter Valid Code.",
+          });
         }
       }
     } else {
       console.log("Invalid perameter");
-      res.status(400).json({ 
+      res.status(400).json({
         response_type: "FAILED",
         data: {},
-        message: "Invalid perameter" });
+        message: "Invalid perameter",
+      });
     }
   } catch (error) {
     console.error("An error occurred:", error);
-    res.status(500).json({ 
+    res.status(500).json({
       response_type: "FAILED",
       data: {},
-      message: error.message }); 
+      message: error.message,
+    });
   }
 };
 
@@ -572,8 +551,8 @@ module.exports.resetToken = async (req, res) => {
           res.setHeader("Authorization", `Bearer ${token}`);
           return res.status(200).json({
             response_type: "SUCCESS",
-            data: {token: token},
-            message: "Token Reset Done Successfully."
+            data: { token: token },
+            message: "Token Reset Done Successfully.",
           });
         } else {
           return res.status(401).json({
@@ -585,16 +564,18 @@ module.exports.resetToken = async (req, res) => {
       });
     } else {
       console.log("Invalid perameter");
-      res.status(400).json({ 
+      res.status(400).json({
         response_type: "FAILED",
         data: {},
-        message: "Invalid perameter" });
+        message: "Invalid perameter",
+      });
     }
   } catch (error) {
     console.error("An error occurred:", error);
-    res.status(500).json({ 
+    res.status(500).json({
       response_type: "FAILED",
       data: {},
-      message: error.message });
+      message: error.message,
+    });
   }
 };
