@@ -733,7 +733,7 @@ module.exports.getListOfCreatedMeeting = async (req, res) => {
       InternalTeamSelect,
     } = req.app.locals.models;
 
-    let { page, pageSize, sort, sortBy, searchField, isActive, empId, cancelledMeeting, type } = req.query;
+    let { page, pageSize, sort, sortBy, searchField, isActive, empId, cancelledMeeting, type, status } = req.query;
 
     page = Math.max(1, parseInt(page, 10)) || 1;
     pageSize = Math.max(1, parseInt(pageSize, 10)) || 10;
@@ -766,7 +766,7 @@ module.exports.getListOfCreatedMeeting = async (req, res) => {
       { model: Office, as: "office" },
       { model: RequestMeeting, as: "requestMeeting" },
       { model: AppointmentMeeting, as: "appointmentMeeting" },
-      { model: OuterMeeting, as: "outerMeeting" },
+      // { model: OuterMeeting, as: "outerMeeting" },
       { model: MeetingType, as: "meetingType" },
       { model: MeetingMode, as: "meetingMode" },
       { model: ConferenceRoom, as: "conferenceRoom" },
@@ -806,6 +806,14 @@ module.exports.getListOfCreatedMeeting = async (req, res) => {
         }
       }
       else if(type == "Outer"){
+        if (status) {
+          queryOptions.include.push({
+            model: OuterMeeting,
+            as: "outerMeeting",
+            where: { status: status },
+            required: true,
+          });
+        }
         queryOptions.where = {
           ...queryOptions.where,
           outerMeetingID: { [Op.not]: null }
