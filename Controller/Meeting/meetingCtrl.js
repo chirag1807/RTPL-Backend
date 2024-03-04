@@ -1,7 +1,7 @@
 const sendMail = require("../../Middleware/emaiService");
 const ErrorHandler = require("../../utils/errorhandler");
 const cloudinary = require("../../utils/cloudinary");
-const fs = require('fs');
+const fs = require("fs");
 const { Op } = require("sequelize");
 
 const inputFieldsMeeting = [
@@ -105,19 +105,19 @@ module.exports.createRequestMeeting = async (req, res) => {
       }
     } else {
       console.log("Invalid parameter");
-      res.status(400).json({ 
+      res.status(400).json({
         response_type: "FAILED",
         data: {},
-        message: "Invalid parameter"
-       });
+        message: "Invalid parameter",
+      });
     }
   } catch (error) {
     console.log(error);
-    res.status(500).json({ 
+    res.status(500).json({
       response_type: "FAILED",
       data: {},
-      message: error.message
-     });
+      message: error.message,
+    });
   }
 };
 
@@ -216,19 +216,19 @@ module.exports.createOuterMeeting = async (req, res) => {
       }
     } else {
       console.log("Invalid parameter");
-      res.status(400).json({ 
+      res.status(400).json({
         response_type: "FAILED",
         data: {},
-        message: "Invalid parameter"
-       });
+        message: "Invalid parameter",
+      });
     }
   } catch (error) {
     console.log(error);
-    res.status(500).json({ 
+    res.status(500).json({
       response_type: "FAILED",
       data: {},
-      message: error.message
-     });
+      message: error.message,
+    });
   }
 };
 
@@ -263,24 +263,24 @@ module.exports.updateOuterMeetingStatus = async (req, res) => {
           response_type: "SUCCESS",
           message: "Status Updated successfully",
           data: {
-            updatedOuterMeeting: updatedOuterMeeting
+            updatedOuterMeeting: updatedOuterMeeting,
           },
         });
       } else {
         res.status(400).json({
           response_type: "FAILED",
           message: "Status Can't be Updated, Please Try Again Later.",
-          data: {}
+          data: {},
         });
       }
     }
   } catch (error) {
     console.log(error);
-    res.status(500).json({ 
+    res.status(500).json({
       response_type: "FAILED",
       data: {},
-      message: error.message
-     });
+      message: error.message,
+    });
   }
 };
 
@@ -395,18 +395,19 @@ module.exports.createAppointmentMeeting = async (req, res) => {
       }
     } else {
       console.log("Invalid parameter");
-      res.status(400).json({ 
+      res.status(400).json({
         response_type: "FAILED",
         data: {},
-        message: "Invalid parameter" });
+        message: "Invalid parameter",
+      });
     }
   } catch (error) {
     console.log(error);
-    res.status(500).json({ 
+    res.status(500).json({
       response_type: "FAILED",
       data: {},
-      message: error.message
-     });
+      message: error.message,
+    });
   }
 };
 
@@ -452,7 +453,7 @@ module.exports.updateAppointmentMeetingStatus = async (req, res) => {
           res.status(200).json({
             response_type: "SUCCESS",
             message: "Time of Meeting Updated successfully",
-            data: {updatedAppointmentMeeting: updatedAppointmentMeeting},
+            data: { updatedAppointmentMeeting: updatedAppointmentMeeting },
           });
         } else {
           res.status(400).json({
@@ -472,19 +473,22 @@ module.exports.updateAppointmentMeetingStatus = async (req, res) => {
     }
   } catch (error) {
     console.log(error);
-    res.status(500).json({ 
+    res.status(500).json({
       response_type: "FAILED",
       data: {},
-      message: error.message });
+      message: error.message,
+    });
   }
 };
 
 module.exports.startMeeting = async (req, res) => {
   try {
-    const { Meeting,
+    const {
+      Meeting,
       // InternalTeamSelect
     } = req.app.locals.models;
-    const { meetingID,
+    const {
+      meetingID,
       // empIds
     } = req.body;
 
@@ -494,22 +498,21 @@ module.exports.startMeeting = async (req, res) => {
       // !Array.isArray(empIds) ||
       // empIds.length === 0
     ) {
-      return res
-        .status(400)
-        .json({ 
-          response_type: "FAILED",
-          data: {},
-          message: "meetingID is required." });
+      return res.status(400).json({
+        response_type: "FAILED",
+        data: {},
+        message: "meetingID is required.",
+      });
     }
 
     const existingMeeting = await Meeting.findByPk(meetingID);
 
     if (!existingMeeting) {
-      return res.status(404).json({ 
+      return res.status(404).json({
         response_type: "FAILED",
         data: {},
-        message: "Meeting not found."
-       });
+        message: "Meeting not found.",
+      });
     }
 
     existingMeeting.startedAt = new Date();
@@ -529,14 +532,15 @@ module.exports.startMeeting = async (req, res) => {
     return res.status(200).json({
       response_type: "SUCCESS",
       message: "Meeting started successfully.",
-      data: {meeting: existingMeeting},
+      data: { meeting: existingMeeting },
     });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ 
+    return res.status(500).json({
       response_type: "FAILED",
       data: {},
-      message: error.message });
+      message: error.message,
+    });
   }
 };
 
@@ -569,12 +573,11 @@ module.exports.rescheduleMeeting = async (req, res) => {
     const meeting = await Meeting.findByPk(meetingID);
 
     if (!meeting) {
-      return res
-        .status(404)
-        .json({ 
-          response_type: "FAILED",
-          data: {},
-          message: "Meeting not found for the given ID" });
+      return res.status(404).json({
+        response_type: "FAILED",
+        data: {},
+        message: "Meeting not found for the given ID",
+      });
     }
 
     meeting.rescMeetingDate = rescMeetingDate;
@@ -587,18 +590,18 @@ module.exports.rescheduleMeeting = async (req, res) => {
 
     await meeting.save();
 
-    res
-      .status(200)
-      .json({ 
-        response_type: "SUCCESS",
-        data: {},
-        message: "Meeting has been rescheduled successfully." });
+    res.status(200).json({
+      response_type: "SUCCESS",
+      data: {},
+      message: "Meeting has been rescheduled successfully.",
+    });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ 
+    res.status(500).json({
       response_type: "FAILED",
       data: {},
-      message: error.message });
+      message: error.message,
+    });
   }
 };
 
@@ -609,23 +612,21 @@ module.exports.endMeeting = async (req, res) => {
     const updatedBy = req.decodedEmpCode;
 
     if (!meetingID) {
-      return res
-        .status(400)
-        .json({ 
-          response_type: "FAILED",
-          data: {},
-          message: "Meeting ID is required in the request body" });
+      return res.status(400).json({
+        response_type: "FAILED",
+        data: {},
+        message: "Meeting ID is required in the request body",
+      });
     }
 
     const meeting = await Meeting.findByPk(meetingID);
 
     if (!meeting) {
-      return res
-        .status(404)
-        .json({ 
-          response_type: "FAILED",
-          data: {},
-          message: "Meeting not found for the given ID" });
+      return res.status(404).json({
+        response_type: "FAILED",
+        data: {},
+        message: "Meeting not found for the given ID",
+      });
     }
 
     meeting.stoppedAt = new Date();
@@ -644,16 +645,18 @@ module.exports.endMeeting = async (req, res) => {
       },
     });
 
-    res.status(200).json({ 
+    res.status(200).json({
       response_type: "SUCCESS",
       data: {},
-      message: "Meeting has ended successfully." });
+      message: "Meeting has ended successfully.",
+    });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ 
+    res.status(500).json({
       response_type: "FAILED",
       data: {},
-      message: error.message });
+      message: error.message,
+    });
   }
 };
 
@@ -664,23 +667,21 @@ module.exports.cancelMeeting = async (req, res) => {
     const updatedBy = req.decodedEmpCode;
 
     if (!meetingID) {
-      return res
-        .status(400)
-        .json({ 
-          response_type: "FAILED",
-          data: {},
-          message: "Meeting ID is required in the request body" });
+      return res.status(400).json({
+        response_type: "FAILED",
+        data: {},
+        message: "Meeting ID is required in the request body",
+      });
     }
 
     const meeting = await Meeting.findByPk(meetingID);
 
     if (!meeting) {
-      return res
-        .status(404)
-        .json({ 
-          response_type: "FAILED",
-          data: {},
-          message: "Meeting not found for the given ID" });
+      return res.status(404).json({
+        response_type: "FAILED",
+        data: {},
+        message: "Meeting not found for the given ID",
+      });
     }
 
     meeting.isActive = false;
@@ -689,16 +690,18 @@ module.exports.cancelMeeting = async (req, res) => {
 
     await meeting.save();
 
-    res.status(200).json({ 
+    res.status(200).json({
       response_type: "SUCCESS",
       data: {},
-      message: "Meeting has ended successfully." });
+      message: "Meeting has ended successfully.",
+    });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ 
+    res.status(500).json({
       response_type: "FAILED",
       data: {},
-      error: error.message });
+      error: error.message,
+    });
   }
 };
 
@@ -717,7 +720,18 @@ module.exports.getListOfCreatedMeeting = async (req, res) => {
       InternalTeamSelect,
     } = req.app.locals.models;
 
-    let { page, pageSize, sort, sortBy, searchField, isActive, empId, cancelledMeeting, type, status } = req.query;
+    let {
+      page,
+      pageSize,
+      sort,
+      sortBy,
+      searchField,
+      isActive,
+      empId,
+      cancelledMeeting,
+      type,
+      status,
+    } = req.query;
 
     page = Math.max(1, parseInt(page, 10)) || 1;
     pageSize = Math.max(1, parseInt(pageSize, 10)) || 10;
@@ -732,7 +746,7 @@ module.exports.getListOfCreatedMeeting = async (req, res) => {
     };
 
     // if (sortBy) {
-      queryOptions.order = [["createdAt", sort]];
+    queryOptions.order = [["createdAt", sort]];
     // }
 
     if (
@@ -764,15 +778,14 @@ module.exports.getListOfCreatedMeeting = async (req, res) => {
       }
     );
 
-    if(empId === true){
+    if (empId === true) {
       queryOptions.where = {
         ...queryOptions.where,
         isActive: isActive ? isActive : false,
         isDeleted: cancelledMeeting ? true : false,
         empId: req.user.empId,
       };
-    } 
-    else{
+    } else {
       queryOptions.where = {
         ...queryOptions.where,
         isActive: isActive ? isActive : false,
@@ -780,14 +793,13 @@ module.exports.getListOfCreatedMeeting = async (req, res) => {
       };
     }
 
-    if(type){
-      if(type == "Request"){
+    if (type) {
+      if (type == "Request") {
         queryOptions.where = {
           ...queryOptions.where,
-          requestID: { [Op.not]: null }
-        }
-      }
-      else if(type == "Outer"){
+          requestID: { [Op.not]: null },
+        };
+      } else if (type == "Outer") {
         if (status) {
           queryOptions.include.push({
             model: OuterMeeting,
@@ -795,25 +807,36 @@ module.exports.getListOfCreatedMeeting = async (req, res) => {
             where: { status: status },
             required: true,
           });
+        } else {
+          queryOptions.include.push({
+            model: OuterMeeting,
+            as: "outerMeeting",
+            required: true,
+          });
         }
         queryOptions.where = {
           ...queryOptions.where,
-          outerMeetingID: { [Op.not]: null }
-        }
-      }
-      else{
+          outerMeetingID: { [Op.not]: null },
+        };
+      } else {
         if (status) {
           queryOptions.include.push({
             model: AppointmentMeeting,
             as: "appointmentMeeting",
             where: { status: status },
-            required: true
-          })
+            required: true,
+          });
+        } else {
+          queryOptions.include.push({
+            model: AppointmentMeeting,
+            as: "appointmentMeeting",
+            required: true,
+          });
         }
         queryOptions.where = {
           ...queryOptions.where,
-          appointmentMeetingID: { [Op.not]: null }
-        }
+          appointmentMeetingID: { [Op.not]: null },
+        };
       }
     }
 
@@ -830,27 +853,27 @@ module.exports.getListOfCreatedMeeting = async (req, res) => {
         totalPage: totalPage,
         currentPage: page,
         response_type: "SUCCESS",
-        message: cancelledMeeting ?
-        "Cancelled Meetings Fetched Successfully." :
-        "Created Meetings Fetched Successfully.",
-        data: {meetings: createdMeetings},
+        message: cancelledMeeting
+          ? "Cancelled Meetings Fetched Successfully."
+          : "Created Meetings Fetched Successfully.",
+        data: { meetings: createdMeetings },
       });
     } else {
       res.status(400).json({
         response_type: "FAILED",
-        message: cancelledMeeting ?
-        "Cancelled Meetings Can't be Fetched." :
-        "Created Meetings Can't be Fetched.",
-        data: {}
+        message: cancelledMeeting
+          ? "Cancelled Meetings Can't be Fetched."
+          : "Created Meetings Can't be Fetched.",
+        data: {},
       });
     }
   } catch (error) {
     console.log(error);
-    res.status(500).json({ 
+    res.status(500).json({
       response_type: "FAILED",
       data: {},
-      message: error.message
-     });
+      message: error.message,
+    });
   }
 };
 
@@ -881,7 +904,7 @@ module.exports.getAppointmentMeetings = async (req, res) => {
       include: [],
     };
 
-      queryOptions.order = [["createdAt", sort]];
+    queryOptions.order = [["createdAt", sort]];
 
     if (
       searchField &&
@@ -891,29 +914,32 @@ module.exports.getAppointmentMeetings = async (req, res) => {
       queryOptions.where = {
         [Op.or]: [
           { status: { [Op.like]: `%${searchField}%` } },
-          { DeclineReason: { [Op.like]: `%${searchField}%` } }
+          { DeclineReason: { [Op.like]: `%${searchField}%` } },
         ],
       };
     }
 
-    if(status){
-      queryOptions.include = [{
-        model: AppointmentMeeting,
-        as: 'appointmentMeeting',
-        where: {
-          empId: req.user.empId,
-          status: status
-        }
-      }];
-    }
-    else {
-      queryOptions.include = [{
-        model: AppointmentMeeting,
-        as: 'appointmentMeeting',
-        where: {
-          empId: req.user.empId,
-        }
-      }];
+    if (status) {
+      queryOptions.include = [
+        {
+          model: AppointmentMeeting,
+          as: "appointmentMeeting",
+          where: {
+            empId: req.user.empId,
+            status: status,
+          },
+        },
+      ];
+    } else {
+      queryOptions.include = [
+        {
+          model: AppointmentMeeting,
+          as: "appointmentMeeting",
+          where: {
+            empId: req.user.empId,
+          },
+        },
+      ];
     }
 
     queryOptions.include.push(
@@ -922,7 +948,7 @@ module.exports.getAppointmentMeetings = async (req, res) => {
       { model: MeetingType, as: "meetingType" },
       { model: MeetingMode, as: "meetingMode" },
       { model: ConferenceRoom, as: "conferenceRoom" },
-      { model: TimeSlot, as: "timeSlot"},
+      { model: TimeSlot, as: "timeSlot" }
       // {
       //   model: InternalTeamSelect,
       //   as: "internalTeamSelect",
@@ -938,7 +964,7 @@ module.exports.getAppointmentMeetings = async (req, res) => {
     const totalCount = await Meeting.count({
       where: queryOptions.where,
     });
-    
+
     const totalPage = Math.ceil(totalCount / pageSize);
 
     const appointmentMeetings = await Meeting.findAll(queryOptions);
@@ -949,24 +975,24 @@ module.exports.getAppointmentMeetings = async (req, res) => {
         currentPage: page,
         response_type: "SUCCESS",
         message: "Appointment Meetings Created For You Fetched Successfully.",
-        data: {meetings: appointmentMeetings},
+        data: { meetings: appointmentMeetings },
       });
     } else {
       res.status(400).json({
         response_type: "FAILED",
         message: "Appointment Meetings Created For You Can't be Fetched.",
-        data: {}
+        data: {},
       });
     }
-
   } catch (error) {
     console.log(error);
-    res.status(500).json({ 
+    res.status(500).json({
       response_type: "FAILED",
       data: {},
-      message: error.message });
+      message: error.message,
+    });
   }
-}
+};
 
 module.exports.getCreatedMeetingByID = async (req, res) => {
   try {
@@ -1005,7 +1031,7 @@ module.exports.getCreatedMeetingByID = async (req, res) => {
         res.status(200).json({
           response_type: "SUCCESS",
           message: "Created Meeting Fetched Successfully.",
-          data: {meeting: createdMeetingDetails},
+          data: { meeting: createdMeetingDetails },
         });
       } else {
         res.status(400).json({
@@ -1016,17 +1042,19 @@ module.exports.getCreatedMeetingByID = async (req, res) => {
       }
     } else {
       console.log("Invalid perameter");
-      res.status(400).json({ 
+      res.status(400).json({
         response_type: "FAILED",
         data: {},
-        message: "Invalid perameter" });
+        message: "Invalid perameter",
+      });
     }
   } catch (error) {
     console.log(error);
-    res.status(500).json({ 
+    res.status(500).json({
       response_type: "FAILED",
       data: {},
-      message: error.message });
+      message: error.message,
+    });
   }
 };
 
@@ -1049,23 +1077,24 @@ module.exports.getMeetingTimesByConferenceRoom = async (req, res) => {
     });
 
     if (!meetings || meetings.length === 0) {
-      return res
-        .status(404)
-        .json({ 
-          response_type: "FAILED",
-          data: {},
-          message: "No meetings found for the provided details." });
+      return res.status(404).json({
+        response_type: "FAILED",
+        data: {},
+        message: "No meetings found for the provided details.",
+      });
     }
 
-    res.status(200).json({ 
+    res.status(200).json({
       response_type: "SUCCESS",
       message: "Meetings Times By COnference Room Fetched Successfully.",
-      data: {meetings: meetings} });
+      data: { meetings: meetings },
+    });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ 
+    res.status(500).json({
       response_type: "FAILED",
       data: {},
-      message: error.message });
+      message: error.message,
+    });
   }
 };
