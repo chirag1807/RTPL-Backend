@@ -102,7 +102,7 @@ module.exports.Registration = async (req, res) => {
 
     console.log("requestData", requestData);
 
-    console.log("received files", req.files);
+    console.log("received files after data", req.files);
 
     if (requestData) {
       
