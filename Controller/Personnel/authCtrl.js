@@ -99,6 +99,11 @@ module.exports.Registration = async (req, res) => {
   try {
     const { Employee } = req.app.locals.models;
     const requestData = req.body;
+
+    console.log("requestData", requestData);
+
+    console.log("received files", req.files);
+
     if (requestData) {
       
       // get value of CreatedBy
