@@ -731,6 +731,7 @@ module.exports.getListOfCreatedMeeting = async (req, res) => {
       cancelledMeeting,
       type,
       status,
+      meetingStatus,
     } = req.query;
 
     page = Math.max(1, parseInt(page, 10)) || 1;
@@ -778,7 +779,7 @@ module.exports.getListOfCreatedMeeting = async (req, res) => {
       }
     );
 
-    if (empId === true) {
+    if (empId) {
       queryOptions.where = {
         ...queryOptions.where,
         isActive: isActive ? isActive : false,
@@ -840,6 +841,58 @@ module.exports.getListOfCreatedMeeting = async (req, res) => {
       }
     }
 
+    if (meetingStatus) {
+      if (meetingStatus === "today") {
+        queryOptions.where.meetingDate = {
+          [Op.eq]: new Date().toISOString().split("T")[0], // Assuming meetingDate is in format "YYYY-MM-DD"
+        };
+      } else if (meetingStatus === "upcoming") {
+        queryOptions.where.meetingDate = {
+          [Op.gt]: new Date().toISOString().split("T")[0], // Assuming meetingDate is in format "YYYY-MM-DD"
+        };
+      } else if (meetingStatus === "cancelled") {
+        queryOptions.where = {
+          isDeleted: true,
+        };
+      } else if (meetingStatus === "completed") {
+        queryOptions.where = {
+          isActive: true,
+          stoppedAt: { [Op.not]: null },
+        };
+      }
+    }
+
+    // if (meetingStatus) {
+    //   switch (meetingStatus) {
+    //     case "today":
+    //       queryOptions.where.isActive = true;
+    //       queryOptions.where.meetingDate = {
+    //         [Op.between]: [
+    //           new Date(new Date().setHours(0, 0, 0, 0)),
+    //           new Date(),
+    //         ],
+    //       };
+    //       break;
+    //     case "upcoming":
+    //       queryOptions.where.isActive = true;
+    //       const todayUTC = new Date().toISOString().split("T")[0];
+    //       queryOptions.where.meetingDate = {
+    //         [Op.gt]: todayUTC,
+    //       };
+    //       break;
+    //     case "cancelled":
+    //       queryOptions.where.isDeleted = true;
+    //       break;
+    //     case "completed":
+    //       queryOptions.where.isActive = false;
+    //       queryOptions.where.stoppedAt = { [Op.not]: null };
+    //       break;
+    //     default:
+    //       break;
+    //   }
+    // }
+
+    console.log(queryOptions.where);
     const totalCount = await Meeting.count({
       where: queryOptions.where,
     });
@@ -1069,8 +1122,6 @@ module.exports.getMeetingTimesByConferenceRoom = async (req, res) => {
       meetingDate: meetingDate ? meetingDate : new Date(),
     };
 
-    console.log(whereClause);
-
     const meetings = await Meeting.findAll({
       where: whereClause,
       attributes: ["meetingStartTime", "meetingEndTime"],
@@ -1086,7 +1137,7 @@ module.exports.getMeetingTimesByConferenceRoom = async (req, res) => {
 
     res.status(200).json({
       response_type: "SUCCESS",
-      message: "Meetings Times By COnference Room Fetched Successfully.",
+      message: "Meetings Times By Conference Room Fetched Successfully.",
       data: { meetings: meetings },
     });
   } catch (error) {

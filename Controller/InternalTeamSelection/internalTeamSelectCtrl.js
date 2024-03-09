@@ -1,4 +1,5 @@
 const { Op } = require("sequelize");
+const sendMail = require("../../Middleware/emaiService");
 
 const inputFieldsInternalTeamSelect = [
   "meetingID",
@@ -6,6 +7,79 @@ const inputFieldsInternalTeamSelect = [
   "status",
   "DeclineReason",
 ];
+
+const inputFieldsInternalMembers = ["empId", "meetingID"];
+
+module.exports.addInternalMembers = async (req, res) => {
+  try {
+    const { InternalTeamSelect, Employee } = req.app.locals.models;
+
+    if (req.body.internalMembers && req.body.meetingID) {
+      const updatedList = req.body.internalMembers.map(
+        (internalMember) => ({
+          ...internalMember,
+          meetingID: req.body.meetingID,
+        })
+      );
+
+      await Promise.all(
+        updatedList.map(async (internalMember) => {
+          await InternalTeamSelect.create(internalMember, {
+            fields: inputFieldsInternalMembers,
+          });
+        })
+      );
+
+      const internalMembers = req.body.internalMembers;
+
+      const internalMemberIds = internalMembers.map(
+        (member) => member.empId
+      );
+
+      const internalTeamEmails = await Employee.findAll({
+        attributes: ["email"],
+        where: {
+          empId: internalMemberIds,
+        },
+        raw: true,
+      });
+
+      const emailPromises = internalTeamEmails.map(async (member) => {
+        const mailSubject = "Meeting Created";
+        const mailMessage = "A new meeting has been created.";
+
+        await sendMail(
+          member.email,
+          "rtpl@rtplgroup.com",
+          mailSubject,
+          mailMessage
+        );
+      });
+
+      await Promise.all(emailPromises);
+
+      res.status(200).json({
+        response_type: "SUCCESS",
+        data: {},
+        message: "Internal Team Members added successfully.",
+      });
+    }
+    else {
+      res.status(400).json({
+        response_type: "FAILED",
+        data: {},
+        message: "Invalid perameter",
+      });
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      response_type: "FAILED",
+      data: {},
+      error: error.message,
+    });
+  }
+}
 
 module.exports.getInternalMembersByMeetingID = async (req, res) => {
   try {
@@ -66,7 +140,7 @@ module.exports.getMeetingsForInternalTeam = async (req, res) => {
     } = req.app.locals.models;
     const { empId } = req.params;
 
-    let { page, pageSize, sort, sortBy, searchField, type } = req.query;
+    let { page, pageSize, sort, sortBy, searchField, type, status } = req.query;
 
     page = Math.max(1, parseInt(page, 10)) || 1;
     pageSize = Math.max(1, parseInt(pageSize, 10)) || 10;
@@ -116,6 +190,23 @@ module.exports.getMeetingsForInternalTeam = async (req, res) => {
         { model: ConferenceRoom, as: "conferenceRoom" },
       ],
     });
+
+    if (status === "accepted") {
+      queryOptions.where = {
+        ...queryOptions.where,
+        status: "Accepted"
+      };
+    } else if (status === "rejected") {
+      queryOptions.where = {
+        ...queryOptions.where,
+        status: "Rejected"
+      };
+    } else if (status === "pending") {
+      queryOptions.where = {
+        ...queryOptions.where,
+        status: "Pending"
+      };
+    }
 
     if (type) {
       if (type === "Request") {
