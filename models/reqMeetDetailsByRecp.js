@@ -63,7 +63,6 @@ const ReqMeetDetailsByRecp = sequelize.define('ReqMeetDetailsByRecp', {
     TokenNumber: {
         type: DataTypes.STRING,
         allowNull: false,
-        unique: true
     },
 }, {
     timestamps: true,

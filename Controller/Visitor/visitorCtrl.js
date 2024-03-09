@@ -35,7 +35,6 @@ const inputFieldsVisitorDetails = [
   "vVisitorID",
 ];
 
-
 const inputFieldsRequestmeetingDetailsbyRecp = [
   "companyID",
   "officeID",
@@ -53,18 +52,26 @@ module.exports.visitorRequestMeeting = async (req, res) => {
   try {
     const { RequestMeeting, ReqMeetVisitorDetails } = req.app.locals.models;
     if (req.body) {
-      console.log(req.files)
-      if (req.body.vCompanyEmail && !validator.isEmail(req.body.vCompanyEmail)) {
-        return res.status(400).json({ 
+      console.log(req.files);
+      if (
+        req.body.vCompanyEmail &&
+        !validator.isEmail(req.body.vCompanyEmail)
+      ) {
+        return res.status(400).json({
           response_type: "FAILED",
           data: {},
-          message: "Invalid email." });
+          message: "Invalid email.",
+        });
       }
-      if (req.body.vCompanyContact && !validator.isMobilePhone(req.body.vCompanyContact.toString(), "any")) {
-        return res.status(400).json({ 
+      if (
+        req.body.vCompanyContact &&
+        !validator.isMobilePhone(req.body.vCompanyContact.toString(), "any")
+      ) {
+        return res.status(400).json({
           response_type: "FAILED",
           data: {},
-          message: "Invalid phone number." });
+          message: "Invalid phone number.",
+        });
       }
 
       const requestMeeting = await RequestMeeting.create(req.body, {
@@ -74,7 +81,7 @@ module.exports.visitorRequestMeeting = async (req, res) => {
       if (requestMeeting) {
         let updatedList = [];
         // console.log(req.vPhotoID,"HK");
-        console.log(req.body)
+        console.log(req.body);
         if (req.vPhotoID.length > 0) {
           let uploadedLiveImages = [];
           let uploadedPhotoIDs = [];
@@ -87,27 +94,28 @@ module.exports.visitorRequestMeeting = async (req, res) => {
           for (const fileData of req.vPhotoID) {
             uploadedPhotoIDs.push(fileData);
           }
-          console.log(req.files)
+          console.log(req.files);
           for (const fileData of req.vVisitorID) {
             uploadedVisitorIDs.push(fileData);
           }
 
-          console.log(req.body.visitors)
+          console.log(req.body.visitors);
           updatedList = JSON.parse(req.body.visitors).map((visitor, index) => ({
             ...visitor,
             reqMeetingID: requestMeeting.reqMeetingID,
             vLiveImage: uploadedLiveImages[index],
             vPhotoID: uploadedPhotoIDs[index],
-            vVisitorID: uploadedVisitorIDs[index]
+            vVisitorID: uploadedVisitorIDs[index],
           }));
+        } else {
+          updatedList = JSON.parse(req.body.visitors).map(
+            (visitor, _index) => ({
+              ...visitor,
+              reqMeetingID: requestMeeting.reqMeetingID,
+            })
+          );
         }
-        else{
-          updatedList = JSON.parse(req.body.visitors).map((visitor, _index) => ({
-            ...visitor,
-            reqMeetingID: requestMeeting.reqMeetingID,
-          }));
-        }
-        console.log(updatedList)
+        console.log(updatedList);
 
         await Promise.all(
           updatedList.map(async (visitor) => {
@@ -121,21 +129,20 @@ module.exports.visitorRequestMeeting = async (req, res) => {
         const mailMessage =
           "Your meeting request has been registered successfully.";
 
-        if(requestMeeting.typeOfVisitor == "Company"){
+        if (requestMeeting.typeOfVisitor == "Company") {
           await sendMail(
             req.body.vCompanyEmail,
             "rtpl@rtplgroup.com",
             mailSubject,
             mailMessage
           );
-        }
-        else{
+        } else {
           await sendMail(
             JSON.parse(req.body.visitors)[0].vMailID,
             "rtpl@rtplgroup.com",
             mailSubject,
             mailMessage
-          )
+          );
         }
 
         res.status(200).json({
@@ -153,17 +160,19 @@ module.exports.visitorRequestMeeting = async (req, res) => {
       }
     } else {
       console.log("Invalid perameter");
-      res.status(400).json({ 
+      res.status(400).json({
         response_type: "FAILED",
         data: {},
-        message: "Invalid perameter" });
+        message: "Invalid perameter",
+      });
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ 
+    res.status(500).json({
       response_type: "FAILED",
       data: {},
-      message: error.message });
+      message: error.message,
+    });
   }
 };
 
@@ -181,7 +190,8 @@ module.exports.getVisitorRequestMeeting = async (req, res) => {
       Designation,
     } = req.app.locals.models;
 
-    let { page, pageSize, sort, sortBy, searchField, status, visitorType } = req.query;
+    let { page, pageSize, sort, sortBy, searchField, status, visitorType } =
+      req.query;
 
     page = Math.max(1, parseInt(page, 10)) || 1;
     pageSize = Math.max(1, parseInt(pageSize, 10)) || 10;
@@ -196,7 +206,7 @@ module.exports.getVisitorRequestMeeting = async (req, res) => {
     };
 
     // if (sortBy) {
-      queryOptions.order = [["createdAt", sort]];
+    queryOptions.order = [["createdAt", sort]];
     // }
 
     if (
@@ -207,9 +217,13 @@ module.exports.getVisitorRequestMeeting = async (req, res) => {
       queryOptions.where = {
         [Op.or]: [
           { purposeOfMeeting: { [Op.like]: `%${searchField}%` } },
-          { contactPersonName: { [Op.like]: `%${searchField}`}},
+          { contactPersonName: { [Op.like]: `%${searchField}` } },
           { vCompanyName: { [Op.like]: `%${searchField}%` } },
           { vCompanyContact: { [Op.like]: `%${searchField}%` } },
+          { vCompanyGST: { [Op.like]: `%${searchField}%` } },
+          // { "visitorDetails.vPANCard": { [Op.like]: `%${searchField}%` } }, // Corrected line
+          // { "visitorDetails.vContact": { [Op.like]: `%${searchField}%` } }, // Corrected line
+          // { "visitorDetails.vMailID": { [Op.like]: `%${searchField}%` } },
         ],
       };
     }
@@ -217,41 +231,43 @@ module.exports.getVisitorRequestMeeting = async (req, res) => {
     if (status === "accepted") {
       queryOptions.where = {
         ...queryOptions.where,
-        ReqStatus: "ReceptionistAccepted"
+        ReqStatus: "ReceptionistAccepted",
       };
     } else if (status === "cancelled") {
       queryOptions.where = {
         ...queryOptions.where,
-        ReqStatus: "ReceptionistRejected"
+        ReqStatus: "ReceptionistRejected",
       };
     } else if (status === "pending") {
       queryOptions.where = {
         ...queryOptions.where,
-        ReqStatus: "Pending"
+        ReqStatus: "Pending",
       };
     }
 
     if (visitorType === "company") {
       queryOptions.where = {
         ...queryOptions.where,
-        typeOfVisitor: "Company"
+        typeOfVisitor: "Company",
       };
     } else if (visitorType === "individual") {
       queryOptions.where = {
         ...queryOptions.where,
-        typeOfVisitor: "Individual"
+        typeOfVisitor: "Individual",
       };
     }
 
     queryOptions.include.push(
       // { model: Employee, as: "employee" },
-      { model: ReqMeetDetailsByRecp, as: "reqMeetDetailsByRecp",
-      include: [
-        { model: Company, as: 'company' },
-        { model: Office, as: 'office' },
-        { model: Department, as: 'department' },
-        { model: Designation, as: 'designation' }
-      ]
+      {
+        model: ReqMeetDetailsByRecp,
+        as: "reqMeetDetailsByRecp",
+        include: [
+          { model: Company, as: "company" },
+          { model: Office, as: "office" },
+          { model: Department, as: "department" },
+          { model: Designation, as: "designation" },
+        ],
       },
       { model: ReqMeetVisitorDetails, required: false, as: "visitorDetails" }
     );
@@ -270,7 +286,7 @@ module.exports.getVisitorRequestMeeting = async (req, res) => {
         currentPage: page,
         response_type: "SUCCESS",
         message: "Request Meetings Fetched Successfully.",
-        data: {meetings: requestMeetings},
+        data: { meetings: requestMeetings },
       });
     } else {
       res.status(400).json({
@@ -281,10 +297,11 @@ module.exports.getVisitorRequestMeeting = async (req, res) => {
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ 
+    res.status(500).json({
       response_type: "FAILED",
       data: {},
-      message: error.message });
+      message: error.message,
+    });
   }
 };
 
@@ -339,9 +356,11 @@ module.exports.getVisitorPendingRequestMeeting = async (req, res) => {
       };
     }
 
-    queryOptions.include.push(
-      { model: ReqMeetVisitorDetails, required: false, as: "visitorDetails" }
-    );
+    queryOptions.include.push({
+      model: ReqMeetVisitorDetails,
+      required: false,
+      as: "visitorDetails",
+    });
 
     const totalCount = await RequestMeeting.count({
       where: queryOptions.where,
@@ -356,7 +375,7 @@ module.exports.getVisitorPendingRequestMeeting = async (req, res) => {
         currentPage: page,
         response_type: "SUCCESS",
         message: "Request Meetings Fetched Successfully.",
-        data: {meetings: requestMeetings},
+        data: { meetings: requestMeetings },
       });
     } else {
       res.status(400).json({
@@ -367,10 +386,11 @@ module.exports.getVisitorPendingRequestMeeting = async (req, res) => {
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ 
+    res.status(500).json({
       response_type: "FAILED",
       data: {},
-      message: error.message });
+      message: error.message,
+    });
   }
 };
 
@@ -390,15 +410,15 @@ module.exports.saveTokenByReceptionist = async (req, res) => {
       if (reqMeetDetailsByRecp) {
         const requestMeeting = await RequestMeeting.findByPk(reqMeetingID);
         if (requestMeeting) {
-          requestMeeting.ReqStatus = "ReceptionistAccepted"
-          requestMeeting.reqMeetDetailsID = reqMeetDetailsByRecp.reqMeetDetailsID;
+          requestMeeting.ReqStatus = "ReceptionistAccepted";
+          requestMeeting.reqMeetDetailsID =
+            reqMeetDetailsByRecp.reqMeetDetailsID;
           await requestMeeting.save();
-          res
-            .status(200)
-            .json({ 
-              response_type: "SUCCESS",
-              data: {},
-              message: "Data and token submited successfully.." });
+          res.status(200).json({
+            response_type: "SUCCESS",
+            data: {},
+            message: "Data and token submited successfully..",
+          });
         } else {
           res.status(400).json({
             response_type: "FAILED",
@@ -415,17 +435,19 @@ module.exports.saveTokenByReceptionist = async (req, res) => {
       }
     } else {
       console.log("Invalid perameter");
-      res.status(400).json({ 
+      res.status(400).json({
         response_type: "FAILED",
         data: {},
-        message: "Invalid perameter" });
+        message: "Invalid perameter",
+      });
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ 
+    res.status(500).json({
       response_type: "FAILED",
       data: {},
-      message: error.message });
+      message: error.message,
+    });
   }
 };
 
@@ -444,63 +466,87 @@ module.exports.getVisitorListByToken = async (req, res) => {
     if (req.params) {
       const { TokenNumber } = req.params;
 
-      const reqMeetingDetails = await ReqMeetDetailsByRecp.findOne({
+      const reqMeetingDetailsList = await ReqMeetDetailsByRecp.findAll({
         where: { TokenNumber },
       });
 
-      if (!reqMeetingDetails) {
-        return res.status(404).json({ 
+      if (!reqMeetingDetailsList.length) {
+        return res.status(404).json({
           response_type: "FAILED",
           data: {},
-          message: "Token and Data not found" });
+          message: "Token and Data not found",
+        });
       }
 
-      const reqMeeting = await RequestMeeting.findOne({
-        where: { reqMeetDetailsID: reqMeetingDetails.reqMeetDetailsID },
-        include: [
-          // { model: Employee, as: "employee" },
-          { model: ReqMeetDetailsByRecp, as: "reqMeetDetailsByRecp",
+      const requestMeetings = [];
+      for (const reqMeetingDetails of reqMeetingDetailsList) {
+        const reqMeeting = await RequestMeeting.findOne({
+          where: { reqMeetDetailsID: reqMeetingDetails.reqMeetDetailsID },
           include: [
-            { model: Company, as: 'company' },
-            { model: Office, as: 'office' },
-            { model: Department, as: 'department' },
-            { model: Designation, as: 'designation' }
-          ]
-          },
-          {
-            model: ReqMeetVisitorDetails,
-            required: false,
-            as: "visitorDetails",
-          },
-        ],
-      });
+            {
+              model: ReqMeetDetailsByRecp,
+              as: "reqMeetDetailsByRecp",
+              include: [
+                { model: Company, as: "company" },
+                { model: Office, as: "office" },
+                { model: Department, as: "department" },
+                { model: Designation, as: "designation" },
+              ],
+            },
+            {
+              model: ReqMeetVisitorDetails,
+              required: false,
+              as: "visitorDetails",
+            },
+          ],
+        });
 
-      if (reqMeeting) {
-        res.status(200).json({
-          response_type: "SUCCESS",
-          message: "Request Meeting Fetched Successfully.",
-          data: {meetings: reqMeeting},
-        });
-      } else {
-        res.status(400).json({
-          response_type: "FAILED",
-          data: {},
-          message: "Request Meeting Can't be Fetched.",
-        });
+        if (reqMeeting) {
+          requestMeetings.push(reqMeeting);
+        }
       }
+      // const reqMeeting = await RequestMeeting.findOne({
+      //   where: { reqMeetDetailsID: reqMeetingDetails.reqMeetDetailsID },
+      //   include: [
+      //     // { model: Employee, as: "employee" },
+      //     {
+      //       model: ReqMeetDetailsByRecp,
+      //       as: "reqMeetDetailsByRecp",
+      //       include: [
+      //         { model: Company, as: "company" },
+      //         { model: Office, as: "office" },
+      //         { model: Department, as: "department" },
+      //         { model: Designation, as: "designation" },
+      //       ],
+      //     },
+      //     {
+      //       model: ReqMeetVisitorDetails,
+      //       required: false,
+      //       as: "visitorDetails",
+      //     },
+      //   ],
+      // });
+
+      res.status(200).json({
+        response_type: "SUCCESS",
+        message: "Request Meeting Fetched Successfully.",
+        data: { meetings: requestMeetings },
+      });
     } else {
       console.log("Invalid perameter");
-      res.status(400).json({ 
+      res.status(400).json({
         response_type: "FAILED",
         data: {},
-        message: "Invalid perameter" });
+        message: "Invalid perameter",
+      });
     }
   } catch (error) {
     console.log(error);
-    res.status(500).json({ 
+    res.status(500).json({
       response_type: "FAILED",
       data: {},
-      message: error.message });
+      message: error.message,
+    });
   }
 };
 
@@ -525,23 +571,26 @@ module.exports.getVisitorListByCode = async (req, res) => {
       });
 
       if (!reqMeetingDetails) {
-        return res.status(404).json({ 
+        return res.status(404).json({
           response_type: "SUCCESS",
           data: {},
-          message: "Data not found" });
+          message: "Data not found",
+        });
       }
 
       const reqMeeting = await RequestMeeting.findOne({
         where: { reqMeetDetailsID: reqMeetingDetails.reqMeetDetailsID },
         include: [
           // { model: Employee, as: "employee" },
-          { model: ReqMeetDetailsByRecp, as: "reqMeetDetailsByRecp",
-          include: [
-            { model: Company, as: 'company' },
-            { model: Office, as: 'office' },
-            { model: Department, as: 'department' },
-            { model: Designation, as: 'designation' }
-          ]
+          {
+            model: ReqMeetDetailsByRecp,
+            as: "reqMeetDetailsByRecp",
+            include: [
+              { model: Company, as: "company" },
+              { model: Office, as: "office" },
+              { model: Department, as: "department" },
+              { model: Designation, as: "designation" },
+            ],
           },
           {
             model: ReqMeetVisitorDetails,
@@ -555,7 +604,7 @@ module.exports.getVisitorListByCode = async (req, res) => {
         res.status(200).json({
           response_type: "SUCCESS",
           message: "Request Meeting Fetched Successfully.",
-          data: {meetings: reqMeeting},
+          data: { meetings: reqMeeting },
         });
       } else {
         res.status(400).json({
@@ -566,17 +615,19 @@ module.exports.getVisitorListByCode = async (req, res) => {
       }
     } else {
       console.log("Invalid perameter");
-      res.status(400).json({ 
+      res.status(400).json({
         response_type: "FAILED",
         data: {},
-        message: "Invalid perameter" });
+        message: "Invalid perameter",
+      });
     }
   } catch (error) {
     console.log(error);
-    res.status(500).json({ 
+    res.status(500).json({
       response_type: "FAILED",
       data: {},
-      message: error.message });
+      message: error.message,
+    });
   }
 };
 
@@ -598,7 +649,8 @@ module.exports.updateVisitorMeetingStatus = async (req, res) => {
         return res.status(404).json({
           response_type: "FAILED",
           data: {},
-          message: "Request Meeting not found for the given Request Meeting ID.",
+          message:
+            "Request Meeting not found for the given Request Meeting ID.",
         });
       }
 
@@ -612,13 +664,13 @@ module.exports.updateVisitorMeetingStatus = async (req, res) => {
       });
 
       if (updatedReqMeeting) {
-        res
-          .status(200)
-          .json({ 
-            response_type: "SUCCESS",
-            message: "Status Updated successfully",
-            data: {
-              updatedReqMeeting: updatedReqMeeting} });
+        res.status(200).json({
+          response_type: "SUCCESS",
+          message: "Status Updated successfully",
+          data: {
+            updatedReqMeeting: updatedReqMeeting,
+          },
+        });
       } else {
         res.status(400).json({
           response_type: "FAILED",
@@ -629,10 +681,11 @@ module.exports.updateVisitorMeetingStatus = async (req, res) => {
     }
   } catch (error) {
     console.log(error);
-    res.status(500).json({ 
+    res.status(500).json({
       response_type: "FAILED",
       data: {},
-      message: error.message });
+      message: error.message,
+    });
   }
 };
 
@@ -652,7 +705,8 @@ module.exports.getVisitorMeetingByempId = async (req, res) => {
     if (req.params) {
       const { empId } = req.params;
 
-      let { page, pageSize, sort, sortBy, searchField, status, visitorType} = req.query;
+      let { page, pageSize, sort, sortBy, searchField, status, visitorType } =
+        req.query;
 
       page = Math.max(1, parseInt(page, 10)) || 1;
       pageSize = Math.max(1, parseInt(pageSize, 10)) || 10;
@@ -667,7 +721,7 @@ module.exports.getVisitorMeetingByempId = async (req, res) => {
       };
 
       // if (sortBy) {
-        queryOptions.order = [["createdAt", sort]];
+      queryOptions.order = [["createdAt", sort]];
       // }
 
       if (
@@ -688,43 +742,45 @@ module.exports.getVisitorMeetingByempId = async (req, res) => {
       if (status === "accepted") {
         queryOptions.where = {
           ...queryOptions.where,
-          ReqStatus: "EMployeeAccepted"
+          ReqStatus: "EMployeeAccepted",
         };
       } else if (status === "cancelled") {
         queryOptions.where = {
           ...queryOptions.where,
-          ReqStatus: "EmployeeRejected"
+          ReqStatus: "EmployeeRejected",
         };
       } else if (status === "pending") {
         queryOptions.where = {
           ...queryOptions.where,
-          ReqStatus: "ReceptionistAccepted"
+          ReqStatus: "ReceptionistAccepted",
         };
       }
 
       if (visitorType === "company") {
         queryOptions.where = {
           ...queryOptions.where,
-          typeOfVisitor: "Company"
+          typeOfVisitor: "Company",
         };
       } else if (visitorType === "individual") {
         queryOptions.where = {
           ...queryOptions.where,
-          typeOfVisitor: "Individual"
+          typeOfVisitor: "Individual",
         };
       }
 
       queryOptions.include.push(
-        { model: ReqMeetDetailsByRecp, as: "reqMeetDetailsByRecp", 
-        where: {
-          empId: empId,
-        },
-        include: [
-          { model: Company, as: 'company' },
-          { model: Office, as: 'office' },
-          { model: Department, as: 'department' },
-          { model: Designation, as: 'designation' }
-        ] 
+        {
+          model: ReqMeetDetailsByRecp,
+          as: "reqMeetDetailsByRecp",
+          where: {
+            empId: empId,
+          },
+          include: [
+            { model: Company, as: "company" },
+            { model: Office, as: "office" },
+            { model: Department, as: "department" },
+            { model: Designation, as: "designation" },
+          ],
         },
         { model: ReqMeetVisitorDetails, required: false, as: "visitorDetails" }
       );
@@ -743,7 +799,7 @@ module.exports.getVisitorMeetingByempId = async (req, res) => {
           currentPage: page,
           response_type: "SUCCESS",
           message: "Request Meetings Fetched Successfully.",
-          data: {meetings: requestMeetings},
+          data: { meetings: requestMeetings },
         });
       } else {
         res.status(400).json({
@@ -755,10 +811,11 @@ module.exports.getVisitorMeetingByempId = async (req, res) => {
     }
   } catch (error) {
     console.log(error);
-    res.status(500).json({ 
+    res.status(500).json({
       response_type: "FAILED",
       data: {},
-      message: error.message });
+      message: error.message,
+    });
   }
 };
 
@@ -782,13 +839,15 @@ module.exports.getVisitorMeetingByReqMeetingID = async (req, res) => {
         where: { reqMeetingID: reqMeetingID },
         include: [
           // { model: Employee, as: "employee" },
-          { model: ReqMeetDetailsByRecp, as: "reqMeetDetailsByRecp",
-          include: [
-            { model: Company, as: 'company' },
-            { model: Office, as: 'office' },
-            { model: Department, as: 'department' },
-            { model: Designation, as: 'designation' }
-          ]
+          {
+            model: ReqMeetDetailsByRecp,
+            as: "reqMeetDetailsByRecp",
+            include: [
+              { model: Company, as: "company" },
+              { model: Office, as: "office" },
+              { model: Department, as: "department" },
+              { model: Designation, as: "designation" },
+            ],
           },
           {
             model: ReqMeetVisitorDetails,
@@ -802,7 +861,7 @@ module.exports.getVisitorMeetingByReqMeetingID = async (req, res) => {
         res.status(200).json({
           response_type: "SUCCESS",
           message: "Request Meetings Fetched Successfully.",
-          data: {meetings: requestMeetings},
+          data: { meetings: requestMeetings },
         });
       } else {
         res.status(400).json({
@@ -814,10 +873,11 @@ module.exports.getVisitorMeetingByReqMeetingID = async (req, res) => {
     }
   } catch (error) {
     console.log(error);
-    res.status(500).json({ 
+    res.status(500).json({
       response_type: "FAILED",
       data: {},
-      message: error.message });
+      message: error.message,
+    });
   }
 };
 
@@ -828,7 +888,7 @@ module.exports.getVisitorsByCompanyContact = async (req, res) => {
     const { companyGST, visitorPAN } = req.body;
 
     if (companyGST) {
-      const reqMeeting = await RequestMeeting.findOne({
+      const reqMeeting = await RequestMeeting.findAll({
         where: { vCompanyGST: companyGST },
       });
 
@@ -840,7 +900,7 @@ module.exports.getVisitorsByCompanyContact = async (req, res) => {
         res.status(200).json({
           response_type: "SUCCESS",
           message: "Visitor Details Fetched Successfully.",
-          data: {details: details},
+          data: { details: details },
         });
       } else {
         res.status(400).json({
@@ -850,8 +910,7 @@ module.exports.getVisitorsByCompanyContact = async (req, res) => {
             "Previous Meetings Can't be Fetched for Given Company Detail.",
         });
       }
-    } else if(visitorPAN) {
-      
+    } else if (visitorPAN) {
       const details = await ReqMeetVisitorDetails.findAll({
         where: { vPANCard: visitorPAN },
         // group: ['vPANCard', 'vFirstName', 'vLastName'],
@@ -861,21 +920,22 @@ module.exports.getVisitorsByCompanyContact = async (req, res) => {
       res.status(200).json({
         response_type: "SUCCESS",
         message: "Visitor Details Fetched Successfully.",
-        data: {details: details},
+        data: { details: details },
       });
-
     } else {
       console.log("Invalid perameter");
-      res.status(400).json({ 
+      res.status(400).json({
         response_type: "FAILED",
         data: {},
-        message: "Invalid perameter" });
+        message: "Invalid perameter",
+      });
     }
   } catch (error) {
     console.log(error);
-    res.status(500).json({ 
+    res.status(500).json({
       response_type: "FAILED",
       data: {},
-      message: error.message });
+      message: error.message,
+    });
   }
 };
