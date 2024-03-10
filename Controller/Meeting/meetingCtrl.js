@@ -18,6 +18,7 @@ const inputFieldsMeeting = [
   "meetingDate",
   "meetingStartTime",
   "meetingEndTime",
+  "meetingLink",
   "rescMeetingDate",
   "rescMeetingStartTime",
   "rescMeetingEndTime",

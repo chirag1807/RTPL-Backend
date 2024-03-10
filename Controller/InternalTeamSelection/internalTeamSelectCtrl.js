@@ -218,12 +218,14 @@ module.exports.getMeetingsForInternalTeam = async (req, res) => {
       }
     }
 
-    const totalCount = await InternalTeamSelect.count({
-      where: queryOptions.where,
-    });
+    const { rows: meetingsForEmployee, count: totalCount } = await InternalTeamSelect.findAndCountAll(queryOptions);
+
+    // const totalCount = await InternalTeamSelect.count({
+    //   where: queryOptions.where,
+    // });
     const totalPage = Math.ceil(totalCount / pageSize);
 
-    const meetingsForEmployee = await InternalTeamSelect.findAll(queryOptions);
+    // const meetingsForEmployee = await InternalTeamSelect.findAll(queryOptions);
 
     if (!meetingsForEmployee || meetingsForEmployee.length === 0) {
       return res.status(404).json({
