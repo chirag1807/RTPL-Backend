@@ -181,7 +181,6 @@ module.exports.getVisitorRequestMeeting = async (req, res) => {
   try {
     const {
       RequestMeeting,
-      // Employee,
       ReqMeetDetailsByRecp,
       ReqMeetVisitorDetails,
       Company,
@@ -190,8 +189,7 @@ module.exports.getVisitorRequestMeeting = async (req, res) => {
       Designation,
     } = req.app.locals.models;
 
-    let { page, pageSize, sort, sortBy, searchField, status, visitorType } =
-      req.query;
+    let { page, pageSize, sort, sortBy, searchField, status, visitorType } = req.query;
 
     page = Math.max(1, parseInt(page, 10)) || 1;
     pageSize = Math.max(1, parseInt(pageSize, 10)) || 10;
@@ -205,27 +203,65 @@ module.exports.getVisitorRequestMeeting = async (req, res) => {
       include: [],
     };
 
-    // if (sortBy) {
     queryOptions.order = [["createdAt", sort]];
-    // }
 
-    if (
-      searchField &&
-      typeof searchField === "string" &&
-      searchField.trim() !== ""
-    ) {
-      queryOptions.where = {
+    if (searchField && searchField.trim() !== "") {
+      const visitorSearch = {
         [Op.or]: [
-          { purposeOfMeeting: { [Op.like]: `%${searchField}%` } },
-          { contactPersonName: { [Op.like]: `%${searchField}` } },
-          { vCompanyName: { [Op.like]: `%${searchField}%` } },
-          { vCompanyContact: { [Op.like]: `%${searchField}%` } },
-          { vCompanyGST: { [Op.like]: `%${searchField}%` } },
-          // { "visitorDetails.vPANCard": { [Op.like]: `%${searchField}%` } }, // Corrected line
-          // { "visitorDetails.vContact": { [Op.like]: `%${searchField}%` } }, // Corrected line
-          // { "visitorDetails.vMailID": { [Op.like]: `%${searchField}%` } },
+          Sequelize.literal(`ReqMeetVisitorDetails.vPANCard LIKE '%${searchField}%'`),
+          Sequelize.literal(`ReqMeetVisitorDetails.vContact LIKE '%${searchField}%'`),
+          Sequelize.literal(`ReqMeetVisitorDetails.vMailID LIKE '%${searchField}%'`),
         ],
       };
+
+      const visitorDetails = await ReqMeetVisitorDetails.findAll({
+        where: visitorSearch,
+        raw: true,
+      });
+
+      if (visitorDetails.length > 0) {
+        queryOptions.where = {
+          reqMeetingID: { [Op.in]: visitorDetails.map(visitor => visitor.reqMeetingID) },
+        };
+
+        queryOptions.include.push({
+          model: ReqMeetVisitorDetails,
+          required: false,
+          as: "visitorDetails",
+          where: {
+            reqMeetingID: { [Op.in]: visitorDetails.map(visitor => visitor.reqMeetingID) },
+          },
+        });
+      } else {
+        const meetingConditions = {
+          [Op.or]: [
+            { purposeOfMeeting: { [Op.like]: `%${searchField}%` } },
+            { contactPersonName: { [Op.like]: `%${searchField}` } },
+            { vCompanyName: { [Op.like]: `%${searchField}%` } },
+            { vCompanyContact: { [Op.like]: `%${searchField}%` } },
+            { vCompanyGST: { [Op.like]: `%${searchField}%` } },
+          ],
+          deletedAt: null,
+        };
+
+        const visitorConditions = visitorSearch && Object.keys(visitorSearch).length > 0 ? {
+          reqMeetingID: {
+            [Op.in]: {
+              [Op.literal]: `(SELECT reqMeetingID FROM ReqMeetVisitorDetails WHERE ${visitorSearch[Op.or].map(
+                condition => `${condition[Op.or][0]}`
+              ).join(' OR ')})`,
+            },
+          },
+        } : {};        
+
+        queryOptions.where = {
+          [Op.or]: [
+            meetingConditions,
+            visitorConditions,
+          ],
+        };
+      }
+
     }
 
     if (status === "accepted") {
@@ -258,7 +294,6 @@ module.exports.getVisitorRequestMeeting = async (req, res) => {
     }
 
     queryOptions.include.push(
-      // { model: Employee, as: "employee" },
       {
         model: ReqMeetDetailsByRecp,
         as: "reqMeetDetailsByRecp",
@@ -304,6 +339,7 @@ module.exports.getVisitorRequestMeeting = async (req, res) => {
     });
   }
 };
+
 
 module.exports.getVisitorPendingRequestMeeting = async (req, res) => {
   try {
@@ -658,7 +694,7 @@ module.exports.updateVisitorMeetingStatus = async (req, res) => {
         ReqStatus,
         DeclineReason:
           ReqStatus === "ReceptionistRejected" ||
-          ReqStatus === "EmployeeRejected"
+            ReqStatus === "EmployeeRejected"
             ? DeclineReason
             : null,
       });
