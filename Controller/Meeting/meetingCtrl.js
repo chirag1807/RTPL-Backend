@@ -840,16 +840,26 @@ module.exports.getListOfCreatedMeeting = async (req, res) => {
           appointmentMeetingID: { [Op.not]: null },
         };
       }
+    } 
+    else {
+      queryOptions.include.push({
+        model: OuterMeeting,
+        as: "outerMeeting",
+      });
+      queryOptions.include.push({
+        model: AppointmentMeeting,
+        as: "appointmentMeeting",
+      });
     }
 
     if (meetingStatus) {
       if (meetingStatus === "today") {
         queryOptions.where.meetingDate = {
-          [Op.eq]: new Date().toISOString().split("T")[0], // Assuming meetingDate is in format "YYYY-MM-DD"
+          [Op.eq]: new Date().toISOString().split("T")[0],
         };
       } else if (meetingStatus === "upcoming") {
         queryOptions.where.meetingDate = {
-          [Op.gt]: new Date().toISOString().split("T")[0], // Assuming meetingDate is in format "YYYY-MM-DD"
+          [Op.gt]: new Date().toISOString().split("T")[0],
         };
       } else if (meetingStatus === "cancelled") {
         queryOptions.where = {
@@ -857,50 +867,21 @@ module.exports.getListOfCreatedMeeting = async (req, res) => {
         };
       } else if (meetingStatus === "completed") {
         queryOptions.where = {
-          isActive: true,
+          isActive: false,
           stoppedAt: { [Op.not]: null },
         };
       }
     }
 
-    // if (meetingStatus) {
-    //   switch (meetingStatus) {
-    //     case "today":
-    //       queryOptions.where.isActive = true;
-    //       queryOptions.where.meetingDate = {
-    //         [Op.between]: [
-    //           new Date(new Date().setHours(0, 0, 0, 0)),
-    //           new Date(),
-    //         ],
-    //       };
-    //       break;
-    //     case "upcoming":
-    //       queryOptions.where.isActive = true;
-    //       const todayUTC = new Date().toISOString().split("T")[0];
-    //       queryOptions.where.meetingDate = {
-    //         [Op.gt]: todayUTC,
-    //       };
-    //       break;
-    //     case "cancelled":
-    //       queryOptions.where.isDeleted = true;
-    //       break;
-    //     case "completed":
-    //       queryOptions.where.isActive = false;
-    //       queryOptions.where.stoppedAt = { [Op.not]: null };
-    //       break;
-    //     default:
-    //       break;
-    //   }
-    // }
+    // const totalCount = await Meeting.count({
+    //   where: queryOptions.where,
+    // });
 
-    console.log(queryOptions.where);
-    const totalCount = await Meeting.count({
-      where: queryOptions.where,
-    });
+    const { rows: createdMeetings, count: totalCount } = await Meeting.findAndCountAll(queryOptions);
 
     const totalPage = Math.ceil(totalCount / pageSize);
 
-    const createdMeetings = await Meeting.findAll(queryOptions);
+    // const createdMeetings = await Meeting.findAll(queryOptions);
 
     if (createdMeetings) {
       res.status(200).json({
