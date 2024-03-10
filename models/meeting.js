@@ -105,6 +105,10 @@ const Meeting = sequelize.define('Meetings', {
         type: DataTypes.TIME,
         allowNull: true,
     },
+    meetingLink: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
     isActive: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
