@@ -551,23 +551,27 @@ module.exports.rescheduleMeeting = async (req, res) => {
     const updatedBy = req.decodedEmpCode;
     const {
       meetingID,
-      rescConferenceRoomId,
-      rescMeetingDate,
-      rescMeetingStartTime,
-      rescMeetingEndTime,
+      officeID,
+      meetingTypeID,
+      meetingModeID,
+      conferenceRoomID,
+      meetingDate,
+      meetingStartTime,
+      meetingEndTime,
+      meetingLink
     } = req.body;
 
     if (
       !meetingID ||
-      !rescMeetingDate ||
-      !rescMeetingStartTime ||
-      !rescMeetingEndTime
+      !meetingDate ||
+      !meetingStartTime ||
+      !meetingEndTime
     ) {
       return res.status(400).json({
         response_type: "FAILED",
         data: {},
         message:
-          "Meeting ID, rescMeetingDate, and rescMeetingTimes are required in the request body",
+          "Meeting ID, MeetingDate, and MeetingTimes are required in the request body",
       });
     }
 
@@ -581,13 +585,26 @@ module.exports.rescheduleMeeting = async (req, res) => {
       });
     }
 
-    meeting.rescMeetingDate = rescMeetingDate;
-    meeting.updatedBy = updatedBy;
-    meeting.rescMeetingStartTime = rescMeetingStartTime;
-    meeting.rescConferenceRoomID = rescConferenceRoomId;
-    meeting.rescMeetingEndTime = rescMeetingEndTime;
-
     meeting.isReschedule = true;
+    meeting.updatedBy = updatedBy;
+    if(meetingTypeID){
+      meeting.meetingTypeID = meetingTypeID;
+    }
+    if(meetingModeID){
+      meeting.meetingModeID = meetingModeID;
+    }
+    if(officeID){
+      meeting.officeID = officeID;
+    }
+    if(meetingLink){
+      meeting.meetingLink = meetingLink;
+    }
+    if(conferenceRoomID){
+      meeting.conferenceRoomID = conferenceRoomID;
+    }
+    meeting.meetingDate = meetingDate;
+    meeting.meetingStartTime = meetingStartTime;
+    meeting.meetingEndTime = meetingEndTime;
 
     await meeting.save();
 
@@ -757,7 +774,7 @@ module.exports.getListOfCreatedMeeting = async (req, res) => {
       searchField.trim() !== ""
     ) {
       queryOptions.where = {
-        [Op.or]: [{ meetingType: { [Op.like]: `%${searchField}%` } }],
+        [Op.or]: [{ MeetingPurpose: { [Op.like]: `%${searchField}%` } }],
       };
     }
 
