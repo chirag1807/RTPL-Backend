@@ -202,21 +202,26 @@ module.exports.Registration = async (req, res) => {
           subject,
           message
         );
-        if (result.success) {
-          const token = createAccessToken(employee.dataValues);
-          res.setHeader("Authorization", `Bearer ${token}`);
-          res.status(200).json({
-            response_type: "SUCCESS",
-            data: {},
-            message: "Employee registered successfully",
-          });
-        } else {
-          res.status(400).json({
-            response_type: "FAILED",
-            data: {},
-            message: result.message,
-          });
-        }
+        // if (result.success) {
+        //   const token = createAccessToken(employee.dataValues);
+        //   res.setHeader("Authorization", `Bearer ${token}`);
+        //   res.status(200).json({
+        //     response_type: "SUCCESS",
+        //     data: {},
+        //     message: "Employee registered successfully",
+        //   });
+        // } else {
+        //   res.status(400).json({
+        //     response_type: "FAILED",
+        //     data: {},
+        //     message: result.message,
+        //   });
+        // }
+        res.status(200).json({
+          response_type: "SUCCESS",
+          data: {},
+          message: "Employee registered successfully",
+        })
       } else {
         res.status(500).json({
           response_type: "FAILED",

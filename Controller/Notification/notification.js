@@ -98,7 +98,7 @@ module.exports.getNotification = async (req, res) => {
             model: ReqMeetDetailsByRecp,
             as: 'reqMeetDetailsByRecp',
             where: {
-              emp_code: emp_code,
+              emp_code: req.user.emp_code,
             },
             attributes: [],
           },
