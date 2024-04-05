@@ -3,6 +3,24 @@ const ErrorHandler = require("../../utils/errorhandler");
 const cloudinary = require("../../utils/cloudinary");
 const fs = require("fs");
 const { Op } = require("sequelize");
+const TimeSlot = require("../../models/timeSlot");
+const Meeting = require("../../models/meeting");
+
+// Define the initial time slots
+const initialTimeSlots = [
+  { meetingStartTime: "9:00", meetingEndTime: "9:30" }, { meetingStartTime: "9:30", meetingEndTime: "10:00" },
+  { meetingStartTime: "10:00", meetingEndTime: "10:30" }, { meetingStartTime: "10:30", meetingEndTime: "11:00" },
+  { meetingStartTime: "11:00", meetingEndTime: "11:30" }, { meetingStartTime: "11:30", meetingEndTime: "12:00" },
+  { meetingStartTime: "12:00", meetingEndTime: "12:30" }, { meetingStartTime: "12:30", meetingEndTime: "1:00" },
+  { meetingStartTime: "1:00", meetingEndTime: "1:30" }, { meetingStartTime: "1:30", meetingEndTime: "2:00" },
+  { meetingStartTime: "2:00", meetingEndTime: "2:30" }, { meetingStartTime: "2:30", meetingEndTime: "3:00" },
+  { meetingStartTime: "3:00", meetingEndTime: "3:30" }, { meetingStartTime: "3:30", meetingEndTime: "4:00" },
+  { meetingStartTime: "4:00", meetingEndTime: "4:30" }, { meetingStartTime: "4:30", meetingEndTime: "5:00" },
+  { meetingStartTime: "5:00", meetingEndTime: "5:30" }, { meetingStartTime: "5:30", meetingEndTime: "6:00" },
+  { meetingStartTime: "6:00", meetingEndTime: "6:30" }, { meetingStartTime: "6:30", meetingEndTime: "7:00" },
+  { meetingStartTime: "7:00", meetingEndTime: "7:30" }, { meetingStartTime: "7:30", meetingEndTime: "8:00" },
+  { meetingStartTime: "8:00", meetingEndTime: "8:30" }, { meetingStartTime: "8:30", meetingEndTime: "9:00" }
+];
 
 const inputFieldsMeeting = [
   "empId",
@@ -17,12 +35,15 @@ const inputFieldsMeeting = [
   "MeetingPurpose",
   "meetingDate",
   "meetingStartTime",
+  "time",
   "meetingEndTime",
   "meetingLink",
   "rescMeetingDate",
   "rescMeetingStartTime",
   "rescMeetingEndTime",
   "createdBy",
+  "status",
+  "meetingTime",
 ];
 
 const inputFieldOuterMeeting = [
@@ -36,15 +57,73 @@ const inputFieldOuterMeeting = [
 const inputFieldsInternalMembers = ["empId", "meetingID"];
 
 const inputFieldTimeSlot = ["meetingID", "meetingStartTime", "meetingEndTime"];
+module.exports.avabletimeslot = async (req, res) => {
+  try {
+    const { meetingDate } = req.params;
+    const arrayData = [];
+
+    // Find available time slots
+    const avabletimeslots = await Meeting.findAll({
+      where: {
+        meetingDate
+      }
+    });
+    if (avabletimeslots.length !== 0) {
+      // Extract the time slots from the avabletimeslots array
+      avabletimeslots.forEach(avabletimeslot => {
+        if (Array.isArray(avabletimeslot.meetingTime)) {
+          avabletimeslot.meetingTime.forEach(meetingTime => {
+            arrayData.push({
+              meetingStartTime: meetingTime ? meetingTime.meetingStartTime : null,
+              meetingEndTime: meetingTime ? meetingTime.meetingEndTime : null
+            });
+          });
+        } else {
+          arrayData.push({
+            meetingStartTime: avabletimeslot.meetingTime ? avabletimeslot.meetingTime.meetingStartTime : null,
+            meetingEndTime: avabletimeslot.meetingTime ? avabletimeslot.meetingTime.meetingEndTime : null
+          });
+        }
+      });
+
+      // Custom function to check if a time slot overlaps with any slot in arrayData
+const overlapsWithArrayData = (slot) => {
+  return arrayData.some(dataSlot => {
+    return slot.meetingStartTime === dataSlot.meetingStartTime &&
+           slot.meetingEndTime === dataSlot.meetingEndTime;
+  });
+};
+
+// Filter initialTimeSlots to exclude slots overlapping with arrayData
+    const updatedTimeSlots = initialTimeSlots.filter(slot => !overlapsWithArrayData(slot));
+      // Send response
+      res.status(200).json({
+        response_type: "SUCCESS",
+        data: {"finalTimeSlots" :  updatedTimeSlots},
+        message: "Available Time Slots."
+      });
+    } else {
+      res.status(200).json({
+        response_type: "SUCCESS",
+        data: {"finalTimeSlots" :  initialTimeSlots},
+        message: "No available time slots found."
+      });
+    }
+  } catch (error) {
+    // Handle errors
+    console.error("Error:", error);
+    res.status(500).json({
+      response_type: "ERROR",
+      message: "An error occurred while processing your request."
+    });
+  }
+};
 
 module.exports.createRequestMeeting = async (req, res) => {
   try {
-    const { Meeting, InternalTeamSelect, Employee } = req.app.locals.models;
+    const { Meeting, InternalTeamSelect, Employee} = req.app.locals.models;
     const updatedBy = req.decodedEmpCode;
-    // console.log(updatedBy);
     if (req.body) {
-      // COMMON.setModelCreatedByFieldValue(req);
-      // Set other necessary fields
       req.body.createdBy = updatedBy;
       req.body.empId = req.decodedEmpId;
       const createdMeeting = await Meeting.create(req.body, {
@@ -113,7 +192,6 @@ module.exports.createRequestMeeting = async (req, res) => {
       });
     }
   } catch (error) {
-    console.log(error);
     res.status(500).json({
       response_type: "FAILED",
       data: {},
@@ -548,65 +626,37 @@ module.exports.startMeeting = async (req, res) => {
 module.exports.rescheduleMeeting = async (req, res) => {
   try {
     const { Meeting } = req.app.locals.models;
-    const updatedBy = req.decodedEmpCode;
-    const {
-      meetingID,
-      officeID,
-      meetingTypeID,
-      meetingModeID,
-      conferenceRoomID,
-      meetingDate,
-      meetingStartTime,
-      meetingEndTime,
-      meetingLink
-    } = req.body;
-
-    if (
-      !meetingID ||
-      !meetingDate ||
-      !meetingStartTime ||
-      !meetingEndTime
-    ) {
+    const {meetingTime,meetingID,isReschedule ,officeID,meetingModeID,conferenceRoomID,meetingDate,meetingLink} = req.body
+    if (!meetingID) {
       return res.status(400).json({
-        response_type: "FAILED",
-        data: {},
-        message:
-          "Meeting ID, MeetingDate, and MeetingTimes are required in the request body",
+          response_type: "FAILED",
+          data: {},
+          message: "meetingID is required in the request body",
       });
-    }
+  }
+  
+  // const meetings = await Meeting.findAll({
+  //   where: {
+  //     meetingTime
+  //   }
+  // });
+  // if (meetings.length !== 0){
+  //   return res.status(400).json({
+  //     response_type: "FAILED",
+  //     data: {},
+  //     message: "already assign this time.",
 
-    const meeting = await Meeting.findByPk(meetingID);
 
-    if (!meeting) {
-      return res.status(404).json({
-        response_type: "FAILED",
-        data: {},
-        message: "Meeting not found for the given ID",
-      });
+  // });
+  // } 
+  const updatedConferenceRoom = await Meeting.update(
+    { meetingTime,isReschedule ,officeID,meetingModeID,conferenceRoomID,meetingDate,meetingLink }, // New values for meetingStartTime and meetingEndTime
+    { 
+        where: { meetingID }, // Condition to select the time slot to update
+        fields: ["meetingTime","isReschedule" ,"officeID","meetingModeID","conferenceRoomID","meetingDate","meetingLink"] // Specify the fields to be updated
     }
-
-    meeting.isReschedule = true;
-    meeting.updatedBy = updatedBy;
-    if(meetingTypeID){
-      meeting.meetingTypeID = meetingTypeID;
-    }
-    if(meetingModeID){
-      meeting.meetingModeID = meetingModeID;
-    }
-    if(officeID){
-      meeting.officeID = officeID;
-    }
-    if(meetingLink){
-      meeting.meetingLink = meetingLink;
-    }
-    if(conferenceRoomID){
-      meeting.conferenceRoomID = conferenceRoomID;
-    }
-    meeting.meetingDate = meetingDate;
-    meeting.meetingStartTime = meetingStartTime;
-    meeting.meetingEndTime = meetingEndTime;
-
-    await meeting.save();
+);
+    
 
     res.status(200).json({
       response_type: "SUCCESS",
@@ -623,45 +673,31 @@ module.exports.rescheduleMeeting = async (req, res) => {
   }
 };
 
+
+
+
 module.exports.endMeeting = async (req, res) => {
   try {
-    const { Meeting, TimeSlot } = req.app.locals.models;
-    const { meetingID, remark } = req.body;
-    const updatedBy = req.decodedEmpCode;
+    const {  Meeting } = req.app.locals.models;
+    const { meetingID, status } = req.body;
+    // const updatedBy = req.decodedEmpCode;
 
     if (!meetingID) {
       return res.status(400).json({
         response_type: "FAILED",
         data: {},
-        message: "Meeting ID is required in the request body",
+        message: "timeSlotID is required in the request body",
       });
     }
 
-    const meeting = await Meeting.findByPk(meetingID);
-
-    if (!meeting) {
-      return res.status(404).json({
-        response_type: "FAILED",
-        data: {},
-        message: "Meeting not found for the given ID",
-      });
-    }
-
-    meeting.stoppedAt = new Date();
-    meeting.isActive = false;
-    meeting.remark = remark;
-
-    meeting.meetingDoc = req.file.path;
-
-    meeting.deletedBy = updatedBy;
-
-    await meeting.save();
-
-    await TimeSlot.destroy({
-      where: {
-        meetingID: meeting.meetingID,
-      },
-    });
+    const cancelConferenceRoom = await Meeting.update(
+      { status },
+      { 
+          where: { meetingID }, 
+          fields: ["status"]
+      }
+  );
+    
 
     res.status(200).json({
       response_type: "SUCCESS",
@@ -681,8 +717,8 @@ module.exports.endMeeting = async (req, res) => {
 module.exports.cancelMeeting = async (req, res) => {
   try {
     const { Meeting } = req.app.locals.models;
-    const { meetingID } = req.body;
-    const updatedBy = req.decodedEmpCode;
+    const { meetingID,status } = req.body;
+    // const updatedBy = req.decodedEmpCode;
 
     if (!meetingID) {
       return res.status(400).json({
@@ -692,26 +728,18 @@ module.exports.cancelMeeting = async (req, res) => {
       });
     }
 
-    const meeting = await Meeting.findByPk(meetingID);
-
-    if (!meeting) {
-      return res.status(404).json({
-        response_type: "FAILED",
-        data: {},
-        message: "Meeting not found for the given ID",
-      });
-    }
-
-    meeting.isActive = false;
-    meeting.isDeleted = true;
-    meeting.deletedBy = updatedBy;
-
-    await meeting.save();
+    const updatedConferenceRoom = await Meeting.update(
+      { status }, // New values for meetingStartTime and meetingEndTime
+      { 
+          where: { meetingID }, // Condition to select the time slot to update
+          fields: ["status"] // Specify the fields to be updated
+      }
+  );
 
     res.status(200).json({
       response_type: "SUCCESS",
       data: {},
-      message: "Meeting has ended successfully.",
+      message: "Meeting has cancle successfully.",
     });
   } catch (error) {
     console.error(error);
@@ -736,11 +764,10 @@ module.exports.getListOfCreatedMeeting = async (req, res) => {
       MeetingMode,
       ConferenceRoom,
       InternalTeamSelect,
+      TimeSlot
     } = req.app.locals.models;
 
     let {
-      page,
-      pageSize,
       sort,
       sortBy,
       searchField,
@@ -752,15 +779,10 @@ module.exports.getListOfCreatedMeeting = async (req, res) => {
       meetingStatus,
     } = req.query;
 
-    page = Math.max(1, parseInt(page, 10)) || 1;
-    pageSize = Math.max(1, parseInt(pageSize, 10)) || 10;
-    const offset = (page - 1) * pageSize;
 
     sort = sort ? sort.toUpperCase() : "DESC";
 
     const queryOptions = {
-      limit: pageSize,
-      offset: offset,
       include: [],
     };
 
@@ -784,6 +806,7 @@ module.exports.getListOfCreatedMeeting = async (req, res) => {
       { model: RequestMeeting, as: "requestMeeting" },
       { model: MeetingType, as: "meetingType" },
       { model: MeetingMode, as: "meetingMode" },
+      // { model: TimeSlot, as: "TimeSlot" },
       { model: ConferenceRoom, as: "conferenceRoom" },
       {
         model: InternalTeamSelect,
@@ -890,20 +913,24 @@ module.exports.getListOfCreatedMeeting = async (req, res) => {
       }
     }
 
-    // const totalCount = await Meeting.count({
-    //   where: queryOptions.where,
-    // });
 
     const { rows: createdMeetings, count: totalCount } = await Meeting.findAndCountAll(queryOptions);
 
-    const totalPage = Math.ceil(totalCount / pageSize);
 
     // const createdMeetings = await Meeting.findAll(queryOptions);
+    // Loop through the createdMeetings array
+    for (let i = 0; i < createdMeetings.length; i++) {
+      const meeting = createdMeetings[i];
+      // Join over TimeSlot using meetingID
+      const timeSlots = await TimeSlot.findAll({
+          where: { meetingID: meeting.meetingID }, // Filter by meetingID
+      });
+      // Add the timeSlots to the meeting object
+      meeting.dataValues.timeSlots = timeSlots;
+    }
 
     if (createdMeetings) {
       res.status(200).json({
-        totalPage: totalPage,
-        currentPage: page,
         response_type: "SUCCESS",
         message: cancelledMeeting
           ? "Cancelled Meetings Fetched Successfully."

@@ -176,6 +176,14 @@ const Meeting = sequelize.define('Meetings', {
         type: DataTypes.STRING,
         allowNull: true
     },
+    status: {
+        type: DataTypes.CHAR,
+        allowNull : true
+    },
+    meetingTime: {
+        type: DataTypes.JSON,
+        allowNull : true
+    },
 }, {
     timestamps: true,
     paranoid: true

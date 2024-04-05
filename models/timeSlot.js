@@ -24,6 +24,18 @@ const TimeSlot = sequelize.define('TimeSlot', {
         type: DataTypes.TIME,
         allowNull: true,
     },
+    meetingDate : {
+        type: DataTypes.CHAR,
+        allowNull: true,
+    },
+    conferenceRoomID : {
+        type : DataTypes.TIME,
+        allowNull : false   
+    },
+    status:{
+        type: DataTypes.CHAR,
+        allowNull: false,
+    }
 }, {
     timestamps: true
 });
