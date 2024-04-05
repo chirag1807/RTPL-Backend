@@ -1139,52 +1139,32 @@ module.exports.getCreatedMeetingByID = async (req, res) => {
 
 module.exports.getMeetingTimesByConferenceRoom = async (req, res) => {
   try {
-    const { Meeting,ConferenceRooms } = req.app.locals.models;
-    const { meetingDate ,conferenceRoomID } = req.params;
-    const arrayData = [];
+    const { Meeting } = req.app.locals.models;
+    const { conferenceRoomID } = req.params;
+    const { meetingDate } = req.query;
 
-    // Find available time slots
-    const avabletimeslots = await Meeting.findAll({
-      where: {
-        conferenceRoomID      
-      }
+    const whereClause = {
+      conferenceRoomID,
+      meetingDate: meetingDate ? meetingDate : new Date(),
+    };
+
+    const meetings = await Meeting.findAll({
+      where: whereClause,
+      attributes: ["meetingStartTime", "meetingEndTime"],
     });
-    avabletimeslots.forEach(meetingTime => {
-      if (meetingTime.dataValues.meetingDate
-            === meetingDate){
-                     arrayData.push(item)
-           }
-      
+
+    if (!meetings || meetings.length === 0) {
+      return res.status(404).json({
+        response_type: "FAILED",
+        data: {},
+        message: "No meetings found for the provided details.",
       });
-//     // Define your filtering condition
-// const filteredData = avabletimeslots.filter(item => {
-//   // Example: filter data where age is greater than 25
-//    if (item.dataValues.meetingDate
-//     === meetingDate){
-//              arrayData.push(item)
-//    }
-// });
-    // Define your filtering condition
-    // const conferenceRoom = ConferenceRooms.findAll({
-    //   where: {
-    //     officeID: avabletimeslots.officeID,
-    //   },
-    //   attributes: ["officeID"],
-    // })
-
-
-    // if (!meetings || meetings.length === 0) {
-    //   return res.status(404).json({
-    //     response_type: "FAILED",
-    //     data: {},
-    //     message: "No meetings found for the provided details.",
-    //   });
-    // }
+    }
 
     res.status(200).json({
       response_type: "SUCCESS",
       message: "Meetings Times By Conference Room Fetched Successfully.",
-      data: { meetings: filteredData },
+      data: { meetings: meetings },
     });
   } catch (error) {
     console.error(error);
