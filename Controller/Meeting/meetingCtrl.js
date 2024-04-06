@@ -1448,3 +1448,57 @@ module.exports.getMeetingTimesByConferenceRoom = async (req, res) => {
     });
   }
 };
+// avableConRoom
+module.exports.avableConRoom = async (req, res) => {
+  try {
+    const { Meeting, ConferenceRoom } = req.app.locals.models;
+    const { meetingDate, officeID } = req.params;
+    const whereClause = {
+      officeID,
+      meetingDate: meetingDate ? meetingDate : new Date(),
+    };
+
+    const meetings = await Meeting.findAll({
+      where: whereClause,
+    });
+
+    const data = [];
+    for (var i = 0; i < meetings.length; i++) {
+      data.push(meetings[i].conferenceRoomID);
+    }
+
+    const ConferenceRoomDataId = await ConferenceRoom.findAll({
+      where: { officeID }
+    });
+
+    const data1 = [];
+    for (var j = 0; j < ConferenceRoomDataId.length; j++) {
+      data1.push(ConferenceRoomDataId[j].conferenceRoomID);
+    }
+    const newData = [];
+    for (let i = 0; i < data1.length; i++) {
+      if (!data.includes(data1[i])) {
+        newData.push(data1[i]);
+      }
+    }
+    
+    console.log(newData);
+
+    const avableMeets =await ConferenceRoom.findAll({
+      where: { conferenceRoomID: newData }
+    });
+
+    res.status(200).json({
+      response_type: "SUCCESS",
+      message: "Avable room data.",
+      data: { meetings: avableMeets },
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      response_type: "FAILED",
+      data: {},
+      message: error.message,
+    });
+  }
+};
