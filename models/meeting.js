@@ -184,6 +184,14 @@ const Meeting = sequelize.define('Meetings', {
         type: DataTypes.JSON,
         allowNull : true
     },
+    pushData :{
+        type: DataTypes.STRING,
+        allowNull : true
+    },
+    followUpMeetingId : {
+        type: DataTypes.STRING,
+        allowNull : true
+    },
 }, {
     timestamps: true,
     paranoid: true

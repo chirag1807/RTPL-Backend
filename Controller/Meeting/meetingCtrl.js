@@ -559,7 +559,280 @@ module.exports.updateAppointmentMeetingStatus = async (req, res) => {
     });
   }
 };
+// meetingID
+module.exports.pushMeeting = async (req, res) => {
+  try {
+    const {  Meeting } = req.app.locals.models;
+    if (req.params && req.body) {
+      const { meetingID } = req.params;
+      const { pushData } = req.body;
+      const appointmentMeeting = await Meeting.findOne({
+        where: { meetingID },
+      });
 
+      if (!appointmentMeeting) {
+        return res.status(404).json({
+          response_type: "FAILED",
+          data: {},
+          message:
+            "Meeting not found for the given Meeting ID.",
+        });
+      }
+      await Meeting.update({ pushData: JSON.stringify(pushData)}, 
+      { where: { meetingID } });
+      
+      res.status(200).json({
+        response_type: "SUCCESS",
+        message: "Meeting Data Add successfully",
+        data: {  },
+      });
+    }}
+    catch (error) {
+      console.error(error);
+      res.status(500).json({
+        response_type: "FAILED",
+        data: {},
+        message: error.message,
+      });
+    }
+  }
+module.exports.followUpMeeting = async (req, res) => {
+    try {
+      const {  Meeting } = req.app.locals.models;
+      if (req.params && req.body) {
+        const { meetingID } = req.params;
+        const { followUpMeetingId } = req.body;
+        const appointmentMeeting = await Meeting.findOne({
+          where: { meetingID },
+        });
+  
+        if (!appointmentMeeting) {
+          return res.status(404).json({
+            response_type: "FAILED",
+            data: {},
+            message:
+              "Meeting not found for the given Meeting ID.",
+          });
+        }
+        await Meeting.update({followUpMeetingId}, 
+        { where: { meetingID } });
+        
+        res.status(200).json({
+          response_type: "SUCCESS",
+          message: "Data Add successfully",
+          data: {  },
+        });
+      }}
+      catch (error) {
+        console.error(error);
+        res.status(500).json({
+          response_type: "FAILED",
+          data: {},
+          message: error.message,
+        });
+      }
+    }
+module.exports.followUpMeetingList = async (req, res) => {
+      try {
+        const {
+          Meeting,
+          Employee,
+          Office,
+          RequestMeeting,
+          AppointmentMeeting,
+          OuterMeeting,
+          MeetingType,
+          MeetingMode,
+          ConferenceRoom,
+          InternalTeamSelect,
+          TimeSlot
+        } = req.app.locals.models;
+    
+        let {
+          sort,
+          sortBy,
+          searchField,
+          isActive,
+          empId,
+          cancelledMeeting,
+          type,
+          status,
+          meetingStatus,
+        } = req.query;
+    
+    
+        sort = sort ? sort.toUpperCase() : "DESC";
+    
+        const queryOptions = {
+          include: [],
+        };
+    
+        // if (sortBy) {
+        queryOptions.order = [["createdAt", sort]];
+        // }
+    
+        if (
+          searchField &&
+          typeof searchField === "string" &&
+          searchField.trim() !== ""
+        ) {
+          queryOptions.where = {
+            [Op.or]: [{ MeetingPurpose: { [Op.like]: `%${searchField}%` } }],
+          };
+        }
+    
+        queryOptions.include.push(
+          { model: Employee, as: "employee" },
+          { model: Office, as: "office" },
+          { model: RequestMeeting, as: "requestMeeting" },
+          { model: MeetingType, as: "meetingType" },
+          { model: MeetingMode, as: "meetingMode" },
+          // { model: TimeSlot, as: "TimeSlot" },
+          { model: ConferenceRoom, as: "conferenceRoom" },
+          {
+            model: InternalTeamSelect,
+            as: "internalTeamSelect",
+            include: [
+              {
+                model: Employee,
+                as: "employee",
+              },
+            ],
+          }
+        );
+    
+        if (empId) {
+          queryOptions.where = {
+            ...queryOptions.where,
+            isActive: isActive ? isActive : false,
+            isDeleted: cancelledMeeting ? true : false,
+            empId: req.user.empId,
+          };
+        } else {
+          queryOptions.where = {
+            ...queryOptions.where,
+            isActive: isActive ? isActive : false,
+            isDeleted: cancelledMeeting ? true : false,
+          };
+        }
+    
+        if (type) {
+          if (type == "Request") {
+            queryOptions.where = {
+              ...queryOptions.where,
+              requestID: { [Op.not]: null },
+            };
+          } else if (type == "Outer") {
+            if (status) {
+              queryOptions.include.push({
+                model: OuterMeeting,
+                as: "outerMeeting",
+                where: { status: status },
+                required: true,
+              });
+            } else {
+              queryOptions.include.push({
+                model: OuterMeeting,
+                as: "outerMeeting",
+                required: true,
+              });
+            }
+            queryOptions.where = {
+              ...queryOptions.where,
+              outerMeetingID: { [Op.not]: null },
+            };
+          } else {
+            if (status) {
+              queryOptions.include.push({
+                model: AppointmentMeeting,
+                as: "appointmentMeeting",
+                where: { status: status },
+                required: true,
+              });
+            } else {
+              queryOptions.include.push({
+                model: AppointmentMeeting,
+                as: "appointmentMeeting",
+                required: true,
+              });
+            }
+            queryOptions.where = {
+              ...queryOptions.where,
+              appointmentMeetingID: { [Op.not]: null },
+            };
+          }
+        } 
+        else {
+          queryOptions.include.push({
+            model: OuterMeeting,
+            as: "outerMeeting",
+          });
+          queryOptions.include.push({
+            model: AppointmentMeeting,
+            as: "appointmentMeeting",
+          });
+        }
+    
+        if (meetingStatus) {
+          if (meetingStatus === "today") {
+            queryOptions.where.meetingDate = {
+              [Op.eq]: new Date().toISOString().split("T")[0],
+            };
+          } else if (meetingStatus === "upcoming") {
+            queryOptions.where.meetingDate = {
+              [Op.gt]: new Date().toISOString().split("T")[0],
+            };
+          } else if (meetingStatus === "cancelled") {
+            queryOptions.where = {
+              isDeleted: true,
+            };
+          } else if (meetingStatus === "completed") {
+            queryOptions.where = {
+              isActive: false,
+              stoppedAt: { [Op.not]: null },
+            };
+          }
+        }
+    
+    
+        const { rows: createdMeetings, count: totalCount } = await Meeting.findAndCountAll(queryOptions);
+    
+    
+        
+        for (let i = 0; i < createdMeetings.length; i++) {
+          const meeting = createdMeetings[i];
+          const timeSlots = await TimeSlot.findAll({
+              where: { meetingID: meeting.meetingID }, // Filter by meetingID
+          });
+          meeting.dataValues.timeSlots = timeSlots;
+        }
+    
+        if (createdMeetings) {
+          res.status(200).json({
+            response_type: "SUCCESS",
+            message: cancelledMeeting
+              ? "Cancelled Meetings Fetched Successfully."
+              : "Created Meetings Fetched Successfully.",
+            data: { meetings: createdMeetings },
+          });
+        } else {
+          res.status(400).json({
+            response_type: "FAILED",
+            message: cancelledMeeting
+              ? "Cancelled Meetings Can't be Fetched."
+              : "Created Meetings Can't be Fetched.",
+            data: {},
+          });
+        }
+      } catch (error) {
+        console.log(error);
+        res.status(500).json({
+          response_type: "FAILED",
+          data: {},
+          message: error.message,
+        });
+      }
+    };
 module.exports.startMeeting = async (req, res) => {
   try {
     const {
@@ -679,7 +952,7 @@ module.exports.rescheduleMeeting = async (req, res) => {
 module.exports.endMeeting = async (req, res) => {
   try {
     const {  Meeting } = req.app.locals.models;
-    const { meetingID, status } = req.body;
+    const { meetingID, status, remark } = req.body;
     // const updatedBy = req.decodedEmpCode;
 
     if (!meetingID) {
@@ -691,10 +964,10 @@ module.exports.endMeeting = async (req, res) => {
     }
 
     const cancelConferenceRoom = await Meeting.update(
-      { status },
+      { status, remark },
       { 
           where: { meetingID }, 
-          fields: ["status"]
+          fields: ["status", "remark"]
       }
   );
     

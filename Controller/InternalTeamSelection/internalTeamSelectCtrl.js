@@ -18,7 +18,8 @@ module.exports.addInternalMembers = async (req, res) => {
       const updatedList = req.body.internalMembers.map(
         (internalMember) => ({
           ...internalMember,
-          meetingID: req.body.meetingID,
+          empId:internalMember,
+          meetingID: req.body.meetingID
         })
       );
 
@@ -29,21 +30,13 @@ module.exports.addInternalMembers = async (req, res) => {
           });
         })
       );
-
-      const internalMembers = req.body.internalMembers;
-
-      const internalMemberIds = internalMembers.map(
-        (member) => member.empId
-      );
-
       const internalTeamEmails = await Employee.findAll({
-        attributes: ["email"],
-        where: {
-          empId: internalMemberIds,
-        },
-        raw: true,
-      });
-
+          attributes: ["email"],
+          where: {
+            empId: req.body.internalMembers,
+          },
+          raw: true,
+        });
       const emailPromises = internalTeamEmails.map(async (member) => {
         const mailSubject = "Meeting Created";
         const mailMessage = "A new meeting has been created.";
@@ -61,7 +54,7 @@ module.exports.addInternalMembers = async (req, res) => {
       res.status(200).json({
         response_type: "SUCCESS",
         data: {},
-        message: "Internal Team Members added successfully.",
+        message: "Internal Team Members added successfully and sent mail",
       });
     }
     else {

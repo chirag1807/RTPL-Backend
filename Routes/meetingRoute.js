@@ -9,6 +9,9 @@ router.post('/create_outer_meeting', authenticateToken, meetingController.create
 router.put('/update_outer_meeting_status/:outerMeetingID', isAdmin(11), meetingController.updateOuterMeetingStatus);
 router.post('/create_appointment_meeting', authenticateToken, meetingController.createAppointmentMeeting);
 router.put('/update_appointment_meeting_status/:appointmentMeetingID', authenticateToken, meetingController.updateAppointmentMeetingStatus);
+router.put('/push-meeting/:meetingID', authenticateToken, meetingController.pushMeeting);
+router.put('/follow-up-meeting/:meetingID', authenticateToken, meetingController.followUpMeeting);
+router.get('/follow-up-meeting-list', authenticateToken, meetingController.followUpMeetingList);
 router.post('/start-meeting', authenticateToken, meetingController.startMeeting);
 router.post('/end-meeting', authenticateToken, upload.single('meetingDoc'), meetingController.endMeeting);
 router.post('/reschedule-meeting', authenticateToken, meetingController.rescheduleMeeting);
