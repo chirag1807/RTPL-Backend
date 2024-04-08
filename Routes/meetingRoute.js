@@ -20,7 +20,7 @@ router.get('/get_meeting_ByCnfRoom/:meetingDate/:conferenceRoomID', meetingContr
 router.get('/avable-con-room/:meetingDate/:officeID', meetingController.avableConRoom);
 router.get('/get_meeting_list', authenticateToken, meetingController.getListOfCreatedMeeting);
 router.get('/get_appointment_meeting', authenticateToken, meetingController.getAppointmentMeetings);
-router.get('/avabletimeslot/:meetingDate',  meetingController.avabletimeslot);
+router.get('/avabletimeslot/:meetingDate/:conroomId',  meetingController.avabletimeslot);
 router.get('/get_meeting_ById/:meetingID', authenticateToken, meetingController.getCreatedMeetingByID);
 
 

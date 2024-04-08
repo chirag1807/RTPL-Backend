@@ -59,13 +59,14 @@ const inputFieldsInternalMembers = ["empId", "meetingID"];
 const inputFieldTimeSlot = ["meetingID", "meetingStartTime", "meetingEndTime"];
 module.exports.avabletimeslot = async (req, res) => {
   try {
-    const { meetingDate } = req.params;
+    const { meetingDate ,conroomId } = req.params;
     const arrayData = [];
 
     // Find available time slots
     const avabletimeslots = await Meeting.findAll({
       where: {
-        meetingDate
+        meetingDate,
+        conferenceRoomID : conroomId
       }
     });
     if (avabletimeslots.length !== 0) {
