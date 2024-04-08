@@ -16,7 +16,7 @@ router.post('/start-meeting', authenticateToken, meetingController.startMeeting)
 router.post('/end-meeting', authenticateToken, upload.single('meetingDoc'), meetingController.endMeeting);
 router.post('/reschedule-meeting', authenticateToken, meetingController.rescheduleMeeting);
 router.post('/cancel-meeting', authenticateToken, meetingController.cancelMeeting);
-router.get('/get_meeting_ByCnfRoom/:meetingDate/:officeID', meetingController.getMeetingTimesByConferenceRoom);
+router.get('/get_meeting_ByCnfRoom/:meetingDate/:conferenceRoomID', meetingController.getMeetingTimesByConferenceRoom);
 router.get('/avable-con-room/:meetingDate/:officeID', meetingController.avableConRoom);
 router.get('/get_meeting_list', authenticateToken, meetingController.getListOfCreatedMeeting);
 router.get('/get_appointment_meeting', authenticateToken, meetingController.getAppointmentMeetings);

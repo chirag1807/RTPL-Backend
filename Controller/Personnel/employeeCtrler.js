@@ -121,12 +121,9 @@ module.exports.deleteEmployee = async (req, res) => {
 //get All Employees
 module.exports.getNonAdminEmployees = async (req, res) => {
   try {
-    const { Employee, Company, Office, Department, Designation, EmployeeRole } =
-      req.app.locals.models;
+    const { Employee, Company, Office, Department, Designation, EmployeeRole } = req.app.locals.models;
 
     let {
-      page,
-      pageSize,
       sort,
       sortBy,
       searchField,
@@ -135,16 +132,9 @@ module.exports.getNonAdminEmployees = async (req, res) => {
       history,
     } = req.query;
 
-    page = Math.max(1, parseInt(page, 10)) || 1;
-    pageSize = Math.max(1, parseInt(pageSize, 10)) || 10;
-
-    const offset = (page - 1) * pageSize;
-
     sort = sort ? sort.toUpperCase() : "ASC";
 
     const queryOptions = {
-      limit: pageSize,
-      offset: offset,
       include: [],
     };
 
@@ -215,17 +205,10 @@ module.exports.getNonAdminEmployees = async (req, res) => {
       };
     }
 
-    const totalCount = await Employee.count({
-      where: queryOptions.where,
-    });
-    const totalPage = Math.ceil(totalCount / pageSize);
-
     const nonAdminEmployees = await Employee.findAll(queryOptions);
 
     if (nonAdminEmployees.length === 0) {
       return res.status(200).json({ 
-        totalPage: 0,
-        currentPage: 0,
         response_type: "SUCCESS",
         message: "No employees found",
         data: {
@@ -235,21 +218,22 @@ module.exports.getNonAdminEmployees = async (req, res) => {
     }
 
     res.status(200).json({
-      totalPage: totalPage,
-      currentPage: page,
       response_type: "SUCCESS",
       message: "Employees Fetched Successfully.",
       data: {
-        nonAdminEmployees: nonAdminEmployees},
+        nonAdminEmployees: nonAdminEmployees
+      },
     });
   } catch (error) {
     console.error("An error occurred:", error);
     res.status(500).json({ 
       response_type: "FAILED",
       data: {},
-      message: error.message });
+      message: error.message 
+    });
   }
 };
+
 
 //true or
 
