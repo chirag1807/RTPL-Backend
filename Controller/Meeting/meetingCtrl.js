@@ -869,7 +869,6 @@ module.exports.startMeeting = async (req, res) => {
     }
 
     existingMeeting.startedAt = new Date();
-    existingMeeting.isActive = true;
 
     await existingMeeting.save();
 
@@ -1193,15 +1192,15 @@ module.exports.getListOfCreatedMeeting = async (req, res) => {
 
     // const createdMeetings = await Meeting.findAll(queryOptions);
     // Loop through the createdMeetings array
-    for (let i = 0; i < createdMeetings.length; i++) {
-      const meeting = createdMeetings[i];
-      // Join over TimeSlot using meetingID
-      const timeSlots = await TimeSlot.findAll({
-          where: { meetingID: meeting.meetingID }, // Filter by meetingID
-      });
-      // Add the timeSlots to the meeting object
-      meeting.dataValues.timeSlots = timeSlots;
-    }
+    // for (let i = 0; i < createdMeetings.length; i++) {
+    //   const meeting = createdMeetings[i];
+    //   // Join over TimeSlot using meetingID
+    //   const timeSlots = await TimeSlot.findAll({
+    //       where: { meetingID: meeting.meetingID }, // Filter by meetingID
+    //   });
+    //   // Add the timeSlots to the meeting object
+    //   meeting.dataValues.timeSlots = timeSlots;
+    // }
 
     if (createdMeetings) {
       res.status(200).json({
