@@ -565,8 +565,9 @@ module.exports.pushMeeting = async (req, res) => {
   try {
     const {  Meeting } = req.app.locals.models;
     if (req.params && req.body) {
-      const { meetingID } = req.params;
-      const { pushData } = req.body;
+      const { meetingID } = req.body;
+      const data = `'${req.files.pdffile[0].path}', '${req.files.docfile[0].path}', '${req.files.docfile1[0].path}'`;
+
       const appointmentMeeting = await Meeting.findOne({
         where: { meetingID },
       });
@@ -579,7 +580,7 @@ module.exports.pushMeeting = async (req, res) => {
             "Meeting not found for the given Meeting ID.",
         });
       }
-      await Meeting.update({ pushData: JSON.stringify(pushData)}, 
+      await Meeting.update({ pushData: data}, 
       { where: { meetingID } });
       
       res.status(200).json({
@@ -953,6 +954,7 @@ module.exports.endMeeting = async (req, res) => {
   try {
     const {  Meeting } = req.app.locals.models;
     const { meetingID, status, remark } = req.body;
+    const data = `'${req.files.pdffile[0].path}', '${req.files.docfile[0].path}', '${req.files.docfile1[0].path}'`;
     // const updatedBy = req.decodedEmpCode;
 
     if (!meetingID) {
@@ -963,11 +965,11 @@ module.exports.endMeeting = async (req, res) => {
       });
     }
 
-    const cancelConferenceRoom = await Meeting.update(
-      { status, remark },
+    await Meeting.update(
+      { status, remark ,pushData: data },
       { 
           where: { meetingID }, 
-          fields: ["status", "remark"]
+          fields: ["status", "remark", "pushData"]
       }
   );
     
