@@ -1039,7 +1039,7 @@ module.exports.getListOfCreatedMeeting = async (req, res) => {
       MeetingMode,
       ConferenceRoom,
       InternalTeamSelect,
-      TimeSlot
+      Company
     } = req.app.locals.models;
 
     let {
@@ -1077,23 +1077,25 @@ module.exports.getListOfCreatedMeeting = async (req, res) => {
 
     queryOptions.include.push(
       { model: Employee, as: "employee" },
-      { model: Office, as: "office" },
+      { model: Office, as: "office", include: [{
+          model: Company, as: "company", // Use "company" instead of "Companys"
+      }] },
       { model: RequestMeeting, as: "requestMeeting" },
       { model: MeetingType, as: "meetingType" },
       { model: MeetingMode, as: "meetingMode" },
       // { model: TimeSlot, as: "TimeSlot" },
       { model: ConferenceRoom, as: "conferenceRoom" },
       {
-        model: InternalTeamSelect,
-        as: "internalTeamSelect",
-        include: [
-          {
-            model: Employee,
-            as: "employee",
-          },
-        ],
+          model: InternalTeamSelect,
+          as: "internalTeamSelect",
+          include: [
+              {
+                  model: Employee,
+                  as: "employee",
+              },
+          ],
       }
-    );
+  );
 
     if (empId) {
       queryOptions.where = {
@@ -1192,17 +1194,32 @@ module.exports.getListOfCreatedMeeting = async (req, res) => {
     const { rows: createdMeetings, count: totalCount } = await Meeting.findAndCountAll(queryOptions);
 
 
-    // const createdMeetings = await Meeting.findAll(queryOptions);
-    // Loop through the createdMeetings array
-    // for (let i = 0; i < createdMeetings.length; i++) {
-    //   const meeting = createdMeetings[i];
-    //   // Join over TimeSlot using meetingID
-    //   const timeSlots = await TimeSlot.findAll({
-    //       where: { meetingID: meeting.meetingID }, // Filter by meetingID
-    //   });
-    //   // Add the timeSlots to the meeting object
-    //   meeting.dataValues.timeSlots = timeSlots;
-    // }
+    const restData = [...createdMeetings]; // Spread the array if you need a shallow copy
+
+try {
+    // Use findAll with include to perform a join operation
+    const meetingsWithCompanies = await Office.findAll({
+        where: { officeID: restData.map(meeting => meeting.officeID) }, // Find offices with IDs from restData
+        include: {
+            model: Company,
+            attributes: ['Name'] // Specify the attributes you want to include from the Company model
+        }
+    });
+
+    // Map the retrieved companies to an object for easier lookup
+    const companyMap = {};
+    meetingsWithCompanies.forEach(office => {
+        companyMap[office.officeID] = office.Company.Name;
+    });
+
+    // Assign company names to restData objects based on the officeID
+    restData.forEach(meeting => {
+        meeting.CompanyName = companyMap[meeting.officeID] || ''; // Assign the company name or an empty string if not found
+    });
+} catch (error) {
+    console.error("Error:", error);
+}
+
 
     if (createdMeetings) {
       res.status(200).json({
@@ -1210,7 +1227,7 @@ module.exports.getListOfCreatedMeeting = async (req, res) => {
         message: cancelledMeeting
           ? "Cancelled Meetings Fetched Successfully."
           : "Created Meetings Fetched Successfully.",
-        data: { meetings: createdMeetings },
+        data: { meetings: restData },
       });
     } else {
       res.status(400).json({
