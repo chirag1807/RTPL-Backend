@@ -136,7 +136,7 @@ const Meeting = sequelize.define('Meetings', {
        allowNull: true,
     },
     visitior_list: {
-        type: DataTypes.JOSN,
+        type: DataTypes.JSON,
         allowNull: true,
      },
     meetingDoc: {
