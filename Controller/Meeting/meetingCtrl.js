@@ -44,6 +44,7 @@ const inputFieldsMeeting = [
   "createdBy",
   "status",
   "meetingTime",
+  "visitior_list"
 ];
 
 const inputFieldOuterMeeting = [
@@ -122,6 +123,7 @@ const overlapsWithArrayData = (slot) => {
 
 module.exports.createRequestMeeting = async (req, res) => {
   try {
+    // visitior_list
     const { Meeting, InternalTeamSelect, Employee} = req.app.locals.models;
     const updatedBy = req.decodedEmpCode;
     if (req.body) {

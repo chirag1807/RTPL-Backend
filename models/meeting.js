@@ -135,6 +135,10 @@ const Meeting = sequelize.define('Meetings', {
        type: DataTypes.TIME,
        allowNull: true,
     },
+    visitior_list: {
+        type: DataTypes.JOSN,
+        allowNull: true,
+     },
     meetingDoc: {
         type: DataTypes.STRING,
         allowNull: true,
