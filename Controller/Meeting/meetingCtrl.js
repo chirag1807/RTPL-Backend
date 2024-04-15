@@ -54,7 +54,6 @@ const inputFieldOuterMeeting = [
   "clientContact",
   "clientVenue",
 ];
-
 const inputFieldsInternalMembers = ["empId", "meetingID"];
 
 const inputFieldTimeSlot = ["meetingID", "meetingStartTime", "meetingEndTime"];
@@ -565,16 +564,21 @@ module.exports.updateAppointmentMeetingStatus = async (req, res) => {
 // meetingID
 module.exports.pushMeeting = async (req, res) => {
   try {
-    const {  Meeting } = req.app.locals.models;
     if (req.params && req.body) {
+      const {  Meeting } = req.app.locals.models;
       const { meetingID } = req.body;
-      const data = `'${req.files.pdffile[0].path}', '${req.files.docfile[0].path}', '${req.files.docfile1[0].path}'`;
+      const data = [
+        req.files.pdffile ? `'${req.files.pdffile[0].path}'` : 'null',
+        req.files.docfile ? `'${req.files.docfile[0].path}'` : 'null',
+        req.files.docfile1 ? `'${req.files.docfile1[0].path}'` : 'null'
+    ].join(', ');
+    
 
-      const appointmentMeeting = await Meeting.findOne({
+      const isMeeting = await Meeting.findOne({
         where: { meetingID },
       });
 
-      if (!appointmentMeeting) {
+      if (!isMeeting) {
         return res.status(404).json({
           response_type: "FAILED",
           data: {},
@@ -606,11 +610,11 @@ module.exports.followUpMeeting = async (req, res) => {
       if (req.params && req.body) {
         const { meetingID } = req.params;
         const { followUpMeetingId } = req.body;
-        const appointmentMeeting = await Meeting.findOne({
+        const isMeeting = await Meeting.findOne({
           where: { meetingID },
         });
   
-        if (!appointmentMeeting) {
+        if (!isMeeting) {
           return res.status(404).json({
             response_type: "FAILED",
             data: {},
@@ -691,7 +695,6 @@ module.exports.followUpMeetingList = async (req, res) => {
           { model: RequestMeeting, as: "requestMeeting" },
           { model: MeetingType, as: "meetingType" },
           { model: MeetingMode, as: "meetingMode" },
-          // { model: TimeSlot, as: "TimeSlot" },
           { model: ConferenceRoom, as: "conferenceRoom" },
           {
             model: InternalTeamSelect,
@@ -956,7 +959,11 @@ module.exports.endMeeting = async (req, res) => {
   try {
     const {  Meeting } = req.app.locals.models;
     const { meetingID, status, remark } = req.body;
-    const data = `'${req.files.pdffile[0].path}', '${req.files.docfile[0].path}', '${req.files.docfile1[0].path}'`;
+    const data = [
+      req.files.pdffile ? `'${req.files.pdffile[0].path}'` : 'null',
+      req.files.docfile ? `'${req.files.docfile[0].path}'` : 'null',
+      req.files.docfile1 ? `'${req.files.docfile1[0].path}'` : 'null'
+  ].join(', ');
     // const updatedBy = req.decodedEmpCode;
 
     if (!meetingID) {

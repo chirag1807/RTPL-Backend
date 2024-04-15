@@ -130,6 +130,7 @@ module.exports.getMeetingsForInternalTeam = async (req, res) => {
       MeetingMode,
       ConferenceRoom,
       InternalTeamSelect,
+      Company
     } = req.app.locals.models;
     const { empId } = req.params;
 
@@ -174,7 +175,9 @@ module.exports.getMeetingsForInternalTeam = async (req, res) => {
       where: {},
       include: [
         { model: Employee, as: "employee" },
-        { model: Office, as: "office" },
+        { model: Office, as: "office", include: [{
+          model: Company, as: "company", 
+      }] },
         { model: RequestMeeting, as: "requestMeeting" },
         { model: AppointmentMeeting, as: "appointmentMeeting" },
         { model: OuterMeeting, as: "outerMeeting" },
