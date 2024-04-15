@@ -11,15 +11,15 @@ const initialTimeSlots = [
   { meetingStartTime: "9:00", meetingEndTime: "9:30" }, { meetingStartTime: "9:30", meetingEndTime: "10:00" },
   { meetingStartTime: "10:00", meetingEndTime: "10:30" }, { meetingStartTime: "10:30", meetingEndTime: "11:00" },
   { meetingStartTime: "11:00", meetingEndTime: "11:30" }, { meetingStartTime: "11:30", meetingEndTime: "12:00" },
-  { meetingStartTime: "12:00", meetingEndTime: "12:30" }, { meetingStartTime: "12:30", meetingEndTime: "1:00" },
-  { meetingStartTime: "1:00", meetingEndTime: "1:30" }, { meetingStartTime: "1:30", meetingEndTime: "2:00" },
-  { meetingStartTime: "2:00", meetingEndTime: "2:30" }, { meetingStartTime: "2:30", meetingEndTime: "3:00" },
-  { meetingStartTime: "3:00", meetingEndTime: "3:30" }, { meetingStartTime: "3:30", meetingEndTime: "4:00" },
-  { meetingStartTime: "4:00", meetingEndTime: "4:30" }, { meetingStartTime: "4:30", meetingEndTime: "5:00" },
-  { meetingStartTime: "5:00", meetingEndTime: "5:30" }, { meetingStartTime: "5:30", meetingEndTime: "6:00" },
-  { meetingStartTime: "6:00", meetingEndTime: "6:30" }, { meetingStartTime: "6:30", meetingEndTime: "7:00" },
-  { meetingStartTime: "7:00", meetingEndTime: "7:30" }, { meetingStartTime: "7:30", meetingEndTime: "8:00" },
-  { meetingStartTime: "8:00", meetingEndTime: "8:30" }, { meetingStartTime: "8:30", meetingEndTime: "9:00" }
+  { meetingStartTime: "12:00", meetingEndTime: "12:30" }, { meetingStartTime: "12:30", meetingEndTime: "13:00" },
+  { meetingStartTime: "13:00", meetingEndTime: "13:30" }, { meetingStartTime: "13:30", meetingEndTime: "14:00" },
+  { meetingStartTime: "14:00", meetingEndTime: "14:30" }, { meetingStartTime: "14:30", meetingEndTime: "15:00" },
+  { meetingStartTime: "15:00", meetingEndTime: "15:30" }, { meetingStartTime: "15:30", meetingEndTime: "16:00" },
+  { meetingStartTime: "16:00", meetingEndTime: "16:30" }, { meetingStartTime: "16:30", meetingEndTime: "17:00" },
+  { meetingStartTime: "17:00", meetingEndTime: "17:30" }, { meetingStartTime: "17:30", meetingEndTime: "18:00" },
+  { meetingStartTime: "18:00", meetingEndTime: "18:30" }, { meetingStartTime: "18:30", meetingEndTime: "19:00" },
+  { meetingStartTime: "19:00", meetingEndTime: "19:30" }, { meetingStartTime: "19:30", meetingEndTime: "20:00" },
+  { meetingStartTime: "20:00", meetingEndTime: "20:30" }, { meetingStartTime: "20:30", meetingEndTime: "21:00" }
 ];
 
 const inputFieldsMeeting = [
