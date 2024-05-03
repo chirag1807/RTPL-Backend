@@ -842,21 +842,9 @@ module.exports.followUpMeetingList = async (req, res) => {
     };
 module.exports.startMeeting = async (req, res) => {
   try {
-    const {
-      Meeting,
-      // InternalTeamSelect
-    } = req.app.locals.models;
-    const {
-      meetingID,
-      // empIds
-    } = req.body;
-
-    if (
-      !meetingID
-      // || !empIds ||
-      // !Array.isArray(empIds) ||
-      // empIds.length === 0
-    ) {
+    const {Meeting} = req.app.locals.models;
+    const {meetingID} = req.body;
+    if (!meetingID) {
       return res.status(400).json({
         response_type: "FAILED",
         data: {},
@@ -873,20 +861,12 @@ module.exports.startMeeting = async (req, res) => {
         message: "Meeting not found.",
       });
     }
-
-    existingMeeting.startedAt = new Date();
-
-    await existingMeeting.save();
-
-    // await Promise.all(
-    //   empIds.map(async (empId) => {
-    //     await InternalTeamSelect.update(
-    //       { status: "Accepted" },
-    //       { where: { meetingID, empId } }
-    //     );
-    //   })
-    // );
-
+    const currentTime = new Date();
+    const hours = currentTime.getHours();
+    const minutes = currentTime.getMinutes();
+    const seconds = currentTime.getSeconds();
+    const formattedTime = `${hours}:${minutes}:${seconds}`;
+    existingMeeting.startedAt = formattedTime;
     return res.status(200).json({
       response_type: "SUCCESS",
       message: "Meeting started successfully.",

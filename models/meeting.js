@@ -188,7 +188,15 @@ const Meeting = sequelize.define('Meetings', {
         type: DataTypes.JSON,
         allowNull : true
     },
-    pushData :{
+    pdf:{
+        type: DataTypes.STRING,
+        allowNull : true
+    },
+    image :{
+        type: DataTypes.STRING,
+        allowNull : true
+    },
+    video  :{
         type: DataTypes.STRING,
         allowNull : true
     },

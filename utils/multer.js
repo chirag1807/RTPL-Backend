@@ -1,35 +1,9 @@
 const multer = require("multer");
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
-// const fs = require("fs");
-
-// if (!fs.existsSync("./uploads")) {
-//     fs.mkdirSync("./uploads");
-// }
-
-// var storage = multer.diskStorage({
-//     destination: function (req, file, cb) {
-//         cb(null, "./uploads");
-//     },
-//     filename: function (req, file, cb) {
-//         cb(null, file.originalname);
-//     },
-// });
-  
-// var upload = multer({ storage: storage });
 
 const path = require("path");
 
-// const storage = multer.diskStorage({
-//   destination: path.join(__dirname, "../uploads"), 
-  
-//   filename: (req, file, cb) => {
-//     const uniqueFilename = `${Date.now()}${path.extname(
-//       file.originalname,
-//     )}`;
-//     cb(null, uniqueFilename);
-//   },
-// });
 cloudinary.config({
   secure:true
 })
@@ -51,16 +25,29 @@ const upload = multer({ storage });
 
 module.exports = { upload };
 
-// const storage = multer.diskStorage({
-//   destination:function(req,file,cb)
-//   {
-//       cb(null,path.join(__dirname, "../uploads"))
-//   },
-//   filename:function(req,file,cb) {
-//       console.log(file)
-//       const fileName = file.fieldname + '-' + Date.now();
-//       req.fileName = req.fileName?[...req.fileName,fileName]:[fileName]
-//       console.log(req.fileName)
-//       cb(null,fileName)
+
+// const aws = require("aws-sdk");
+// const multerS3 = require("multer-s3");
+
+// const path = require("path");
+
+// const s3 = new aws.S3({
+//   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+//   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+//   region: process.env.AWS_REGION // specify your AWS region
+// });
+
+// const storage = multerS3({
+//   s3: s3,
+//   bucket: process.env.S3_BUCKET_NAME, // specify your S3 bucket name
+//   contentType: multerS3.AUTO_CONTENT_TYPE,
+//   acl: "public-read", // specify the access control list (ACL) for the files
+//   key: function(req, file, cb) {
+//     const id = Date.now() + path.extname(file.originalname); // generate unique key for the file
+//     cb(null, id);
 //   }
-// })
+// });
+
+// const upload = multer({ storage });
+
+// module.exports = { upload };

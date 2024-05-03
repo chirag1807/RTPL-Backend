@@ -363,9 +363,16 @@ module.exports.takeAttendanceOfInternalMembers = async (req, res) => {
       const empIds = req.body.empIds;
 
       const teamMembers = await InternalTeamSelect.findAll({
-        where: { meetingID },
+        where: {
+          meetingID: meetingID,
+          empId: {
+            [Op.or]: empIds.map(empId => ({
+              [Op.like]: `%${empId}%`
+            }))
+          }
+        }
       });
-
+            
       for (const teamMember of teamMembers) {
         if (empIds.includes(teamMember.empId)) {
           await teamMember.update({ isAttended: 1 });
@@ -396,15 +403,21 @@ module.exports.takeAttendanceOfInternalMembers = async (req, res) => {
 };
 
 module.exports.takeAttendanceOfVisitors = async (req, res) => {
-  const { ReqMeetVisitorDetails } = req.app.locals.models;
-
+  const { ReqMeetVisitorDetails , Meeting } = req.app.locals.models;
   try {
     if (req.body) {
       const reqMeetingID = req.body.reqMeetingID;
       const visitorIds = req.body.visitorIds;
 
       const visitors = await ReqMeetVisitorDetails.findAll({
-        where: { reqMeetingID },
+        where: {
+          reqMeetingID: reqMeetingID,
+          visitorID: {
+            [Op.or]: visitorIds.map(visitorId => ({
+              [Op.like]: `%${visitorId}%`
+            }))
+          }
+        }
       });
 
       for (const visitor of visitors) {
@@ -412,6 +425,14 @@ module.exports.takeAttendanceOfVisitors = async (req, res) => {
           await visitor.update({ isAttended: 1 });
         }
       }
+      const updateMettingVisitorList = await Meeting.update(
+        { visitior_list: visitors },
+        { 
+            where: { meetingID: reqMeetingID }, 
+            fields: ["visitior_list"]
+        }
+    );
+
 
       res.status(200).json({
         response_type: "SUCCESS",

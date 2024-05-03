@@ -115,9 +115,9 @@ module.exports.addAdmin = async (req, res) => {
         });
       }
 
-      req.body.empAadharCard = req.files.empAadharCard[0].path;
-      req.body.empIdCard = req.files.empIdCard[0].path;
-      req.body.empProfileImg = req.files.empProfileImg[0].path;
+      req.body.empAadharCard = req.files.empAadharCard[0].location;
+      req.body.empIdCard = req.files.empIdCard[0].location;
+      req.body.empProfileImg = req.files.empProfileImg[0].location;
 
       if (Array.isArray(req.body.permissions)) {
         req.body.permissions = req.body.permissions.join(",");

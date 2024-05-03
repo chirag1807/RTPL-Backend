@@ -94,6 +94,81 @@ module.exports.login = async (req, res) => {
     });
   }
 };
+// updateProfile
+
+module.exports.updateProfile = async (req, res) => {
+  try {
+    const { Employee } = req.app.locals.models;
+    const requestData = req.body;
+    console.log("requestData", requestData);
+    // requestData.empProfileImg = req.files.empProfileImg[0].path;
+    const isempId = await Employee.findOne({
+      where: {
+        empId: requestData.empId,
+      },
+    });
+    if (!isempId){
+      res.status(400).json({
+        response_type: "FAILED",
+        data: {},
+        message: "Invalid empId",
+      });
+    }
+
+
+    if (requestData) {
+      const updateFields = {
+        firstName: req.body.firstName,
+        lastName: req.body.lastName,
+        birthDate: req.body.birthDate
+      };
+      
+      // Check if req.files exists and if empProfileImg exists in req.files
+      if (req.files && req.files.empProfileImg && req.files.empProfileImg.length > 0) {
+        // If empProfileImg exists, add it to the updateFields object
+        updateFields.empProfileImg = req.files.empProfileImg[0].path;
+      }
+      const updateProfile = await Employee.update(
+        updateFields,
+        {
+          where: {
+            empId: req.body.empId
+          }
+        }
+      );
+      
+      if (updateProfile) {
+        res.status(200).json({
+          response_type: "SUCCESS",
+          data: {},
+          message: "Employee updated successfully",
+        })
+      } else {
+        res.status(500).json({
+          response_type: "FAILED",
+          data: {},
+          message: "Employee updated Failed.",
+        });
+      }
+    } else {
+      console.log("Invalid perameter");
+      res.status(400).json({
+        response_type: "FAILED",
+        data: {},
+        message: "Invalid perameter",
+      });
+    }
+  } catch (error) {
+    console.error("An error occurred:", error);
+    res.status(500).json({
+      response_type: "FAILED",
+      data: {},
+      message: error.message,
+    });
+  }
+};
+
+
 
 module.exports.Registration = async (req, res) => {
   try {
@@ -181,9 +256,9 @@ module.exports.Registration = async (req, res) => {
           message: "Employee with this Aadhar No Already Exist.",
         });
       }
-      requestData.empAadharCard = req.files.empAadharCard[0].path;
-      requestData.empIdCard = req.files.empIdCard[0].path;
-      requestData.empProfileImg = req.files.empProfileImg[0].path;
+      requestData.empAadharCard = req.files.empAadharCard[0].location;
+      requestData.empIdCard = req.files.empIdCard[0].location;
+      requestData.empProfileImg = req.files.empProfileImg[0].location;
       // const employeeData = { empProfileImgreq.body };
       if (req.body.anniversaryDate == "") {
         delete requestData.anniversaryDate;
