@@ -106,7 +106,7 @@ const inputFieldsRequestmeeting = [
   });
   
   function sanitizeFile(file, cb) {
-    const fileExts = [".png", ".pdf", ".jpg", ".jpeg", ".gif", ".doc", ".docx"];
+    const fileExts = [".png", ".pdf", ".jpg", ".jpeg", ".gif", ".doc", ".docx",".mp4"];
   
     const isAllowedExt = fileExts.includes(
       path.extname(file.originalname.toLowerCase())
@@ -116,6 +116,7 @@ const inputFieldsRequestmeeting = [
     const isAllowedMimeType =
       file.mimetype.startsWith("image/") ||
       file.mimetype === "application/pdf" ||
+      file.mimetype === "video/mp4" ||
       file.mimetype === "application/msword" ||
       file.mimetype ===
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
