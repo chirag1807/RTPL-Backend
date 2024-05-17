@@ -867,6 +867,14 @@ module.exports.startMeeting = async (req, res) => {
     const seconds = currentTime.getSeconds();
     const formattedTime = `${hours}:${minutes}:${seconds}`;
     existingMeeting.startedAt = formattedTime;
+
+    await Meeting.update(
+      {  stoppedAt: formattedTime },
+      {
+          where: { meetingID },
+          fields: [ "startedAt"]
+      }
+  );
     return res.status(200).json({
       response_type: "SUCCESS",
       message: "Meeting started successfully.",
