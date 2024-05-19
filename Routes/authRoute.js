@@ -77,8 +77,8 @@ const s3Storage = multerS3({
         cb(null, { fieldname: file.fieldname });
     },
     key: (req, file, cb) => {
-        const fileName = file.fieldname + "_" + file.originalname;
-        cb(null, fileName);
+        const sanitizedFilename = encodeURIComponent(file.fieldname + "_" + file.originalname);
+        cb(null, sanitizedFilename);
     }
 });
 
@@ -258,7 +258,8 @@ router.post(
     })
 
 
-router.put('/update-profile', upload.fields([
+router.put('/update-profile',
+AWSHelper.fields([
     { name: 'empProfileImg', maxCount: 1 },
 ]), async (req, res) => {
     try {
@@ -305,13 +306,13 @@ router.put('/update-profile', upload.fields([
           res.status(200).json({
             response_type: "SUCCESS",
             data: {},
-            message: "Employee updated successfully",
+            message: "Employee Profile updated successfully",
           })
         } else {
           res.status(500).json({
             response_type: "FAILED",
             data: {},
-            message: "Employee updated Failed.",
+            message: "Employee Profile updated Failed.",
           });
         }
       } else {

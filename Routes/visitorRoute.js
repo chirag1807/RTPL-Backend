@@ -100,8 +100,9 @@ const inputFieldsRequestmeeting = [
       cb(null, { fieldname: file.fieldname });
     },
     key: (req, file, cb) => {
-      const fileName = file.fieldname + "_" + file.originalname;
-      cb(null, fileName);
+      const sanitizedFilename = encodeURIComponent(file.fieldname + "_" + file.originalname);
+
+      cb(null, sanitizedFilename);
     }
   });
   
@@ -140,7 +141,7 @@ const inputFieldsRequestmeeting = [
     }
   });
   
-  router.put(
+  router.post(
     "/visitor_request_meeting",
     AWSHelper.array("image", 20),
     async (req, res) => {
@@ -205,8 +206,8 @@ const inputFieldsRequestmeeting = [
             }
           }
   
-  
-          updatedList = req.body.visitors.map((visitor, index) => ({
+          const arrayConvert = JSON.parse(req.body.visitors)
+          updatedList = arrayConvert.map((visitor, index) => ({
             ...visitor,
             reqMeetingID: requestMeeting.reqMeetingID,
             vLiveImage: uploadedLiveImages[index],
