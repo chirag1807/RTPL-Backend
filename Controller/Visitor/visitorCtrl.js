@@ -924,8 +924,11 @@ module.exports.getVisitorsByCompanyContact = async (req, res) => {
     const { companyGST, visitorPAN } = req.body;
 
     if (companyGST) {
-      const reqMeeting = await RequestMeeting.findAll({
+      const reqMeeting = await RequestMeeting.findOne({
         where: { vCompanyGST: companyGST },
+        order: [
+          ['createdAt', 'DESC'],
+    ],
       });
 
       if (reqMeeting) {
@@ -947,8 +950,11 @@ module.exports.getVisitorsByCompanyContact = async (req, res) => {
         });
       }
     } else if (visitorPAN) {
-      const details = await ReqMeetVisitorDetails.findAll({
+      const details = await ReqMeetVisitorDetails.findOne({
         where: { vPANCard: visitorPAN },
+        order: [
+          ['createdAt', 'DESC'],
+    ],
         // group: ['vPANCard', 'vFirstName', 'vLastName'],
         // having: Sequelize.literal('COUNT(*) = 1'),
       });

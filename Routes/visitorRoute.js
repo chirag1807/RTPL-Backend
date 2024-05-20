@@ -137,9 +137,120 @@ const inputFieldsRequestmeeting = [
       sanitizeFile(file, callback);
     },
     limits: {
-      fileSize: 1024 * 1024 * 500 // 500 MB file size limit
+      fileSize: (1024 * 1024 * 500) // 500 MB file size limit
+    },
+  }); 
+  
+  
+  router.post(
+    "/visitor_request_meeting",
+    AWSHelper.fields([{ name: 'vLiveImage', maxCount: 4 }, { name: 'vPhotoID', maxCount: 4 }, { name: 'vVisitorID', maxCount: 4 }]), 
+    async (req, res) => {
+      try {
+        console.log("🚀 ~ req.files:", req.files)
+        const { RequestMeeting, ReqMeetVisitorDetails } = req.app.locals.models;
+  
+        // Check if request body exists
+        if (!req.body) {
+          return res.status(400).json({
+            response_type: "FAILED",
+            data: {},
+            message: "Invalid parameter: request body is missing",
+          });
+        }
+  
+        // Validate email and phone number
+        if (req.body.vCompanyEmail && !validator.isEmail(req.body.vCompanyEmail)) {
+          return res.status(400).json({
+            response_type: "FAILED",
+            data: {},
+            message: "Invalid email.",
+          });
+        }
+  
+        if (req.body.vCompanyContact && !validator.isMobilePhone(req.body.vCompanyContact.toString(), "any")) {
+          return res.status(400).json({
+            response_type: "FAILED",
+            data: {},
+            message: "Invalid phone number.",
+          });
+        }
+  
+        // Create request meeting
+        const requestMeeting = await RequestMeeting.create(req.body, {
+          fields: inputFieldsRequestmeeting,
+        });
+  
+        if (!requestMeeting) {
+          return res.status(400).json({
+            response_type: "FAILED",
+            data: {},
+            message: "Sorry, Your meeting request has not registered. Please try again later",
+          });
+        }
+        let updatedList = [];
+        if (Object.keys(req.files).length > 0) {
+  
+  
+          const arrayConvert = JSON.parse(req.body.visitors)
+          updatedList = arrayConvert.map((visitor, index) => ({
+            ...visitor,
+            reqMeetingID: requestMeeting.reqMeetingID,
+            vLiveImage: req.files?.vLiveImage?.[index].location,
+            vPhotoID: req.files?.vPhotoID?.[index].location,
+            vVisitorID: req.files?.vVisitorID?.[index].location,
+          }));
+        } else {
+          updatedList = JSON.parse(req.body.visitors).map(visitor => ({
+            ...visitor,
+            reqMeetingID: requestMeeting.reqMeetingID,
+          }));
+        }
+  
+  
+  
+        // Save visitor details
+        await Promise.all(updatedList.map(async (visitor) => {
+          await ReqMeetVisitorDetails.create(visitor, {
+            fields: inputFieldsVisitorDetails,
+          });
+        }));
+  
+        // Send email
+        const mailSubject = "Meeting Request Created";
+        const mailMessage = "Your meeting request has been registered successfully.";
+  
+        if (requestMeeting.typeOfVisitor == "Company") {
+          await sendMail(
+            req.body.vCompanyEmail,
+            "rtpl@rtplgroup.com",
+            mailSubject,
+            mailMessage
+          );
+        } else {
+          await sendMail(
+            JSON.parse(req.body.visitors)[0].vMailID,
+            "rtpl@rtplgroup.com",
+            mailSubject,
+            mailMessage
+          );
+        }
+  
+        res.status(200).json({
+          response_type: "SUCCESS",
+          data: {},
+          message: "Your meeting request has been registered successfully.",
+        });
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({
+          response_type: "FAILED",
+          data: {},
+          message: error.message,
+        });
+      }
     }
-  });
+  );
   
   router.post(
     "/visitor_request_meeting",
