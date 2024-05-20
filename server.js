@@ -14,7 +14,7 @@ app.use(
   })
 );
 
-app.use(bodyParser.urlencoded({ extended: false,limit: '50mb' }));
+app.use(bodyParser.urlencoded({ extended: false,limit: '150mb', parameterLimit:50000 }));
 app.use(express.json({limit: '150mb'}));
 app.use(bodyParser.json({ limit: '150mb' }));
 app.use("/uploads", express.static("uploads"));
