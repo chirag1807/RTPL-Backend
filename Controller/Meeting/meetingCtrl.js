@@ -1054,6 +1054,7 @@ module.exports.getListOfCreatedMeeting = async (req, res) => {
       Employee,
       Office,
       RequestMeeting,
+      ReqMeetVisitorDetails,
       AppointmentMeeting,
       OuterMeeting,
       MeetingType,
@@ -1101,7 +1102,9 @@ module.exports.getListOfCreatedMeeting = async (req, res) => {
       { model: Office, as: "office", include: [{
           model: Company, as: "company", // Use "company" instead of "Companys"
       }] },
-      { model: RequestMeeting, as: "requestMeeting" },
+      { model: RequestMeeting, as: "requestMeeting",
+        include:[{model: ReqMeetVisitorDetails, required: false, as: "visitorDetails"}]
+       },
       { model: MeetingType, as: "meetingType" },
       { model: MeetingMode, as: "meetingMode" },
       // { model: TimeSlot, as: "TimeSlot" },

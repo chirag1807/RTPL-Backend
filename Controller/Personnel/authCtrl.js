@@ -35,6 +35,7 @@ module.exports.login = async (req, res) => {
       const employeeDetails = await Employee.findOne({
         where: {
           email: req.body.email,
+          isDeleted: false
         },
       });
       if (employeeDetails && employeeDetails.emp_code == req.body.emp_code) {

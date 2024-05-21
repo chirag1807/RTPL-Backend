@@ -31,7 +31,7 @@ app.use((req, res, next) => {
 });
 
 app.get('/', (req, res) => {
-  res.send('Hello, Warm Regards from RTPL Group!')
+  res.send('Hello, Warm Regards from RTPL Group!');
 })
 
 app.use('/api',require('./Routes/routeIndex'));
