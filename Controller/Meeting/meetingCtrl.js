@@ -1107,7 +1107,7 @@ module.exports.getListOfCreatedMeeting = async (req, res) => {
        },
       { model: MeetingType, as: "meetingType" },
       { model: MeetingMode, as: "meetingMode" },
-      // { model: TimeSlot, as: "TimeSlot" },
+      { model: TimeSlot, as: "timeSlot" },
       { model: ConferenceRoom, as: "conferenceRoom" },
       {
           model: InternalTeamSelect,
