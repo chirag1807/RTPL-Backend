@@ -1241,11 +1241,11 @@ module.exports.getListOfCreatedMeeting = async (req, res) => {
 try {
     // Use findAll with include to perform a join operation
     const meetingsWithCompanies = await Office.findAll({
-        where: { officeID: {$in: restData.map(meeting => meeting.officeID)} }, // Find offices with IDs from restData
-        include: {
+        where: { officeID: { $in: (restData.map(meeting => meeting.officeID))} }, // Find offices with IDs from restData
+        include:[ {
             model: Company,
             attributes: ['Name'] // Specify the attributes you want to include from the Company model
-        }
+        }]
     });
 
     // Map the retrieved companies to an object for easier lookup
