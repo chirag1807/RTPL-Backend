@@ -138,7 +138,7 @@ router.post('/end-meeting', AWSHelper.fields([
     { name: 'docfile1', maxCount: 1 },
 ]), async (req, res) => {
     try {
-        const { Meeting, RequestMeeting } = req.app.locals.models;
+        const { Meeting, RequestMeeting, AppointmentMeeting } = req.app.locals.models;
         const { meetingID, status, remark ,requestId} = req.body;
         const data = [
             req.files.pdffile ? `'${req.files.pdffile[0].location}'` : 'null',
@@ -172,8 +172,13 @@ router.post('/end-meeting', AWSHelper.fields([
                 fields: ["status", "remark", "pdf", "image", "video", "stoppedAt"]
             }
         );
+        const existingMeeting = await Meeting.findByPk(meetingID);
 
-        
+        // Update request meeting status
+        await AppointmentMeeting.update(
+            {status},
+            {where: existingMeeting.appointmentMeetingID}
+          );  
         // ReqStatus
         await RequestMeeting.update(
             { ReqStatus: status},

@@ -2,7 +2,7 @@ const sendMail = require("../../Middleware/emaiService");
 const ErrorHandler = require("../../utils/errorhandler");
 const cloudinary = require("../../utils/cloudinary");
 const fs = require("fs");
-const { Op } = require("sequelize");
+const { Op, where } = require("sequelize");
 const TimeSlot = require("../../models/timeSlot");
 const Meeting = require("../../models/meeting");
 
@@ -866,7 +866,7 @@ module.exports.followUpMeetingList = async (req, res) => {
     
 module.exports.startMeeting = async (req, res) => {
   try {
-    const {Meeting} = req.app.locals.models;
+    const {Meeting, AppointmentMeeting} = req.app.locals.models;
     const {meetingID} = req.body;
     if (!meetingID) {
       return res.status(400).json({
@@ -899,7 +899,11 @@ module.exports.startMeeting = async (req, res) => {
           fields: [ "startedAt"]
       }
   );
-    return res.status(200).json({
+  // await AppointmentMeeting.update(
+  //   {status},
+  //   {where: existingMeeting.appointmentMeetingID}
+  // );    
+  return res.status(200).json({
       response_type: "SUCCESS",
       message: "Meeting started successfully.",
       data: { meeting: existingMeeting },
@@ -1012,7 +1016,7 @@ module.exports.endMeeting = async (req, res) => {
 
 module.exports.cancelMeeting = async (req, res) => {
   try {
-    const { Meeting } = req.app.locals.models;
+    const { Meeting, AppointmentMeeting } = req.app.locals.models;
     const { meetingID,status } = req.body;
     // const updatedBy = req.decodedEmpCode;
 
@@ -1023,14 +1027,28 @@ module.exports.cancelMeeting = async (req, res) => {
         message: "Meeting ID is required in the request body",
       });
     }
-
+    const meetingData = await Meeting.findOne({
+      where: meetingID,
+      include:[
+        {
+          model: AppointmentMeeting,
+          as: "appointmentMeeting",
+          required: true,
+        }
+      ]
+    })
     const updatedConferenceRoom = await Meeting.update(
       { status }, // New values for meetingStartTime and meetingEndTime
       { 
           where: { meetingID }, // Condition to select the time slot to update
           fields: ["status"] // Specify the fields to be updated
       }
-  );
+      
+    )
+    await AppointmentMeeting.update(
+      {status},
+      {where: meetingData.appointmentMeetingID}
+    );
 
     res.status(200).json({
       response_type: "SUCCESS",
