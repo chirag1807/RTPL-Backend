@@ -431,10 +431,10 @@ module.exports.createAppointmentMeeting = async (req, res) => {
             );
 
             const internalTeamEmails = await Employee.findAll({
-              attributes: ["email"],
               where: {
-                empId: internalMemberIds,
+                empId: {[Op.in]: internalMemberIds},
               },
+              attributes: ["email"],
               raw: true,
             });
 
@@ -1016,7 +1016,7 @@ module.exports.endMeeting = async (req, res) => {
 
 module.exports.cancelMeeting = async (req, res) => {
   try {
-    const { Meeting, AppointmentMeeting } = req.app.locals.models;
+    const { Meeting, AppointmentMeeting, RequestMeeting } = req.app.locals.models;
     const { meetingID,status } = req.body;
     // const updatedBy = req.decodedEmpCode;
 
@@ -1049,6 +1049,12 @@ module.exports.cancelMeeting = async (req, res) => {
       {status},
       {where: meetingData.appointmentMeetingID}
     );
+
+     // ReqStatus
+     await RequestMeeting.update(
+      { ReqStatus: status},
+      { where: { id: meetingData.requestID}}
+  )
 
     res.status(200).json({
       response_type: "SUCCESS",
